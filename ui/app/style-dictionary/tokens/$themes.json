@@ -1,0 +1,47 @@
+[
+  {
+    "id": "13640b2fc0051972f01b8b9bc3ccf51a17382a1d",
+    "name": "High Contrast",
+    "selectedTokenSets": {
+      "base/colors": "source",
+      "base/radii": "source",
+      "base/shadows": "source",
+      "base/typography": "source",
+      "semantic/theme": "enabled",
+      "semantic/typography": "enabled",
+      "base/dimension": "source",
+      "themes/high contrast": "enabled"
+    },
+    "$figmaStyleReferences": {}
+  },
+  {
+    "id": "54be2eea0002a21bff606bb38bc5cff56fcaaff3",
+    "name": "Light",
+    "selectedTokenSets": {
+      "base/colors": "source",
+      "base/radii": "source",
+      "base/shadows": "source",
+      "base/typography": "source",
+      "semantic/theme": "enabled",
+      "semantic/typography": "enabled",
+      "base/dimension": "source",
+      "themes/light": "enabled"
+    },
+    "$figmaStyleReferences": {}
+  },
+  {
+    "id": "975c20aafa00ba52962b043ac09182ee5d0b5e37",
+    "name": "Dark",
+    "selectedTokenSets": {
+      "base/colors": "source",
+      "base/radii": "source",
+      "base/shadows": "source",
+      "base/typography": "source",
+      "semantic/theme": "enabled",
+      "semantic/typography": "enabled",
+      "base/dimension": "source",
+      "themes/dark": "enabled"
+    },
+    "$figmaStyleReferences": {}
+  }
+]
