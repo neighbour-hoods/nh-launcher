@@ -20,6 +20,7 @@ import { MatrixStore } from "../../matrix-store";
 import { matrixContext, weGroupContext } from "../../context";
 import { DnaHash, EntryHash, EntryHashB64 } from "@holochain/client";
 import { fakeMd5SeededEntryHash } from "../../utils";
+import { listen } from '@tauri-apps/api/event';
 
 export class InstallFromFsDialog extends ScopedElementsMixin(LitElement) {
   @contextProvided({ context: matrixContext, subscribe: true })
@@ -65,6 +66,17 @@ export class InstallFromFsDialog extends ScopedElementsMixin(LitElement) {
   @state()
   _fakeDevhubHappReleaseHash: EntryHash | undefined = undefined;
 
+  _unlisten
+  constructor() {
+
+    super();
+    listen<string>('tauri://file-drop', (event) => {
+      console.log('tauri file drop:', event.payload);
+    }).then((unlisten) => {
+      this._unlisten = unlisten;
+    // }).catch(console.error.bind(console));
+    }).catch((e) => console.error(e));
+  }
   open() {
     this._appletDialog.show();
   }
@@ -140,6 +152,7 @@ export class InstallFromFsDialog extends ScopedElementsMixin(LitElement) {
   // TODO! make typing right here
   loadFileBytes(e: any) {
     const files: FileList = e.target.files;
+    console.log("file on upload: ", files)
 
     const reader = new FileReader();
     reader.onload = (e) => {
