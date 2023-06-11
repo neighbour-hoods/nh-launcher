@@ -1,6 +1,6 @@
 /**
  * Do not edit directly
- * Generated on Fri, 02 Jun 2023 09:43:07 GMT
+ * Generated on Sun, 11 Jun 2023 09:55:56 GMT
  */
 
 module.exports = {
@@ -4665,7 +4665,7 @@ module.exports = {
   "lineHeights": {
     "headlines": {
       "xl": {
-        "value": "1.1",
+        "value": 1.1,
         "type": "lineHeights",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -4682,7 +4682,7 @@ module.exports = {
         ]
       },
       "lg": {
-        "value": "1.1",
+        "value": 1.1,
         "type": "lineHeights",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -4699,7 +4699,7 @@ module.exports = {
         ]
       },
       "default": {
-        "value": "1.1",
+        "value": 1.1,
         "type": "lineHeights",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -4716,7 +4716,7 @@ module.exports = {
         ]
       },
       "sm": {
-        "value": "1.3",
+        "value": 1.3,
         "type": "lineHeights",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -4735,7 +4735,7 @@ module.exports = {
     },
     "body": {
       "relaxed": {
-        "value": "1.75",
+        "value": 1.75,
         "type": "lineHeights",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -4752,7 +4752,7 @@ module.exports = {
         ]
       },
       "default": {
-        "value": "1.5",
+        "value": 1.5,
         "type": "lineHeights",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -4773,7 +4773,7 @@ module.exports = {
   "fontWeights": {
     "headlines": {
       "bold": {
-        "value": "700",
+        "value": 700,
         "type": "fontWeights",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -4790,7 +4790,7 @@ module.exports = {
         ]
       },
       "regular": {
-        "value": "400",
+        "value": 400,
         "type": "fontWeights",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -4809,7 +4809,7 @@ module.exports = {
     },
     "body": {
       "bold": {
-        "value": "700",
+        "value": 700,
         "type": "fontWeights",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -4826,7 +4826,7 @@ module.exports = {
         ]
       },
       "regular": {
-        "value": "400",
+        "value": 400,
         "type": "fontWeights",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6290,7 +6290,7 @@ module.exports = {
   "typography": {
     "Colossus": {
       "Bold": {
-        "value": "700 122px/1.1 Space Grotesk",
+        "value": "700 122px/1.1 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6316,7 +6316,7 @@ module.exports = {
         ]
       },
       "Regular": {
-        "value": "400 122px/1.1 Space Grotesk",
+        "value": "400 122px/1.1 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6344,7 +6344,7 @@ module.exports = {
     },
     "Display": {
       "Bold": {
-        "value": "700 71px/1.1 Space Grotesk",
+        "value": "700 71px/1.1 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6370,7 +6370,7 @@ module.exports = {
         ]
       },
       "Regular": {
-        "value": "400 71px/1.1 Space Grotesk",
+        "value": "400 71px/1.1 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6398,7 +6398,7 @@ module.exports = {
     },
     "Hero": {
       "Bold": {
-        "value": "700 85px/1.1 Space Grotesk",
+        "value": "700 85px/1.1 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6424,7 +6424,7 @@ module.exports = {
         ]
       },
       "Regular": {
-        "value": "400 85px/1.1 Space Grotesk",
+        "value": "400 85px/1.1 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6452,7 +6452,7 @@ module.exports = {
     },
     "Uber": {
       "Bold": {
-        "value": "700 102px/1.1 Space Grotesk",
+        "value": "700 102px/1.1 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6478,7 +6478,7 @@ module.exports = {
         ]
       },
       "Regular": {
-        "value": "400 102px/1.1 Space Grotesk",
+        "value": "400 102px/1.1 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6506,7 +6506,7 @@ module.exports = {
     },
     "Headline 1": {
       "Bold": {
-        "value": "700 59px/1.1 Space Grotesk",
+        "value": "700 59px/1.1 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6532,7 +6532,7 @@ module.exports = {
         ]
       },
       "Regular": {
-        "value": "400 59px/1.1 Space Grotesk",
+        "value": "400 59px/1.1 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6560,7 +6560,7 @@ module.exports = {
     },
     "Headline 2": {
       "Bold": {
-        "value": "700 49px/1.1 Space Grotesk",
+        "value": "700 49px/1.1 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6586,7 +6586,7 @@ module.exports = {
         ]
       },
       "Regular": {
-        "value": "400 49px/1.1 Space Grotesk",
+        "value": "400 49px/1.1 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6614,7 +6614,7 @@ module.exports = {
     },
     "Headline 3": {
       "Bold": {
-        "value": "700 41px/1.1 Space Grotesk",
+        "value": "700 41px/1.1 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6640,7 +6640,7 @@ module.exports = {
         ]
       },
       "Regular": {
-        "value": "400 41px/1.1 Space Grotesk",
+        "value": "400 41px/1.1 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6668,7 +6668,7 @@ module.exports = {
     },
     "Headline 4": {
       "Bold": {
-        "value": "700 34px/1.3 Space Grotesk",
+        "value": "700 34px/1.3 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6694,7 +6694,7 @@ module.exports = {
         ]
       },
       "Regular": {
-        "value": "400 34px/1.3 Space Grotesk",
+        "value": "400 34px/1.3 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6722,7 +6722,7 @@ module.exports = {
     },
     "Headline 5": {
       "Bold": {
-        "value": "700 23px/1.3 Space Grotesk",
+        "value": "700 23px/1.3 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -6748,7 +6748,7 @@ module.exports = {
         ]
       },
       "Regular": {
-        "value": "400 23px/1.3 Space Grotesk",
+        "value": "400 23px/1.3 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,
@@ -7503,7 +7503,7 @@ module.exports = {
     "headlines": {
       "bold": {
         "large": {
-          "value": "700 48px/140% Space Grotesk",
+          "value": "700 48px/140% 'Space Grotesk'",
           "type": "typography",
           "filePath": "high-contrast.json",
           "isSource": true,
@@ -7530,7 +7530,7 @@ module.exports = {
           ]
         },
         "small": {
-          "value": "700 20px/140% Space Grotesk",
+          "value": "700 20px/140% 'Space Grotesk'",
           "type": "typography",
           "filePath": "high-contrast.json",
           "isSource": true,
@@ -7559,7 +7559,7 @@ module.exports = {
       },
       "regular": {
         "large": {
-          "value": "400 48px/140% Space Grotesk",
+          "value": "400 48px/140% 'Space Grotesk'",
           "type": "typography",
           "filePath": "high-contrast.json",
           "isSource": true,
@@ -7586,7 +7586,7 @@ module.exports = {
           ]
         },
         "small": {
-          "value": "400 20px/140% Space Grotesk",
+          "value": "400 20px/140% 'Space Grotesk'",
           "type": "typography",
           "filePath": "high-contrast.json",
           "isSource": true,
@@ -7614,7 +7614,7 @@ module.exports = {
         }
       },
       "xl": {
-        "value": "700 112px/140% Space Grotesk",
+        "value": "700 112px/140% 'Space Grotesk'",
         "type": "typography",
         "filePath": "high-contrast.json",
         "isSource": true,

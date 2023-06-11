@@ -1,6 +1,6 @@
 /**
  * Do not edit directly
- * Generated on Fri, 02 Jun 2023 09:43:08 GMT
+ * Generated on Sun, 11 Jun 2023 09:55:56 GMT
  */
 
 :root {
@@ -214,11 +214,11 @@
   --nh-documentation-body-regular-large: var(--nh-font-weights-body-regular) 48px/140% var(--nh-font-families-body);
   --nh-documentation-body-bold-small: var(--nh-font-weights-body-bold) 20px/140% var(--nh-font-families-body);
   --nh-documentation-body-bold-large: var(--nh-font-weights-body-bold) 48px/140% var(--nh-font-families-body);
-  --nh-documentation-headlines-xl: var(--nh-font-weights-headlines-bold) 112px/140% var(--nh-font-families-headlines);
-  --nh-documentation-headlines-regular-small: var(--nh-font-weights-headlines-regular) 20px/140% var(--nh-font-families-headlines);
-  --nh-documentation-headlines-regular-large: var(--nh-font-weights-headlines-regular) 48px/140% var(--nh-font-families-headlines);
-  --nh-documentation-headlines-bold-small: var(--nh-font-weights-headlines-bold) 20px/140% var(--nh-font-families-headlines);
-  --nh-documentation-headlines-bold-large: var(--nh-font-weights-headlines-bold) 48px/140% var(--nh-font-families-headlines);
+  --nh-documentation-headlines-xl: var(--nh-font-weights-headlines-bold) 112px/140% 'var(--nh-font-families-headlines)';
+  --nh-documentation-headlines-regular-small: var(--nh-font-weights-headlines-regular) 20px/140% 'var(--nh-font-families-headlines)';
+  --nh-documentation-headlines-regular-large: var(--nh-font-weights-headlines-regular) 48px/140% 'var(--nh-font-families-headlines)';
+  --nh-documentation-headlines-bold-small: var(--nh-font-weights-headlines-bold) 20px/140% 'var(--nh-font-families-headlines)';
+  --nh-documentation-headlines-bold-large: var(--nh-font-weights-headlines-bold) 48px/140% 'var(--nh-font-families-headlines)';
   --nh-typography-input-large-regular: var(--nh-font-weights-body-regular) var(--nh-font-size-md)px/var(--nh-line-heights-body-default) var(--nh-font-families-body);
   --nh-typography-input-large-bold: var(--nh-font-weights-body-bold) var(--nh-font-size-md)px/var(--nh-line-heights-body-default) var(--nh-font-families-body);
   --nh-typography-input-normal-regular: var(--nh-font-weights-body-regular) var(--nh-font-size-sm)px/var(--nh-line-heights-body-default) var(--nh-font-families-body);
@@ -241,24 +241,24 @@
   --nh-typography-body-bold: var(--nh-font-weights-body-bold) var(--nh-font-size-lg)px/var(--nh-line-heights-body-default) var(--nh-font-families-body);
   --nh-typography-lead-regular: var(--nh-font-weights-body-regular) var(--nh-font-size-2xl)px/var(--nh-line-heights-body-default) var(--nh-font-families-body);
   --nh-typography-lead-bold: var(--nh-font-weights-body-bold) var(--nh-font-size-2xl)px/var(--nh-line-heights-body-default) var(--nh-font-families-body);
-  --nh-typography-headline-5-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-xl)px/var(--nh-line-heights-headlines-sm) var(--nh-font-families-headlines);
-  --nh-typography-headline-5-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-xl)px/var(--nh-line-heights-headlines-sm) var(--nh-font-families-headlines);
-  --nh-typography-headline-4-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-3xl)px/var(--nh-line-heights-headlines-sm) var(--nh-font-families-headlines);
-  --nh-typography-headline-4-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-3xl)px/var(--nh-line-heights-headlines-sm) var(--nh-font-families-headlines);
-  --nh-typography-headline-3-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-4xl)px/var(--nh-line-heights-headlines-default) var(--nh-font-families-headlines);
-  --nh-typography-headline-3-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-4xl)px/var(--nh-line-heights-headlines-default) var(--nh-font-families-headlines);
-  --nh-typography-headline-2-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-5xl)px/var(--nh-line-heights-headlines-default) var(--nh-font-families-headlines);
-  --nh-typography-headline-2-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-5xl)px/var(--nh-line-heights-headlines-default) var(--nh-font-families-headlines);
-  --nh-typography-headline-1-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-6xl)px/var(--nh-line-heights-headlines-default) var(--nh-font-families-headlines);
-  --nh-typography-headline-1-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-6xl)px/var(--nh-line-heights-headlines-default) var(--nh-font-families-headlines);
-  --nh-typography-uber-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-9xl)px/var(--nh-line-heights-headlines-lg) var(--nh-font-families-headlines);
-  --nh-typography-uber-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-9xl)px/var(--nh-line-heights-headlines-lg) var(--nh-font-families-headlines);
-  --nh-typography-hero-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-8xl)px/var(--nh-line-heights-headlines-default) var(--nh-font-families-headlines);
-  --nh-typography-hero-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-8xl)px/var(--nh-line-heights-headlines-default) var(--nh-font-families-headlines);
-  --nh-typography-display-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-7xl)px/var(--nh-line-heights-headlines-default) var(--nh-font-families-headlines);
-  --nh-typography-display-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-7xl)px/var(--nh-line-heights-headlines-default) var(--nh-font-families-headlines);
-  --nh-typography-colossus-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-1var(--nh-paragraph-spacing-default)xl)px/var(--nh-line-heights-headlines-xl) var(--nh-font-families-headlines);
-  --nh-typography-colossus-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-1var(--nh-paragraph-spacing-default)xl)px/var(--nh-line-heights-headlines-xl) var(--nh-font-families-headlines);
+  --nh-typography-headline-5-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-xl)px/var(--nh-line-heights-headlines-sm) 'var(--nh-font-families-headlines)';
+  --nh-typography-headline-5-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-xl)px/var(--nh-line-heights-headlines-sm) 'var(--nh-font-families-headlines)';
+  --nh-typography-headline-4-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-3xl)px/var(--nh-line-heights-headlines-sm) 'var(--nh-font-families-headlines)';
+  --nh-typography-headline-4-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-3xl)px/var(--nh-line-heights-headlines-sm) 'var(--nh-font-families-headlines)';
+  --nh-typography-headline-3-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-4xl)px/var(--nh-line-heights-headlines-default) 'var(--nh-font-families-headlines)';
+  --nh-typography-headline-3-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-4xl)px/var(--nh-line-heights-headlines-default) 'var(--nh-font-families-headlines)';
+  --nh-typography-headline-2-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-5xl)px/var(--nh-line-heights-headlines-default) 'var(--nh-font-families-headlines)';
+  --nh-typography-headline-2-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-5xl)px/var(--nh-line-heights-headlines-default) 'var(--nh-font-families-headlines)';
+  --nh-typography-headline-1-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-6xl)px/var(--nh-line-heights-headlines-default) 'var(--nh-font-families-headlines)';
+  --nh-typography-headline-1-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-6xl)px/var(--nh-line-heights-headlines-default) 'var(--nh-font-families-headlines)';
+  --nh-typography-uber-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-9xl)px/var(--nh-line-heights-headlines-lg) 'var(--nh-font-families-headlines)';
+  --nh-typography-uber-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-9xl)px/var(--nh-line-heights-headlines-lg) 'var(--nh-font-families-headlines)';
+  --nh-typography-hero-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-8xl)px/var(--nh-line-heights-headlines-default) 'var(--nh-font-families-headlines)';
+  --nh-typography-hero-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-8xl)px/var(--nh-line-heights-headlines-default) 'var(--nh-font-families-headlines)';
+  --nh-typography-display-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-7xl)px/var(--nh-line-heights-headlines-default) 'var(--nh-font-families-headlines)';
+  --nh-typography-display-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-7xl)px/var(--nh-line-heights-headlines-default) 'var(--nh-font-families-headlines)';
+  --nh-typography-colossus-regular: var(--nh-font-weights-headlines-regular) var(--nh-font-size-1var(--nh-paragraph-spacing-default)xl)px/var(--nh-line-heights-headlines-xl) 'var(--nh-font-families-headlines)';
+  --nh-typography-colossus-bold: var(--nh-font-weights-headlines-bold) var(--nh-font-size-1var(--nh-paragraph-spacing-default)xl)px/var(--nh-line-heights-headlines-xl) 'var(--nh-font-families-headlines)';
   --nh-theme-overlay-bg: var(--nh-colors-black);
   --nh-theme-shadow-blur-active: var(--nh-colors-lavender-600);
   --nh-theme-shadow-blur: rgba(13, 13, 13, var(--nh-theme-shadow-opacity-blur));
