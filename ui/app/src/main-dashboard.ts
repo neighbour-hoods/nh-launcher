@@ -294,7 +294,7 @@ export class MainDashboard extends NHComponentShoelace {
     }
   }
 
-  handleWeGroupIconPrimaryClick(weGroupId: DnaHash) {
+  async handleWeGroupIconPrimaryClick(weGroupId: DnaHash) {
     this._navigationMode = NavigationMode.GroupCentric;
     if (this._selectedWeGroupId !== weGroupId) {
       this._selectedAppletInstanceId = undefined;
@@ -302,6 +302,11 @@ export class MainDashboard extends NHComponentShoelace {
     }
     this._dashboardMode = DashboardMode.WeGroupHome;
     this._selectedWeGroupId = weGroupId;
+
+
+    // initialize widgets for group
+    console.log("initializing views for group")
+    await this._matrixStore.initializeViewsForGroup(weGroupId);
   }
 
   handleWeGroupIconSecondaryClick(weGroupId: DnaHash, appletId: EntryHash) {
@@ -401,8 +406,9 @@ export class MainDashboard extends NHComponentShoelace {
                       style="overflow: hidden; margin-top: 2px; margin-bottom: 2px;"
                       .logoSrc=${weGroupInfo.info.logoSrc}
                       .tooltipText=${weGroupInfo.info.name}
-                      @click=${() => {
-                        this.handleWeGroupIconPrimaryClick(weGroupInfo.dna_hash);
+                      @click=${async () => {
+                        console.log("clicked to enter group!");
+                        await this.handleWeGroupIconPrimaryClick(weGroupInfo.dna_hash);
                         this.requestUpdate();
                       }}
                       class=${classMap({
