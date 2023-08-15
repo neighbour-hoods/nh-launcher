@@ -33,10 +33,9 @@ export class NHSensemakerSettings extends NHComponentShoelace {
     store &&
       store.subscribe(appletConfig => {
         this.appletDetails = appletConfig;
-        if (Object.values(appletConfig.resource_defs).length <= 1)
+        if (Object.values(appletConfig.resource_defs).length < 1)
           return console.log("Didn't register the applet's resource defs yet");
         this.activeMethodsDict = Object.entries(appletConfig.resource_defs)
-          .slice(1)
           .reduce(
             // Slice to remove Generic Resource
             (dict, [_, eH]): any => {
@@ -190,7 +189,6 @@ export class NHSensemakerSettings extends NHComponentShoelace {
 
     return html`
       ${Object.entries(this.appletDetails.resource_defs)
-        .slice(1)
         .map(([key, eH]: any) => {
           const resourceDefEh = encodeHashToBase64(eH);
           const activeMethod = this.activeMethodsDict.get(resourceDefEh);
