@@ -376,7 +376,7 @@ export class MainDashboard extends NHComponentShoelace {
         this._selectedAppletClassId = this._allAppletClasses.value.keys()[0];
         // this._dashboardMode = DashboardMode.AppletClassHome; // Not used currently as Applet Class Home is disabled and button removed. Added lines below instead.
         this._selectedAppletInstanceId = get(
-          this._matrixStore.getInstanceInfosForAppletClass(this._selectedAppletClassId),
+          this._matrixStore.getInstanceInfosForAppletClass(this._selectedAppletClassId as any),
         )[0][1].appletId;
         this._dashboardMode = DashboardMode.AppletGroupInstanceRendering;
       }
@@ -386,7 +386,7 @@ export class MainDashboard extends NHComponentShoelace {
       if (this._dashboardMode === DashboardMode.WeGroupHome) {
         //this._dashboardMode = DashboardMode.AppletClassHome; // Not used currently as Applet Class Home is disabled and button removed. Added lines below instead.
         this._selectedAppletInstanceId = get(
-          this._matrixStore.getInstanceInfosForAppletClass(this._selectedAppletClassId),
+          this._matrixStore.getInstanceInfosForAppletClass(this._selectedAppletClassId as any),
         )[0][1].appletId;
         this._dashboardMode = DashboardMode.AppletGroupInstanceRendering;
       }
