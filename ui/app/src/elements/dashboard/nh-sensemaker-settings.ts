@@ -346,7 +346,7 @@ export class NHSensemakerSettings extends NHComponentShoelace {
   }
 
   .pagination-number:hover:not(.active) {
-    background-color: var(--nh-theme-bg-subtle);
+    background-color: var(--nh-theme-bg-surface);
   }
 
   .widget-display, .widget-choice, .choose-assessment-widget {
