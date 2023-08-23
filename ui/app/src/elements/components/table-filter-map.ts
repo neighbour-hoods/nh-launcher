@@ -31,6 +31,8 @@ export class DashboardFilterMap extends LitElement {
   resourceDefEh;
   @property({ type: AssessmentTableType })
   tableType;
+  @property({ type: Object })
+  selectedAppletResourceDefs;
   @property({ type: String })
   selectedContext;
   @property()
@@ -71,6 +73,11 @@ export class DashboardFilterMap extends LitElement {
   }
 
   async updated(changedProps) {
+    if ((changedProps.has('selectedAppletResourceDefs') || changedProps.has('resourceDefEh')) && this.resourceDefEh) {
+      this._allAssessments.unsubscribe();
+      this.setupAssessmentFilteringSubscription();
+      this.requestUpdate('selectedDimensions')
+    }
     if (changedProps.has('selectedContext')) {
       await this.fetchCurrentContextEntry();
       this._allAssessments.unsubscribe();
@@ -79,10 +86,6 @@ export class DashboardFilterMap extends LitElement {
     if (changedProps.has('contextEhs') && this.tableType == AssessmentTableType.Context) {
       this._allAssessments.unsubscribe();
       this.contextEhsB64 = this.contextEhs.map(eh => encodeHashToBase64(eh));
-      this.setupAssessmentFilteringSubscription();
-    }
-    if (changedProps.has('resourceDefEh')) {
-      this._allAssessments.unsubscribe();
       this.setupAssessmentFilteringSubscription();
     }
     if (changedProps.has('selectedDimensions')) {
@@ -181,7 +184,8 @@ export class DashboardFilterMap extends LitElement {
         ? Object.values(assessments)
         : this.filterByResourceDefEh(assessments, this.resourceDefEh)
     ).flat() as Assessment[];
-
+    
+    filteredByResourceDef = this.selectedAppletResourceDefs ? this.filterByAppletResourceDefEhs(filteredByResourceDef, this.selectedAppletResourceDefs)  as Assessment[] : filteredByResourceDef;
     // By objective/subjective dimension names
     let filteredByMethodType;
 
@@ -221,7 +225,7 @@ export class DashboardFilterMap extends LitElement {
         }
       })
     }
-    console.log('tripleFiltered || filteredByMethodType :>> ', tripleFiltered || filteredByMethodType);
+// console.log('tripleFiltered || filteredByMethodType :>> ', tripleFiltered || filteredByMethodType);
     return tripleFiltered || filteredByMethodType;
   }
 
@@ -233,6 +237,12 @@ export class DashboardFilterMap extends LitElement {
         );
       }),
     );
+  }
+
+  filterByAppletResourceDefEhs(resourceAssessments: Assessment[], selectedAppletResourceDefEhs: EntryHash[]) {
+    if(!selectedAppletResourceDefEhs || typeof selectedAppletResourceDefEhs !== 'object') return;
+    const appletResourceDefs = Object.values(selectedAppletResourceDefEhs).map(eh => encodeHashToBase64(eh));
+    return resourceAssessments.filter((assessment: Assessment) => appletResourceDefs.includes(encodeHashToBase64(assessment.resource_def_eh)))
   }
 
   filterByDimensionEh(resourceAssessments: Assessment[], filteringHash: string) {
@@ -271,7 +281,6 @@ export class DashboardFilterMap extends LitElement {
     for (let dimensionName of Object.keys(this.selectedDimensions)) {
       baseRecord[dimensionName] = '';
     }
-
     // If dimension_eh in assessment matches a dimensionUint8 in the dictionary
     // populate the corresponding dimension field in the base record with the assessment value
     for (let [dimensionName, dimensionUint8] of Object.entries(this.selectedDimensions)) {
@@ -304,6 +313,7 @@ export class DashboardFilterMap extends LitElement {
                   const assessWidgetType = get(this._sensemakerStore.widgetRegistry())[
                     encodeHashToBase64(assessment.dimension_eh)
                   ].assess;
+                  if(!assessWidgetType) return  html`<div></div>`;
                   const assessWidget = new assessWidgetType();
                   assessWidget.resourceEh = assessment.resource_eh;
                   assessWidget.dimensionEh = assessment.dimension_eh;
