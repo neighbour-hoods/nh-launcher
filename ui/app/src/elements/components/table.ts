@@ -126,7 +126,7 @@ export class StatefulTable extends NHComponentShoelace {
       --border-color: #7d7087;
       --menuSubTitle: #a89cb0;
       --column-min-width: calc(1rem * var(--nh-spacing-sm));
-      --column-max-width: calc(2rem * var(--nh-spacing-md));
+      --column-max-width: calc(1rem * var(--nh-spacing-md));
 
       /** Header Cells **/
       --table-assessmentsForResource-heading-background-color: var(--nh-theme-bg-surface);
@@ -166,7 +166,7 @@ export class StatefulTable extends NHComponentShoelace {
       /** First Two Columns **/
       --table-assessmentsForResource-resource-width: var(--column-max-width);
       --table-assessmentsForResource-neighbour-width: var(--column-max-width);
-      --table-assessmentsForResource-resource-vertical-align: top;
+      --table-assessmentsForResource-resource-vertical-align: middle;
       --table-assessmentsForResource-neighbour-vertical-align: top;
 
       --table-assessmentsForResource-row-even-background-color: var(---nh-theme-bg-surface);
