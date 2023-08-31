@@ -93,8 +93,13 @@ export class SensemakerDashboard extends NHComponentShoelace {
         appletConfigs => {
           // TODO: fix edge case of repeat install of same dna/cloned ? make unique id
           Object.entries(appletConfigs).forEach(([installedAppId, appletConfig]) => {
+            // flatten resource defs by removing the role name and zome name keys
+            const flattenedResourceDefs = Object.values(appletConfig.resource_defs).map((zomeResourceMap) => Object.values(zomeResourceMap)).flat().reduce(
+              (acc, curr) => ({...acc, ...curr}),
+              {}
+            );
             this.appletDetails[installedAppId].appletRenderInfo = {
-              resourceNames: Object.keys(appletConfig.resource_defs)?.map(cleanResourceNameForUI),
+              resourceNames: Object.keys(flattenedResourceDefs)?.map(cleanResourceNameForUI),
             };
 
             // Keep dimensions for dashboard table prop
@@ -115,7 +120,7 @@ export class SensemakerDashboard extends NHComponentShoelace {
               this.selectedResourceDefIndex >= 0 &&
               snakeCase(currentAppletRenderInfo.resourceNames![this.selectedResourceDefIndex]);
             this.selectedResourceDefEh = resourceName
-              ? encodeHashToBase64(appletConfig.resource_defs[resourceName])
+              ? encodeHashToBase64(flattenedResourceDefs[resourceName])
               : 'none';
           });
           this.loading = false;
