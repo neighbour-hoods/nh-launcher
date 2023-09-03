@@ -13,8 +13,6 @@ import {
   SlTab,
   SlMenuLabel,
   SlInput,
-  SlAlert,
-  SlIcon,
 } from '@scoped-elements/shoelace';
 import { StatefulTable } from '../components/table';
 import { DashboardFilterMap } from '../components/table-filter-map';
@@ -22,7 +20,7 @@ import { DashboardFilterMap } from '../components/table-filter-map';
 import { Readable, StoreSubscriber, derived, get } from '@holochain-open-dev/stores';
 import { encodeHashToBase64 } from '@holochain/client';
 
-import { NHButton, NHComponentShoelace, NHPageHeaderCard } from '@neighbourhoods/design-system-components';
+import { NHAlert, NHButton, NHComponentShoelace, NHPageHeaderCard } from '@neighbourhoods/design-system-components';
 
 import { classMap } from 'lit/directives/class-map.js';
 import {
@@ -255,6 +253,11 @@ export class SensemakerDashboard extends NHComponentShoelace {
     return html`
       <div class="container skeleton-overview">
         <main>
+        <div class="alert-wrapper">
+          <nh-alert style="display: flex; flex: 1; gap: 8px;">
+            <span>There are no applets installed - go to your Neighbourhood Home to install them, then visit the applets and return here for data.</span>
+          </nh-alert>
+        </div>
           <div class="skeleton-nav-container">
             ${[50, 40, 40, 55].map(
               width =>
@@ -270,17 +273,11 @@ export class SensemakerDashboard extends NHComponentShoelace {
               style="width: 80%; height: 2rem; opacity: 0"
             ></sl-skeleton>
           </div>
-          ${this.loadingState == LoadingState.NoAppletSensemakerData
-            ? html`<div class="alert-wrapper" style="width: 80%;">
-                <sl-alert open class="alert">
-                  There is no sensemaking data for this tab; go to your applet to generate some.
-                </sl-alert>
-              </div>`
-            : html`<div class="skeleton-main-container">
+          <div class="skeleton-main-container">
                 ${Array.from(Array(24)).map(
                   () => html`<sl-skeleton effect="sheen" class="skeleton-part"></sl-skeleton>`,
                 )}
-              </div>`}
+          </div>
         </main>
       </div>
     `;
@@ -302,15 +299,15 @@ export class SensemakerDashboard extends NHComponentShoelace {
             ];
     }
     const contexts = appletConfig && appletDetails[this.selectedAppletIndex]?.contexts;
-    if (!appletConfig![0] || !contexts) {
-      this.loadingState = LoadingState.FirstRender;
+    if (!appletConfig![0] || contexts == 0) {
+      this.loadingState = LoadingState.NoAppletSensemakerData;
     }
     return html`
       <div class="container">
         <slot name="configure-widget-button"></slot>
         ${this.renderSidebar(appletIds as string[])}
         <main>
-          ${this.loading
+          ${this.loadingState === LoadingState.NoAppletSensemakerData
             ? this.renderMainSkeleton()
             : html`<sl-tab-group class="dashboard-tab-group" @context-selected=${function(e: CustomEvent) {
               ([...(e.currentTarget as any).querySelectorAll('sl-tab-panel')]
@@ -335,13 +332,13 @@ export class SensemakerDashboard extends NHComponentShoelace {
                         this.loadingState = LoadingState.FirstRender;
                         this.selectedContext = 'none';
                       }}
-                      >${this.selectedResourceName}</sl-tab
+                      >${this.selectedResourceName || "No Applets Installed"}</sl-tab
                     >
                     <div
                       slot="buttons"
                       class="tabs">
-                        ${contexts &&
-                          contexts.map(
+                        ${contexts ?
+                          html`<div style="display: flex">${contexts.map(
                             context =>
                             this.context_ehs[context] ? 
                               html`<nh-tab-button><sl-tab
@@ -358,20 +355,19 @@ export class SensemakerDashboard extends NHComponentShoelace {
                                 >${context}</sl-tab-panel></nh-tab-button>`
                                 : null,
                           )}
+                          <nh-button-group
+                            class="dashboard-action-buttons"
+                            .direction=${"horizontal"}
+                            .fixedFirstItem=${false}
+                            .addItemButton=${false}
+                          >
+                          <div slot="buttons">
+                            <nh-button .clickHandler=${async () => { await this.contextSelector.requestUpdate("resourceAssessments");  // TODO test this
+                          }} .iconImageB64=${b64images.icons.refresh} .variant=${"neutral"} .size=${"icon"}></nh-button>
+                          </div>
+                          </nh-button-group></div>` : html``}
                       </div>
                     </nh-context-selector>
-                    <nh-button-group
-                      class="dashboard-action-buttons"
-                      .direction=${"horizontal"}
-                      .fixedFirstItem=${false}
-                      .addItemButton=${false}
-                      slot="primary-action"
-                    >
-                    <div slot="buttons">
-                      <nh-button .clickHandler=${async () => { await this.contextSelector.requestUpdate("resourceAssessments");  // TODO test this
-                    }} .iconImageB64=${b64images.icons.refresh} .variant=${"neutral"} .size=${"icon"}></nh-button>
-                    </div>
-                    </nh-button-group>
                 </nh-page-header-card>
 
                 <sl-tab-panel active class="dashboard-tab-panel" name="resource">
@@ -387,7 +383,7 @@ export class SensemakerDashboard extends NHComponentShoelace {
                       >
                       </dashboard-filter-map>`}
                 </sl-tab-panel>
-                ${contexts &&
+                ${contexts ?
                 contexts.map(context =>
                   {return !(this.context_ehs[context] && encodeHashToBase64(this.context_ehs[context]) == this.selectedContext)
                     ? ''
@@ -413,7 +409,7 @@ export class SensemakerDashboard extends NHComponentShoelace {
                             >
                             </dashboard-filter-map>
                           </sl-tab-panel>`},
-                    )}
+                    ) : html``}
               </sl-tab-group>`}
         </main>
       </div>
@@ -430,7 +426,7 @@ export class SensemakerDashboard extends NHComponentShoelace {
       'sl-tab': SlTab,
       'sl-tab-group': SlTabGroup,
       'sl-tab-panel': SlTabPanel,
-      'sl-alert': SlAlert,
+      'nh-alert': NHAlert,
       'nh-page-header-card': NHPageHeaderCard,
       'nh-button': NHButton,
       'nh-context-selector': ContextSelector,
@@ -469,17 +465,6 @@ export class SensemakerDashboard extends NHComponentShoelace {
       .container main::-webkit-scrollbar   {
         width: 0;
       }
-      .alert-wrapper {
-        height: 100%;
-        display: grid;
-        place-content: center;
-        align-content: start;
-        padding: 4rem calc(1px * var(--nh-spacing-lg));
-      }
-      .alert::part(base) {
-        height: 8rem;
-        width: 100%;
-      }
 
       /* Side scrolling **/
       .dashboard-tab-group {
@@ -493,6 +478,12 @@ export class SensemakerDashboard extends NHComponentShoelace {
 
       nh-page-header-card {
         width: 100%;
+      }
+
+      .alert-wrapper {
+        display: flex;
+        width: 100%;
+        padding-top: calc(1px * var(--nh-spacing-md));
       }
 
       /** Tab Nav **/
@@ -518,8 +509,8 @@ export class SensemakerDashboard extends NHComponentShoelace {
       }
 
       /* Tab hover effect */
-       [slot="buttons"] :hover::part(base)::after,
-       [slot="buttons"] .active::part(base)::after {
+      [slot="buttons"] :hover::part(base)::after,
+      [slot="buttons"] .active::part(base)::after {
         position: absolute;
         background-color: var(--nh-theme-bg-canvas);
         bottom: calc(-1px * var(--nh-spacing-sm));
