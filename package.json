@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@holochain-playground/cli": "^0.0.11",
+    "@tauri-apps/cli": "^1.4.0",
     "concurrently": "^6.2.1",
     "concurrently-repeat": "^0.0.1",
     "cross-env": "^7.0.3",
