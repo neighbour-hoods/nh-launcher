@@ -12,15 +12,6 @@ import { RenderBlock } from '../render-block'
 
 customElements.define('render-block', RenderBlock)
 
-// :TODO: This should really be wrapped up into a helper generator fn in some
-//        shared @neighbourhoods/applet-framework module.
-const renderer = (tagName, classDef) => (i: HTMLElement, r: CustomElementRegistry) => {
-  if (r.get(tagName) !== classDef) {
-    r.define(tagName, classDef)
-  }
-  i.innerHTML = `<${tagName} />`
-}
-
 describe('RenderBlock', () => {
   const initialRender = async (theHTML) => {
     return await fixture(theHTML)
@@ -50,8 +41,8 @@ describe('RenderBlock', () => {
 
     test(`They should be able to render same child elements`, async () => {
       const harness = await initialRender(testHtml`<div>
-        <render-block .renderer=${renderer('child-1', Child1)}></render-block>
-        <render-block .renderer=${renderer('child-2', Child2)}></render-block>
+        <render-block .elementClass=${Child1} elementTag="child-1"></render-block>
+        <render-block .elementClass=${Child2} elementTag="child-2"></render-block>
       </div>`)
 
       const children = harness.querySelectorAll('render-block')
@@ -82,7 +73,7 @@ describe('RenderBlock', () => {
 
       render() {
         return html`<div>
-          <render-block .renderer=${renderer('child-3', Child3)}></render-block>
+          <render-block elementTag="child-3" .elementClass=${Child3}></render-block>
           <child-3></child-3>
         </div>`
       }
@@ -90,15 +81,15 @@ describe('RenderBlock', () => {
 
     test(`RenderBlock children should be able to be rendered recursively no matter their parent elements`, async () => {
       const harness = await initialRender(testHtml`<div>
-        <render-block .renderer=${renderer('dynamic-child', DynamicRenderingChild)}></render-block>
-        <render-block .renderer=${renderer('child-3', Child3)}></render-block>
+        <render-block elementTag="dynamic-child" .elementClass=${DynamicRenderingChild}></render-block>
+        <render-block elementTag="child-3" .elementClass=${Child3}></render-block>
       </div>`)
 
       const child = harness.querySelectorAll('render-block')[0]
       expect(child).shadowDom.to.equal('<div><dynamic-child /></div>', { ignoreAttributes: [{ tags: ['div'], attributes: ['style'] }] })
 
       const nestedRoot = child?.shadowRoot?.querySelector('dynamic-child')
-      expect(nestedRoot).shadowDom.to.equal('<div><render-block></render-block><child-3></child-3></div>')
+      expect(nestedRoot).shadowDom.to.equal('<div><render-block elementTag="child-3"></render-block><child-3></child-3></div>')
       expect(nestedRoot?.shadowRoot?.querySelector('child-3')).shadowDom.to.equal('<nh-button label="Child 3" />')
 
       const nestedChild = nestedRoot?.shadowRoot?.querySelector('render-block')
@@ -126,7 +117,7 @@ describe('RenderBlock', () => {
       }
 
       render() {
-        return html`<render-block .renderer=${renderer('child-4', Child4)}></render-block>`
+        return html`<render-block elementTag="child-4" .elementClass=${Child4}></render-block>`
       }
     }
 
@@ -136,7 +127,7 @@ describe('RenderBlock', () => {
       }
 
       render() {
-        return html`<render-block .renderer=${renderer('child-4', Child4)}></render-block>`
+        return html`<render-block elementTag="child-4" .elementClass=${Child4}></render-block>`
       }
     }
 
