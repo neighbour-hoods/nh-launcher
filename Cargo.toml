@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "src-tauri",
   "dnas/lobby/zomes/coordinator/*",
   "dnas/lobby/zomes/integrity/*",
   "dnas/we/zomes/coordinator/*",
