@@ -5,13 +5,20 @@ import { Renderer } from "@neighbourhoods/nh-launcher-applet";
 
 export class RenderBlock extends LitElement {
   @property()
-  renderer!: Renderer;
+  elementClass!: HTMLElement & CustomElementConstructor
 
-  registry?: CustomElementRegistry;
+  @property({ attribute: true })
+  elementTag!: string
+
+  registry?: CustomElementRegistry
 
   renderRenderer(element: Element | undefined) {
     if (element) {
-      this.renderer(element as HTMLElement, this.registry || customElements);
+      const r = this.registry!
+      if (r.get(this.elementTag) !== this.elementClass) {
+        r.define(this.elementTag, this.elementClass)
+      }
+      element.innerHTML = `<${this.elementTag} />`
     }
   }
 
