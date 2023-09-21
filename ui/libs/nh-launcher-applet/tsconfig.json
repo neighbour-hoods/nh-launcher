@@ -7,6 +7,5 @@
     "declaration": true,
     "incremental": true
   },
-
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts","**/*.d.ts"],
 }
