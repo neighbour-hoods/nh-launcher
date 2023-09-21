@@ -1,19 +1,20 @@
-import { LitElement } from "lit"
+import { LitElement, TemplateResult, html } from "lit"
 import { Task } from "@lit-labs/task"
 import { property } from "lit/decorators.js";
 import { RoleName, ZomeName, FunctionName, EntryHash, AppAgentCallZomeRequest } from "@holochain/client"
 
-// NOTE: should this be moved into our design systems components?
-export class ResourceView extends LitElement {
-  roleName!: RoleName
-  zomeName!: ZomeName
-  functionName!: FunctionName
+export type Resource = any
+
+export abstract class ResourceView extends LitElement {
+  abstract roleName: RoleName
+  abstract zomeName: ZomeName
+  abstract functionName: FunctionName
 
   @property()
   resourceEh!: EntryHash
 
   @property()
-  resourceResolver!: (request: AppAgentCallZomeRequest) => Promise<any>
+  resourceResolver!: (request: AppAgentCallZomeRequest) => Promise<Resource>
 
   _fetchResourceTask = new Task(
     this,
@@ -28,4 +29,17 @@ export class ResourceView extends LitElement {
     () => []
   );
 
+  abstract renderPending(): TemplateResult;
+  abstract renderComplete(resource: Resource): TemplateResult;
+  abstract renderError(e: unknown): TemplateResult;
+
+  render() {
+    return html`
+      ${this._fetchResourceTask.render({
+        pending: this.renderPending,
+        complete: this.renderComplete,
+        error: this.renderError,
+      })}
+    `
+  }
 }
