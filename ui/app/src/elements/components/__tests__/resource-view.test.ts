@@ -7,28 +7,27 @@ import { vi } from 'vitest';
 import { AppAgentCallZomeRequest } from '@holochain/client';
 
 class TodoView extends ResourceView {
-    roleName = 'todo';
-    zomeName = 'todos';
-    functionName = 'get_todo';
+  roleName = 'todo';
+  zomeName = 'todos';
+  functionName = 'get_todo';
 
-    renderPending() {
+  renderPending() {
     return html` <div class="loading-state">Loading...</div> `;
-    }
-    renderComplete(resource: object): TemplateResult {
+  }
+  renderComplete(resource: object): TemplateResult {
     return html` <div class="resolved-state">${JSON.stringify(resource)}</div> `;
-    }
-
-    renderError(e: unknown): TemplateResult {
+  }
+  renderError(e: unknown): TemplateResult {
     return html` <div class="error-state">${JSON.stringify(e)}</div> `;
-    }
+  }
 }
 customElements.define('todo-view', TodoView);
 
 describe('ResourceView', () => {
   describe('Given a TodoView component that extends ResourceView', () => {
     test(`It renders the loading state when the resolver hasn't resolved.`, async () => {
-      const mockResourceResolver = vi.fn((_request: AppAgentCallZomeRequest) =>
-        new Promise(() => {})
+      const mockResourceResolver = vi.fn(
+        (_request: AppAgentCallZomeRequest) => new Promise(() => {}),
       );
       const harness = await fixture(testHtml`
         <div>
@@ -39,7 +38,26 @@ describe('ResourceView', () => {
 
       const children = harness.querySelectorAll('todo-view');
       expect(children.length).to.equal(1);
-      expect(children[0].shadowRoot?.querySelector('div')?.className).to.equal("loading-state");
+      expect(children[0].shadowRoot?.querySelector('div')?.className).to.equal('loading-state');
+    });
+    test(`It renders the complete state when the resolver has resolved.`, async () => {
+      const todoItem = {
+        description: 'A todo item',
+        completed: false,
+      };
+      const mockResourceResolver = vi.fn(
+        (_request: AppAgentCallZomeRequest) => Promise.resolve(todoItem)
+      );
+      const harness = await fixture(testHtml`
+        <div>
+            <todo-view
+                .resourceResolver=${mockResourceResolver}
+            ></todo-view>
+        </div>`);
+
+      const children = harness.querySelectorAll('todo-view');
+      expect(children.length).to.equal(1);
+      expect(children[0].shadowRoot?.querySelector('div')?.className).to.equal('resolved-state');
     });
   });
 });
