@@ -11,7 +11,7 @@ export type Renderer = (
   registry: CustomElementRegistry
 ) => void;
 
-export type ResourceView = (
+type ResourceView = (
   element: HTMLElement,
   resourceIdentifier: EntryHash,
 ) => void;
@@ -50,3 +50,5 @@ export interface AppletInfo {
   neighbourhoodInfo: NeighbourhoodInfo,
   appInfo: AppInfo,
 }
+
+export * from "./resource-view";
