@@ -18,7 +18,7 @@ class TodoView extends ResourceView {
     return html` <div class="resolved-state">${JSON.stringify(resource)}</div> `;
   }
   renderError(e: unknown): TemplateResult {
-    return html` <div class="error-state">${JSON.stringify(e)}</div> `;
+    return html` <div class="error-state"></div> `;
   }
 }
 customElements.define('todo-view', TodoView);
@@ -58,6 +58,22 @@ describe('ResourceView', () => {
       const children = harness.querySelectorAll('todo-view');
       expect(children.length).to.equal(1);
       expect(children[0].shadowRoot?.querySelector('div')?.className).to.equal('resolved-state');
+    });
+    test.skip(`It renders the error state when the resolver rejects.`, async () => {
+      const mockResourceResolver = vi.fn(
+        (_request: AppAgentCallZomeRequest) => Promise.reject(Error("error fetching resource"))
+      );
+
+      const harness = await fixture(testHtml`
+        <div>
+            <todo-view
+                .resourceResolver=${mockResourceResolver}
+            ></todo-view>
+        </div>`);
+
+      const children = harness.querySelectorAll('todo-view');
+      expect(children.length).to.equal(1);
+      expect(children[0].shadowRoot?.querySelector('div')?.className).to.equal('error-state');
     });
   });
 });
