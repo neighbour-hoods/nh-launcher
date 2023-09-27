@@ -49,7 +49,7 @@ importers:
       '@lit-labs/task': ^1.1.2
       '@msgpack/msgpack': ^2.7.2
       '@neighbourhoods/client': 0.0.6
-      '@neighbourhoods/design-system-components': file:../../../design-system-components/components/design-system
+      '@neighbourhoods/design-system-components': 0.0.11
       '@neighbourhoods/design-system-styles': ^0.0.5
       '@neighbourhoods/nh-launcher-applet': workspace:*
       '@neighbourhoods/testing-utils': 0.0.1
@@ -96,7 +96,7 @@ importers:
       '@lit-labs/task': 1.1.3
       '@msgpack/msgpack': 2.8.0
       '@neighbourhoods/client': 0.0.6
-      '@neighbourhoods/design-system-components': file:../design-system-components/components/design-system
+      '@neighbourhoods/design-system-components': 0.0.11
       '@neighbourhoods/design-system-styles': 0.0.5
       '@neighbourhoods/nh-launcher-applet': link:../libs/nh-launcher-applet
       '@scoped-elements/material-web': 0.0.19
@@ -2535,6 +2535,17 @@ packages:
       svelte: 3.59.2
     transitivePeerDependencies:
       - ws
+
+  /@neighbourhoods/design-system-components/0.0.11:
+    resolution: {integrity: sha512-h2ut3QhZrmUeV1idmMxqXyYfkCJ5ixan1cAkcuoCa5UHugaZabyktxz8CyYNEw/hCb4Yt7ek5oWxPkSdSJN8rQ==}
+    dependencies:
+      '@lit-labs/scoped-registry-mixin': 1.0.1
+      '@neighbourhoods/design-system-styles': 0.0.5
+      '@shoelace-style/shoelace': 2.8.0
+      lit: 2.8.0
+    transitivePeerDependencies:
+      - '@types/react'
+    dev: false
 
   /@neighbourhoods/design-system-styles/0.0.3:
     resolution: {integrity: sha512-umGWJFE0ielqTw4T7P4yMmXabZkPDpnXa/zqiet//ogSr0o3t7RxtIYf8yj5SbHT1rZnSm/bH8oePy++1xZ0pQ==}
@@ -7208,19 +7219,6 @@ packages:
       compress-commons: 4.1.2
       readable-stream: 3.6.2
     dev: true
-
-  file:../design-system-components/components/design-system:
-    resolution: {directory: ../design-system-components/components/design-system, type: directory}
-    name: '@neighbourhoods/design-system-components'
-    version: 0.0.11
-    dependencies:
-      '@lit-labs/scoped-registry-mixin': 1.0.1
-      '@neighbourhoods/design-system-styles': 0.0.5
-      '@shoelace-style/shoelace': 2.8.0
-      lit: 2.8.0
-    transitivePeerDependencies:
-      - '@types/react'
-    dev: false
 
   github.com/adaburrows/table-web-component/6ac0c957aed1e2233c2d98f20ec56a4f20e110d4:
     resolution: {tarball: https://codeload.github.com/adaburrows/table-web-component/tar.gz/6ac0c957aed1e2233c2d98f20ec56a4f20e110d4}
