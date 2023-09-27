@@ -19,12 +19,13 @@ export abstract class ResourceView extends LitElement {
   _fetchResourceTask = new Task(
     this,
     async () => {
-      return await this.resourceResolver({
+      const request: AppAgentCallZomeRequest = {
         role_name: this.roleName,
         zome_name: this.zomeName,
         fn_name: this.functionName,
         payload: this.resourceEh,
-      })
+      }
+      return await this.resourceResolver(request)
     },
     () => []
   );
