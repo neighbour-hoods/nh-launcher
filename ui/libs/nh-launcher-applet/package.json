@@ -17,8 +17,10 @@
   "dependencies": {
     "@holochain/client": "0.12.0",
     "@holochain-open-dev/profiles": "0.16.1",
+    "@holochain-open-dev/utils": "^0.8.0",
     "@neighbourhoods/client": "0.0.6",
     "@lit-labs/task": "^1.1.2",
+    "@webcomponents/scoped-custom-element-registry": "^0.0.9",
     "lit": "^2.2.0"
   },
   "devDependencies": {
