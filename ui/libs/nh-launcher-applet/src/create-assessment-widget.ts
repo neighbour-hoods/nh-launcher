@@ -1,4 +1,4 @@
-import { LitElement } from "lit"
+import { LitElement, TemplateResult } from "lit"
 import { property } from "lit/decorators.js";
 import { EntryHash } from "@holochain/client"
 import { CreateAssessmentInput } from "@neighbourhoods/client";
@@ -25,4 +25,5 @@ export abstract class CreateAssessmentWidget extends LitElement {
       composed: true,
     }))
   }
+  abstract render(): TemplateResult;
 }
