@@ -5,7 +5,7 @@ import { Assessment } from "@neighbourhoods/client";
 
 export abstract class DisplayAssessmentWidget extends LitElement {
   @property()
-  assessment!: Assessment
+  assessment: Assessment | undefined
 
   abstract render(): TemplateResult;
 }

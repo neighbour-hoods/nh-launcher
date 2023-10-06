@@ -1,25 +1,30 @@
 import './polyfills'
 import { LitElement, html } from "lit"
+import { html as staticHtml, unsafeStatic } from "lit/static-html.js"
 import { property } from "lit/decorators.js";
-import { EntryHash } from "@holochain/client"
-import { Assessment } from "@neighbourhoods/client";
+import { EntryHash, EntryHashB64, encodeHashToBase64 } from "@holochain/client"
+import { Assessment, RangeKind } from "@neighbourhoods/client";
 import { CreateAssessmentWidget } from "./create-assessment-widget";
 import { DisplayAssessmentWidget } from "./display-assessment-widget";
-import { EntryHashMap } from "@holochain-open-dev/utils";
 
+export interface WidgetBundle<WidgetComponent extends LitElement> {
+  name: string,
+  range: RangeKind,
+  component: new () => WidgetComponent,
+}
 
-interface AssessmentWidgetConfig {
+export interface AssessmentWidgetConfig {
   inputAssessmentWidget: {
     dimensionEh: EntryHash,
-    widgetEh: new () => CreateAssessmentWidget,
+    widget: WidgetBundle<CreateAssessmentWidget>,
   },
   outputAssessmentWidget: {
     dimensionEh: EntryHash,
-    widgetEh: new () => DisplayAssessmentWidget,
+    widget: WidgetBundle<DisplayAssessmentWidget>,
   },
 }
 
-type AssessmentWidgetTrayConfig = EntryHashMap<AssessmentWidgetConfig>
+export type AssessmentWidgetTrayConfig = Map<EntryHashB64, AssessmentWidgetConfig>
 
 export class ResourceAssessmentTray extends LitElement {
   @property()
@@ -32,30 +37,52 @@ export class ResourceAssessmentTray extends LitElement {
   resourceDefEh!: EntryHash
 
   @property()
-  outputAssessments!: EntryHashMap<Assessment>
+  outputAssessments!: Map<EntryHashB64, Assessment>
+
+  registry?: CustomElementRegistry
+
+  override createRenderRoot() {
+    this.registry = new CustomElementRegistry()
+
+    const renderRoot = this.attachShadow({
+      mode: 'open',
+      customElements: this.registry,
+    });
+
+    return renderRoot;
+  }
+
+  registerScopedComponents() {
+    this.assessmentWidgetTrayConfig.forEach(({inputAssessmentWidget, outputAssessmentWidget}) => {
+      this.registry!.define(inputAssessmentWidget.widget.name, inputAssessmentWidget.widget.component);
+      this.registry!.define(outputAssessmentWidget.widget.name, outputAssessmentWidget.widget.component);
+    })
+  }
 
   render() {
+    this.registerScopedComponents();
+
+    const widgets = staticHtml`
+      ${
+        Array.from(this.assessmentWidgetTrayConfig.values()).map(({inputAssessmentWidget, outputAssessmentWidget}) => {
+          const outputHtml = staticHtml`
+              <${unsafeStatic(inputAssessmentWidget.widget.name)}
+                .${unsafeStatic('dimensionEh')}=${inputAssessmentWidget.dimensionEh}
+                .${unsafeStatic('resourceEh')}=${this.resourceEh}
+                .${unsafeStatic('resourceDefEh')}=${this.resourceDefEh}
+              ></${unsafeStatic(inputAssessmentWidget.widget.name)}>
+              <${unsafeStatic(outputAssessmentWidget.widget.name)}
+                .${unsafeStatic('assessment')}=${this.outputAssessments.get(encodeHashToBase64(outputAssessmentWidget.dimensionEh))}
+              ></${unsafeStatic(outputAssessmentWidget.widget.name)}>
+          `
+          return outputHtml
+        })
+      }
+    `
     return html`
-      <div>
-        ${
-          Object.values(this.assessmentWidgetTrayConfig).map(({inputAssessmentWidget, outputAssessmentWidget}: AssessmentWidgetConfig) => {
-            const inputAssessmentComponent = new inputAssessmentWidget.widgetEh();
-            inputAssessmentComponent.dimensionEh = inputAssessmentWidget.dimensionEh;
-            inputAssessmentComponent.resourceEh = this.resourceEh;
-            inputAssessmentComponent.resourceDefEh = this.resourceDefEh;
-
-            const outputAssessmentComponent = new outputAssessmentWidget.widgetEh();
-            outputAssessmentComponent.assessment = this.outputAssessments.get(outputAssessmentWidget.dimensionEh);
-
-            return html`
-              <div>
-                ${inputAssessmentComponent.render()}
-                ${outputAssessmentComponent.render()}
-              </div>
-            `
-          })
-        }
-      </div>
+    <div class="widget-wrapper">
+      ${widgets}
+    </div>
     `
   }
 }

@@ -52,3 +52,6 @@ export interface AppletInfo {
 }
 
 export * from "./resource-view";
+export * from "./create-assessment-widget";
+export * from "./display-assessment-widget";
+export * from "./resource-assessment-tray";
