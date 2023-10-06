@@ -41,6 +41,7 @@ const outputAssessment: Assessment = {
 
 customElements.define('resource-assessment-tray', ResourceAssessmentTray);
 customElements.define('importance-assessment-widget', ImportanceAssessmentWidget);
+customElements.define('total-importance-widget', TotalImportanceWidget);
 
 describe('ResourceAssessmentTray', () => {
   describe('Given a ResourceAssessmentTray that takes in one pair of input/output dimension widgets', () => {
@@ -103,6 +104,15 @@ describe('ResourceAssessmentTray', () => {
         maybe_input_dataset: null,
       }
       expect(event.detail).to.deep.equal(expectedInput);
+    });
+
+    test(`It renders the output assessment value in the provided display assessment widget.`, async () => {
+      const harness = await fixture(trayHtml);
+
+      const resourceAssessmentTray = harness.querySelectorAll('resource-assessment-tray')[0];
+      const totalImportanceWidget = resourceAssessmentTray.shadowRoot?.querySelectorAll('total-importance-widget')[0]!;
+      const displayAssessmentDiv = totalImportanceWidget.shadowRoot?.querySelectorAll('div')[0]!;
+      expect(displayAssessmentDiv).dom.to.equal('<div class="display-assessment-div">1</div>');
     });
   });
 });
