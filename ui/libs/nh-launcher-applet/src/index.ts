@@ -4,44 +4,17 @@ import {
   AppAgentClient,
   EntryHash,
 } from "@holochain/client";
-import { AppletConfigInput, ConcreteAssessDimensionWidget, ConcreteDisplayDimensionWidget, SensemakerStore } from "@neighbourhoods/client";
-
-export type Renderer = (
-  rootElement: HTMLElement,
-  registry: CustomElementRegistry
-) => void;
-
-type ResourceView = (
-  element: HTMLElement,
-  resourceIdentifier: EntryHash,
-) => void;
-
-export interface AppletRenderers {
-  full: Renderer;
-  resourceRenderers: {
-    [resourceDefName: string]: ResourceView;
-  }
-}
+import { AppletConfigInput, SensemakerStore } from "@neighbourhoods/client";
+import { WidgetBundle } from "./resource-assessment-tray";
+import { CreateAssessmentWidget } from "./create-assessment-widget";
+import { DisplayAssessmentWidget } from "./display-assessment-widget";
+import { FullAppletView } from "./full-applet-view";
+import { ResourceView } from "./resource-view";
 
 export interface NeighbourhoodServices {
   profilesStore?: ProfilesStore;  // in case of cross-we renderers the profilesStore may not be required
   sensemakerStore?: SensemakerStore;
 }
-
-export interface NeighbourhoodApplet {
-  appletRenderers: (
-    appAgentWebsocket: AppAgentClient,
-    neighbourhoodStore: NeighbourhoodServices,
-    appletInfo: AppletInfo[],
-  ) => Promise<AppletRenderers>;
-  appletConfig: AppletConfigInput;
-  widgetPairs: {
-    assess: typeof ConcreteAssessDimensionWidget,
-    display: typeof ConcreteDisplayDimensionWidget,
-    compatibleDimensions: string[],
-  }[]
-}
-
 export interface NeighbourhoodInfo {
   logoSrc: string;
   name: string;
@@ -51,7 +24,20 @@ export interface AppletInfo {
   appInfo: AppInfo,
 }
 
+export interface NeighbourhoodApplet {
+  appletConfig: AppletConfigInput;
+  viewElements: {
+    full: FullAppletView,
+    resourceViews: {
+      [resourceDefName: string]: ResourceView,
+    }
+    widgets: WidgetBundle<CreateAssessmentWidget | DisplayAssessmentWidget>[]
+  }
+}
+
+
 export * from "./resource-view";
 export * from "./create-assessment-widget";
 export * from "./display-assessment-widget";
 export * from "./resource-assessment-tray";
+export * from "./full-applet-view";
