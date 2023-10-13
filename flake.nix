@@ -30,10 +30,29 @@
               inputsFrom = [
                 inputs'.holochain-flake.devShells.holonix
               ];
-              packages = [
-                pkgs.nodejs-18_x
-                # more packages go here
-              ];
+              packages = (with pkgs; [
+                # pin client app Node version
+                nodejs-18_x
+              ])
+              # for Tauri compilation
+              ++ (pkgs.lib.optionals pkgs.stdenv.isLinux
+                (with pkgs; [
+                  webkitgtk.dev
+                  gdk-pixbuf
+                  gtk3
+                ]))
+              ++ pkgs.lib.optionals pkgs.stdenv.isDarwin
+                # :TODO: doesn't like `self`, fix this
+                []
+                # (with self'.legacyPackages.apple_sdk'.frameworks; [
+                #   AppKit
+                #   CoreFoundation
+                #   CoreServices
+                #   Security
+                #   IOKit
+                #   WebKit
+                # ])
+              ;
             };
           };
       };

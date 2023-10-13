@@ -1,10 +1,14 @@
 [workspace]
 members = [
-  "src-tauri",
   "dnas/lobby/zomes/coordinator/*",
   "dnas/lobby/zomes/integrity/*",
   "dnas/we/zomes/coordinator/*",
   "dnas/we/zomes/integrity/*",
+]
+exclude = [
+  # :NOTE: Excluded "src-tauri" which builds to different toolchains.
+  #        Can be added when https://doc.rust-lang.org/cargo/reference/unstable.html#per-package-target stabilises.
+  "src-tauri"
 ]
 resolver = "2"
 
