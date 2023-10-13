@@ -1,17 +1,11 @@
 import { css, CSSResult, html } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
-import { NHButton, NHCard, NHComponentShoelace } from '@neighbourhoods/design-system-components';
-import { contextProvided } from '@lit-labs/context';
+import { NHButton, NHCard, NHComponentShoelace, NHSelectAvatar } from '@neighbourhoods/design-system-components';
 import { Profile, ProfilesStore, profilesStoreContext } from '@holochain-open-dev/profiles';
 import { StoreSubscriber } from '@holochain-open-dev/stores';
 import { SlInput, SlSpinner } from '@scoped-elements/shoelace';
 import { object, string, number, date, InferType } from 'yup';
-import { SelectAvatar } from '@holochain-open-dev/elements';
-
-function isDataURL(s) {
-  return !!s.match(isDataURL.regex);
-}
-isDataURL.regex = /^\s*data:([a-z]+\/[a-z0-9\-\+]+(;[a-z\-]+\=[a-z0-9\-]+)?)?(;base64)?,[a-z0-9\!\$\&\'\,\(\)\*\+\,\;\=\-\.\_\~\:\@\/\?\%\s]*\s*$/i;
+import { isDataURL } from '../helpers/functions';
 
 export class NHCreateProfile extends NHComponentShoelace {
   @property()
@@ -61,8 +55,10 @@ export class NHCreateProfile extends NHComponentShoelace {
       
       const errorDOM = root.querySelectorAll("label[name=" + err.path + "]")
       if(errorDOM.length == 0) return;
-      errorDOM[0].textContent = '*';
-      const slInput : any = errorDOM[0].previousElementSibling;
+      const element : any = errorDOM[0];
+      element.textContent = '*';
+      element.style.display = 'flex';
+      const slInput : any = element.previousElementSibling;
       slInput.setCustomValidity(err.message)
       slInput.reportValidity()
     })
@@ -96,11 +92,13 @@ export class NHCreateProfile extends NHComponentShoelace {
     return html`
       <nh-card .theme=${'dark'} .textSize=${"md"} .hasPrimaryAction=${true} .title=${'Create Profile'} .footerAlign=${"r"}>
         <div class="content">
-          <select-avatar
+          <nh-select-avatar
             name="image"
-            style="margin-left: 1rem; width: 6rem; transform: scale(1.5, 1.2); margin-top: 1rem; }"
+            style="display: flex; margin-right: calc(1px * var(--nh-spacing-xl))"
+            shape=${"circle"}
+            .label=${""} 
             @avatar-selected=${(e: CustomEvent) => this.onChangeValue(e)}
-          ></select-avatar>
+          ></nh-select-avatar>
           <sl-input name="nickname" required @sl-input=${(e: CustomEvent) => this.onChangeValue(e)} value=${this.user.nickname} placeholder=${"Enter a name"}></sl-input>
           <label class="error" for="nickname" name="nickname"></label>
         </div>
@@ -124,7 +122,7 @@ export class NHCreateProfile extends NHComponentShoelace {
       'nh-card': NHCard,
       'nh-button': NHButton,
       'sl-input': SlInput,
-      "select-avatar": SelectAvatar,
+      "nh-select-avatar": NHSelectAvatar,
       "sl-spinner": SlSpinner ,
     };
   }
@@ -144,7 +142,7 @@ export class NHCreateProfile extends NHComponentShoelace {
       }
 
       label {
-        display: flex;
+        display: none;
         padding: 0 8px;
         flex: 1;
         flex-grow: 0;
