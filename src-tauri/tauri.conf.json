@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "build": {
-    "beforeBuildCommand": "cd ui/app && npm run build",
-    "beforeDevCommand": "AGENTS=1 npm run launch:dev",
+    "beforeBuildCommand": "npm run build:webapp && npm run build:happ && npm run build:nh-launcher-applet",
+    "beforeDevCommand": "UI_PORT=8888 AGENTS=1 npm run dev:services",
     "devPath": "http://localhost:8888",
     "distDir": "../ui/app/dist"
   },
