@@ -42,6 +42,7 @@ import { NHSensemakerSettings } from './elements/dashboard/nh-sensemaker-setting
 import { WithProfile } from './elements/components/profile/with-profile';
 import { b64images } from '@neighbourhoods/design-system-styles';
 import { provideMatrix, provideAppletInstances } from './matrix-helpers.js';
+import { NHGlobalConfig } from './nh-global-config';
 
 export class MainDashboard extends NHComponentShoelace {
   @contextProvided({ context: matrixContext, subscribe: true })
@@ -240,8 +241,7 @@ export class MainDashboard extends NHComponentShoelace {
     if (this._dashboardMode === DashboardMode.MainHome) {
       return html` <home-screen style="display: flex; flex: 1;"></home-screen> `;
     } else if (this._dashboardMode === DashboardMode.NHGlobalConfig) {
-      console.log('this._dashboardMode :>> ', this._dashboardMode);
-      return html`Hello`
+      return html`<nh-global-config></nh-global-config>`
     } else if (this._dashboardMode === DashboardMode.WeGroupHome) {
       return html`
         <we-group-context .weGroupId=${this._selectedWeGroupId}>
@@ -939,6 +939,7 @@ export class MainDashboard extends NHComponentShoelace {
       'nh-button': NHButton,
       'nh-profile-card': NHProfileCard,
       'sensemaker-dashboard': SensemakerDashboard,
+      'nh-global-config': NHGlobalConfig,
       'nh-sensemaker-settings': NHSensemakerSettings,
       'applet-class-renderer': AppletClassRenderer,
       'applet-instance-renderer': AppletInstanceRenderer,
