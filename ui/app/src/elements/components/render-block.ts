@@ -1,7 +1,6 @@
 import { ref } from "lit/directives/ref.js";
 import { css, html, LitElement } from "lit";
 import { property } from "lit/decorators.js";
-import { Renderer } from "@neighbourhoods/nh-launcher-applet";
 
 export class RenderBlock extends LitElement {
   @property()
