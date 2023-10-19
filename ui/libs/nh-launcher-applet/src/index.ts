@@ -27,12 +27,12 @@ export interface AppletInfo {
 export interface NeighbourhoodApplet {
   appletConfig: AppletConfigInput;
   viewElements: {
-    full: FullAppletView,
+    full: new () => FullAppletView,
     resourceViews: {
-      [resourceDefName: string]: ResourceView,
+      [resourceDefName: string]: new () => ResourceView,
     }
-    widgets: WidgetBundle<CreateAssessmentWidget | DisplayAssessmentWidget>[]
   }
+  widgets: WidgetBundle<CreateAssessmentWidget | DisplayAssessmentWidget>[]
 }
 
 
