@@ -54,6 +54,7 @@ import {
   AppletInfo,
   NeighbourhoodServices,
   NeighbourhoodInfo,
+  AppBlockDelegate,
 } from "@neighbourhoods/nh-launcher-applet";
 import { SensemakerStore, SensemakerService } from "@neighbourhoods/client";
 import {
@@ -2165,5 +2166,27 @@ export class MatrixStore {
       .flatMap((resource) => Object.entries(resource))
       .find(([resourceDefName, resourceDefEhFromConfig]) => encodeHashToBase64(resourceDefEhFromConfig) === encodeHashToBase64(resourceDefEh))![0];
     return appletInstanceInfo!.views!.resourceRenderers[resourceDefName];
+  }
+
+  /**
+   * helper for constructing `AppBlockDelegate` given an applet id
+   */
+  appBlockDelegate(appletId: EntryHash): AppBlockDelegate {
+    const weGroupId = this.getWeGroupInfoForAppletInstance(appletId).cell_id[0];
+    const [_weGroupData, appInstanceInfos] = get(this._matrix).get(weGroupId);
+    const appInstanceInfo = appInstanceInfos.find(
+      (info) =>
+        JSON.stringify(info.appletId) === JSON.stringify(appletId)
+    )!;
+    
+    return {
+      appAgentWebsocket: appInstanceInfo.appAgentWebsocket!,
+      appletInfo: [{ 
+        neighbourhoodInfo: this.getWeGroupInfo(weGroupId)!,
+        appInfo: appInstanceInfo.appInfo
+      }],
+      sensemakerStore: get(this.sensemakerStore(weGroupId))!,
+      profilesStore: get(this.profilesStore(weGroupId))!,
+    };
   }
 }
