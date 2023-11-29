@@ -20,7 +20,7 @@ export type UnsubscribeFn = () => void;
 /**
  * A callback function to be called when updates occur
  */
-export type CallbackFn = (_: Assessment) => void;
+export type CallbackFn = (_: Assessment | null) => void;
 
 /**
  * Generic constructor type
@@ -59,8 +59,8 @@ export interface AppBlockDelegate {
  * The minimal interface needed for an assessment widget
  */
 export interface InputAssessmentWidgetDelegate {
-  getLatestAssessmentForUser(): Assessment // get the latest assessment value the user created (or none if never assessed or invalidated)
-  subscribe(_:CallbackFn): UnsubscribeFn // subscribe to when the current assessment changes
+  getLatestAssessmentForUser(resourceEh: EntryHash, dimensionEh: EntryHash): Assessment | null // get the latest assessment value the user created (or none if never assessed or invalidated)
+  subscribe(_:CallbackFn, resourceEh: EntryHash, dimensionEh: EntryHash): UnsubscribeFn // subscribe to when the current assessment changes
   createAssessment(assessment: Assessment): Assessment // create an assessment
   invalidateLastAssessment(): void // invalidate the last created assessment [ignore for now, we only support creating new assessments]
 }
@@ -69,8 +69,8 @@ export interface InputAssessmentWidgetDelegate {
  * The minimal interface needed to render computed assessments
  */
 export interface OutputAssessmentWidgetDelegate {
-  getLatestAssessment(): Assessment // get the latest computed assessment value (regardless of user, for computed dimensions)
-  subscribe(_:CallbackFn): UnsubscribeFn // subscribe to when the current computed dimension changes
+  getLatestAssessment(resourceEh: EntryHash, dimensionEh: EntryHash): Assessment | null // get the latest computed assessment value (regardless of user, for computed dimensions)
+  subscribe(_:CallbackFn, reosurceEh: EntryHash, dimensionEh: EntryHash): UnsubscribeFn // subscribe to when the current computed dimension changes
 }
 
 /**
