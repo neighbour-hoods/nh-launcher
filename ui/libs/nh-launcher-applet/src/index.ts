@@ -52,7 +52,7 @@ export interface AppBlockDelegate {
   appAgentWebsocket: AppAgentClient
   appletInfo: AppletInfo[]
   sensemakerStore: SensemakerStore
-  profileStore: ProfilesStore
+  profilesStore: ProfilesStore
 }
 
 /**
