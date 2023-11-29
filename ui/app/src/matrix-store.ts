@@ -56,8 +56,11 @@ import {
   NeighbourhoodInfo,
   AppBlockDelegate,
   ResourceBlockDelegate,
+  InputAssessmentWidgetDelegate,
+  OutputAssessmentWidgetDelegate,
+  CallbackFn,
 } from "@neighbourhoods/nh-launcher-applet";
-import { SensemakerStore, SensemakerService } from "@neighbourhoods/client";
+import { SensemakerStore, SensemakerService, Assessment } from "@neighbourhoods/client";
 import {
   Applet,
   AppletGui,
@@ -2205,5 +2208,40 @@ export class MatrixStore {
     return {
       appAgentWebsocket: appInstanceInfo.appAgentWebsocket!,
     };
+  }
+
+  /**
+   * helper for input widget delegate construction
+   */
+  inputWidgetDelegate(weGroupId: EntryHash): InputAssessmentWidgetDelegate {
+    let sensemakerStore = get(this.sensemakerStore(weGroupId))!;
+    return {
+      getLatestAssessmentForUser(resourceEh: EntryHash, dimensionEh: EntryHash) {
+        return get(sensemakerStore.myLatestAssessmentAlongDimension(encodeHashToBase64(resourceEh), encodeHashToBase64(dimensionEh)));
+      },
+      subscribe(callback: CallbackFn, resourceEh: EntryHash, dimensionEh: EntryHash) {
+        return sensemakerStore.myLatestAssessmentAlongDimension(encodeHashToBase64(resourceEh), encodeHashToBase64(dimensionEh)).subscribe(callback)
+      },
+      createAssessment(assessment) {
+        let assessmentRecord = sensemakerStore.createAssessment(assessment);
+        return assessment;
+      }, 
+      invalidateLastAssessment() {},
+    }
+  }
+
+  /**
+   * helper for output widget delegate construction
+   */
+  outputWidgetDelegate(weGroupId: EntryHash): OutputAssessmentWidgetDelegate {
+    let sensemakerStore = get(this.sensemakerStore(weGroupId))!;
+    return {
+      getLatestAssessment(resourceEh: EntryHash, dimensionEh: EntryHash) {
+        return get(sensemakerStore.myLatestAssessmentAlongDimension(encodeHashToBase64(resourceEh), encodeHashToBase64(dimensionEh)));
+      },
+      subscribe(callback: CallbackFn, resourceEh: EntryHash, dimensionEh: EntryHash) {
+        return sensemakerStore.myLatestAssessmentAlongDimension(encodeHashToBase64(resourceEh), encodeHashToBase64(dimensionEh)).subscribe(callback)
+      },
+    }
   }
 }
