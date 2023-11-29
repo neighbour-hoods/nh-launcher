@@ -55,6 +55,7 @@ import {
   NeighbourhoodServices,
   NeighbourhoodInfo,
   AppBlockDelegate,
+  ResourceBlockDelegate,
 } from "@neighbourhoods/nh-launcher-applet";
 import { SensemakerStore, SensemakerService } from "@neighbourhoods/client";
 import {
@@ -2187,6 +2188,22 @@ export class MatrixStore {
       }],
       sensemakerStore: get(this.sensemakerStore(weGroupId))!,
       profilesStore: get(this.profilesStore(weGroupId))!,
+    };
+  }
+
+  /**
+   * helper for constructing `ResourceBlockDelegate` given an applet id
+   */
+  resourceBlockDelegate(appletId: EntryHash): ResourceBlockDelegate {
+    const weGroupId = this.getWeGroupInfoForAppletInstance(appletId).cell_id[0];
+    const [_weGroupData, appInstanceInfos] = get(this._matrix).get(weGroupId);
+    const appInstanceInfo = appInstanceInfos.find(
+      (info) =>
+        JSON.stringify(info.appletId) === JSON.stringify(appletId)
+    )!;
+    
+    return {
+      appAgentWebsocket: appInstanceInfo.appAgentWebsocket!,
     };
   }
 }
