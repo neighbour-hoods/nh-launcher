@@ -60,7 +60,7 @@ import {
   OutputAssessmentWidgetDelegate,
   CallbackFn,
 } from "@neighbourhoods/nh-launcher-applet";
-import { SensemakerStore, SensemakerService, Assessment } from "@neighbourhoods/client";
+import { SensemakerStore, SensemakerService, Assessment, CreateAssessmentInput } from "@neighbourhoods/client";
 import {
   Applet,
   AppletGui,
@@ -2222,9 +2222,14 @@ export class MatrixStore {
       subscribe(callback: CallbackFn, resourceEh: EntryHash, dimensionEh: EntryHash) {
         return sensemakerStore.myLatestAssessmentAlongDimension(encodeHashToBase64(resourceEh), encodeHashToBase64(dimensionEh)).subscribe(callback)
       },
-      createAssessment(assessment) {
+      async createAssessment(assessment: CreateAssessmentInput) {
         let assessmentRecord = sensemakerStore.createAssessment(assessment);
-        return assessment;
+        return assessmentRecord.then((assessmentRecord) => {
+          // :TODO: update to latest neighbourhoods/client version 0.0.9 and then remove the ts-ignore
+          //@ts-ignore
+          let entryRecord = new EntryRecord<Assessment>(assessmentRecord);
+          return entryRecord.entry;
+        });
       }, 
       invalidateLastAssessment() {},
     }
