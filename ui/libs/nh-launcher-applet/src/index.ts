@@ -9,7 +9,10 @@ import {
   Assessment,
   ConcreteAssessDimensionWidget,
   ConcreteDisplayDimensionWidget,
-  SensemakerStore
+  SensemakerStore,
+  Range,
+  RangeKind,
+  CreateAssessmentInput,
 } from "@neighbourhoods/client";
 
 /**
@@ -61,7 +64,7 @@ export interface AppBlockDelegate {
 export interface InputAssessmentWidgetDelegate {
   getLatestAssessmentForUser(resourceEh: EntryHash, dimensionEh: EntryHash): Assessment | null // get the latest assessment value the user created (or none if never assessed or invalidated)
   subscribe(_:CallbackFn, resourceEh: EntryHash, dimensionEh: EntryHash): UnsubscribeFn // subscribe to when the current assessment changes
-  createAssessment(assessment: Assessment): Assessment // create an assessment
+  createAssessment(assessment: CreateAssessmentInput): Promise<Assessment> // create an assessment
   invalidateLastAssessment(): void // invalidate the last created assessment [ignore for now, we only support creating new assessments]
 }
 
@@ -78,7 +81,7 @@ export interface OutputAssessmentWidgetDelegate {
  */
 export type InputAssessmentWidgetDefinition = {
   name: string,         // Likely appended to the App name in the dashboard configuration screen
-  range: Range,         // Output components must support a range of [-INF, INF] unless it is used with an AVG.
+  range: RangeKind,         // Output components must support a range of [-INF, INF] unless it is used with an AVG.
   component: Constructor<NHDelegateReceiverComponent<InputAssessmentWidgetDelegate>>, // Intersection of HTML Element and the delegate interface for
   kind: 'input'
 }
@@ -88,48 +91,12 @@ export type InputAssessmentWidgetDefinition = {
  */
 export type OutputAssessmentWidgetDefinition = {
   name: string,         // Likely appended to the App name in the dashboard configuration screen
-  range: Range,         // Output components must support a range of [-INF, INF] unless it is used with an AVG.
+  range: RangeKind,         // Output components must support a range of [-INF, INF] unless it is used with an AVG.
   component: Constructor<NHDelegateReceiverComponent<OutputAssessmentWidgetDelegate>>,
   kind: 'output'
 }
 
 export type AssessmentWidgetDefinition = InputAssessmentWidgetDefinition | OutputAssessmentWidgetDefinition
-
-export type Renderer = (
-  rootElement: HTMLElement,
-  registry: CustomElementRegistry
-) => void;
-
-export type ResourceView = (
-  element: HTMLElement,
-  resourceIdentifier: EntryHash,
-) => void;
-
-export interface AppletRenderers {
-  full: Renderer;
-  resourceRenderers: {
-    [resourceDefName: string]: ResourceView;
-  }
-}
-
-export interface NeighbourhoodServices {
-  profilesStore?: ProfilesStore;  // in case of cross-we renderers the profilesStore may not be required
-  sensemakerStore?: SensemakerStore;
-}
-
-export interface NeighbourhoodApplet {
-  appletRenderers: (
-    appAgentWebsocket: AppAgentClient,
-    neighbourhoodStore: NeighbourhoodServices,
-    appletInfo: AppletInfo[],
-  ) => Promise<AppletRenderers>;
-  appletConfig: AppletConfigInput;
-  widgetPairs: {
-    assess: typeof ConcreteAssessDimensionWidget,
-    display: typeof ConcreteDisplayDimensionWidget,
-    compatibleDimensions: string[],
-  }[]
-}
 
 export interface NeighbourhoodInfo {
   logoSrc: string;
@@ -138,4 +105,10 @@ export interface NeighbourhoodInfo {
 export interface AppletInfo {
   neighbourhoodInfo: NeighbourhoodInfo,
   appInfo: AppInfo,
+}
+export interface NeighbourhoodApplet {
+  appletConfig: AppletConfigInput;
+  appletRenderers: Record<string, Constructor<NHDelegateReceiverComponent<AppBlockDelegate>>>;
+  resourceRenderers: Record<string, Constructor<NHDelegateReceiverComponent<ResourceBlockDelegate>>>;
+  assessmentWidgets: Record<string, AssessmentWidgetDefinition>;
 }
