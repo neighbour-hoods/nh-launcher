@@ -1,5 +1,4 @@
 lockfileVersion: '6.0'
-lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -88,8 +87,8 @@ importers:
         specifier: workspace:*
         version: link:../libs/sensemaker-client
       '@neighbourhoods/design-system-components':
-        specifier: 0.0.14
-        version: 0.0.14(@types/react@18.2.42)
+        specifier: ../../../design-system-components/components/design-system
+        version: link:../../../design-system-components/components/design-system
       '@neighbourhoods/design-system-styles':
         specifier: ^0.0.7
         version: 0.0.7
@@ -2911,22 +2910,6 @@ packages:
     resolution: {integrity: sha512-h9u4u/jiIRKbq25PM+zymTyW6bhTzELvOoUd+AvYriWOAKpLGnIamaET3pnHYoI5iYphAHBI4ayx0MehR+VVPQ==}
     engines: {node: '>= 10'}
 
-  /@neighbourhoods/design-system-components@0.0.14(@types/react@18.2.42):
-    resolution: {integrity: sha512-mpIQqGXG7rqqiq9COc/2nTZWCCjd/ciGOAvQpXE7W1/A0lmzruPVaWWE8GMHCeXAfjxdu0dOSdYTzogrUj6VPg==}
-    dependencies:
-      '@lit-labs/scoped-registry-mixin': 1.0.3
-      '@neighbourhoods/design-system-styles': 0.0.6
-      '@open-wc/lit-helpers': 0.6.0(lit@2.8.0)
-      '@shoelace-style/shoelace': 2.12.0(@types/react@18.2.42)
-      lit: 2.8.0
-    transitivePeerDependencies:
-      - '@types/react'
-    dev: false
-
-  /@neighbourhoods/design-system-styles@0.0.6:
-    resolution: {integrity: sha512-S+Sn2mrVSkCIOWyXaQMI84aAeHyW7miI1f/o+0gUoSQdRaYHkaGin0/2vpTzpU1+JQtnxlGzg214ehisCdMVgg==}
-    dev: false
-
   /@neighbourhoods/design-system-styles@0.0.7:
     resolution: {integrity: sha512-uz56o2Ia7VqVP5EqAUQ9Cm2XbEgKWhQeH3fPY2V2W6bRi+Waa8pfEnQmicQUnX/jEsXH9bkByCOWa3fnh8mpMw==}
     dev: false
@@ -2954,14 +2937,6 @@ packages:
 
   /@open-wc/dedupe-mixin@1.4.0:
     resolution: {integrity: sha512-Sj7gKl1TLcDbF7B6KUhtvr+1UCxdhMbNY5KxdU5IfMFWqL8oy1ZeAcCANjoB1TL0AJTcPmcCFsCbHf8X2jGDUA==}
-
-  /@open-wc/lit-helpers@0.6.0(lit@2.8.0):
-    resolution: {integrity: sha512-9F0Rw18Lupp8hehF299yYozN4cFMTnHeCVNtz0k18/eUkcUUb6DCWerL/ASJ9lZ4bLA/YUPmrkdgZz/xe9cKeg==}
-    peerDependencies:
-      lit: ^2.0.0
-    dependencies:
-      lit: 2.8.0
-    dev: false
 
   /@open-wc/scoped-elements@2.2.4:
     resolution: {integrity: sha512-12X4F4QGPWcvPbxAiJ4v8wQFCOu+laZHRGfTrkoj+3JzACCtuxHG49YbuqVzQ135QPKCuhP9wA0kpGGEfUegyg==}
