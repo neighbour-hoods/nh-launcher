@@ -1,4 +1,4 @@
-import { NHBaseForm, NHButton, NHCard, NHTextInput, NHTooltip, NHValidationError } from "@neighbourhoods/design-system-components";
+import { NHBaseForm, NHButton, NHCard, NHTextInput, NHTooltip } from "@neighbourhoods/design-system-components";
 import { html, css, CSSResult } from "lit";
 import { SlCheckbox, SlInput, SlRadio, SlRadioGroup } from "@scoped-elements/shoelace";
 import { object, string, number, ObjectSchema } from 'yup';
@@ -246,8 +246,7 @@ export default class CreateDimension extends NHBaseForm {
     "sl-radio-group": SlRadioGroup,
     "sl-checkbox": SlCheckbox,
     "nh-text-input": NHTextInput,
-    "nh-tooltip": NHTooltip,
-    'nh-validation-error': NHValidationError,
+    "nh-tooltip": NHTooltip
   }
 
   static get styles() {
