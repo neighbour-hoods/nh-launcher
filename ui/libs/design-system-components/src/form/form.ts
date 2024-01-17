@@ -34,7 +34,7 @@ interface RadioGroupFieldConfig extends BaseFieldConfig {
   type: 'radio-group';
   options: String[];
   direction: 'horizontal' | 'vertical';
-  handleInputChangeOverride: (model: any) => void;
+  handleInputChangeOverride?: (model: any) => void;
   // ... other properties specific to select fields
 }
 
@@ -225,6 +225,7 @@ export default class NHForm extends NHBaseForm {
             .text=${this.getErrorMessage(config.name)}
             .variant=${'danger'}
           >
+          
             <nh-radio-group
               slot="hoverable"
               .errored=${this.shouldShowValidationErrorForField(config.name)}
@@ -233,9 +234,10 @@ export default class NHForm extends NHBaseForm {
               .id=${config.id}
               data-name=${config.name}
               .name=${config.name}
-              @change=${(e: Event) => {this.handleInputChange(e); config.handleInputChangeOverride(this._model)}}
+              @change=${(e: Event) => {this.handleInputChange(e); config?.handleInputChangeOverride && config.handleInputChangeOverride(this._model)}}
               .direction=${config.direction}
               .options=${config.options}
+              .label=${fieldConfig.label}
               .value=${(this as any)._model[fieldConfig.name as any]}
             >
             </nh-radio-group>

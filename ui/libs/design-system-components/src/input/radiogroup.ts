@@ -8,15 +8,13 @@ export default class NHRadioGroup extends NHComponent {
   @property()
   name: string = "Field";
   @property()
-  label?: string = "Your field";
+  label?: string = "Select your option:";
   @property()
   options?: string[] = ["Cheese", "Crackers"];
   @property()
   size: "medium" | "large" = "medium";
   @property()
   direction: "horizontal" | "vertical" = "horizontal";
-  @property()
-  placeholder?: string = "Select your option:";
   @property()
   required: boolean = false;
   @property()
@@ -30,7 +28,7 @@ export default class NHRadioGroup extends NHComponent {
   _radioGroup!: SlRadioGroup;
 
   handleInputChange(e: Event) {
-    this.value = ((e.target as SlRadio).parentElement as SlRadioGroup).value
+    this.value = (e.target as SlRadioGroup).value
 
     this.dispatchEvent(
       new CustomEvent("change", {
@@ -117,14 +115,27 @@ export default class NHRadioGroup extends NHComponent {
       .vertical sl-radio-group::part(form-control-input) {
         flex-direction: column;
       }
-
+      
       sl-radio:hover::part(control) {
-        background-color: var(--nh-theme-bg-detail); 
+        border: 2px solid var(--nh-theme-bg-detail);
+        background-color: var(--nh-theme-bg-element); 
+      }
+      
+      sl-radio::part(checked-icon), sl-radio:hover::part(checked-icon) {
+        height: 13px;
+        width: 13px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .field.large sl-radio::part(checked-icon), .field.large sl-radio:hover::part(checked-icon) {
+        height: 21px;
+        width: 21px;
       }
 
       sl-radio::part(control) {
-        color: var(--nh-theme-accent-default);
-        border-color: var(--nh-theme-accent-default);
+        color: var(--nh-theme-accent-emphasis);
+        border: 2px solid transparent;
         background-color: var(--nh-theme-bg-detail);
         width: 1rem;
         height: 1rem;
@@ -167,6 +178,15 @@ export default class NHRadioGroup extends NHComponent {
       .field.large sl-radio::part(base), .field.large sl-radio::part(label) {
         font-size: calc(1px * var(--nh-font-size-lg));
         font-weight: var(--nh-font-weights-body-bold);
+      }
+
+      .field.large sl-radio::part(control), .field.large sl-radio:hover::part(control) {
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+
+      .field.large sl-radio::part(label) {
+        padding-top: 0.25rem;
       }
 
       /* Labels */

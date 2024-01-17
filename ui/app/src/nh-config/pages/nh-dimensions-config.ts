@@ -11,6 +11,7 @@ import {
   NHCard,
   NHComponent,
   NHDialog,
+  NHForm,
   NHPageHeaderCard,
 } from '@neighbourhoods/design-system-components';
 import CreateDimension from '../create-input-dimension-form';
@@ -18,6 +19,7 @@ import DimensionList from '../dimension-list';
 import { property, query, state } from 'lit/decorators.js';
 import { b64images } from '@neighbourhoods/design-system-styles';
 import CreateOutputDimensionMethod from '../create-output-dimension-form';
+import { object, string } from 'yup';
 
 export default class NHDimensionsConfig extends NHComponent {
   @consume({ context: matrixContext, subscribe: true })
@@ -159,10 +161,59 @@ export default class NHDimensionsConfig extends NHComponent {
 
   private renderMainForm(): TemplateResult {
     if (this._formType == 'input-dimension') {
-      return html`<create-input-dimension-form
+      return html`<nh-form
+      .config=${{
+        submitBtnRef: (() => {
+          
+        })(),
+        rows: [1, 1],
+        fields: [
+          [{
+            type: 'text',
+            name: "name",
+            id: "dimension-name",
+            defaultValue: "",
+            size: "medium",
+            required: true,
+            placeholder: 'Enter a dimension name',
+            label: 'Dimension Name',
+          }],
+          [{
+            type: 'radio-group',
+            options: ['Whole', 'Decimal'],
+            name: "number_type",
+            id: "number-type",
+            defaultValue: "",
+            size: "large",
+            required: true,
+            label: 'Number type',
+            handleInputChangeOverride: (model) => console.log('model :>> ', model)
+          }],
+        ],
+        resetOverride() {
+          console.log('reset :>>');
+        },
+        submitOverride: (() => {
+          
+        })(),
+        progressiveValidation: false,
+        schema: object({
+          assessment_widget: string()
+            .min(1, 'Must be at least 1 characters')
+            .required('Select a widget'),
+          input_dimension: string()
+            .min(1, 'Must be at least 1 characters')
+            .required('Select an input dimension'),
+          output_dimension: string()
+            .min(1, 'Must be at least 1 characters')
+            .required('Select an output dimension'),
+        })
+      }}></nh-form>
+      <create-input-dimension-form
         .sensemakerStore=${this._sensemakerStore.value}
         .submitBtn=${this.submitBtn}
-      ></create-input-dimension-form>`;
+      ></create-input-dimension-form>`
+      ;
     }
     return html`<create-output-dimension-method-form
       .sensemakerStore=${this._sensemakerStore.value}
@@ -173,6 +224,7 @@ export default class NHDimensionsConfig extends NHComponent {
   }
 
   static elementDefinitions = {
+    'nh-form': NHForm,
     'nh-button': NHButton,
     'nh-card': NHCard,
     'nh-dialog': NHDialog,
