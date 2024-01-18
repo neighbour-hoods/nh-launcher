@@ -10,6 +10,8 @@ customElements.define('nh-select', NHSelect)
 export interface SelectProps {
   options: OptionConfig[];
   placeholder: string;
+  errored: boolean;
+  required: boolean;
   size: "medium" | "large";
 }
 
@@ -134,16 +136,16 @@ export const WithTooltip: Story = {
   },
 };
 
-export const DefaultImagesTooltip: Story = {
-  render: (args) => html` <nh-tooltip .visible=${true} .variant=${"danger"} .text=${"This is a required field."}>
+export const ImagesTooltip: Story = {
+  render: (args) => html` <nh-tooltip .visible=${true} .variant=${"primary"} .text=${"Info about your field"}>
     <nh-select
-    ?required=${true}
+    .required=${args.required}
+    .errored=${args.errored}
     .size=${"large"}
     class="untouched"
     slot="hoverable"
     .options=${args.options}
     .placeholder=${args.placeholder}
-    .size=${args.size}
     >${args.placeholder}</nh-select>
   </nh-tooltip>
   `,
@@ -180,11 +182,12 @@ export const DefaultImagesTooltip: Story = {
     ]
   },
 };
-export const RequiredUntouched: Story = {
+
+export const RequiredErrored: Story = {
   render: (args) => html` <nh-tooltip .visible=${true} .variant=${"danger"} .text=${"This is a required field."}>
     <nh-select
-    ?required=${true}
-    class="untouched"
+    .required=${true}
+    .errored=${true}
     slot="hoverable"
     .options=${args.options}
     .placeholder=${args.placeholder}
@@ -193,6 +196,7 @@ export const RequiredUntouched: Story = {
   </nh-tooltip>
   `,
   args: {
+    required: false,
     placeholder: "Please select something:",
     size: "medium",
     options: [
@@ -219,3 +223,8 @@ export const RequiredUntouched: Story = {
     ],
   },
 };
+
+export const ImagesRequiredErrored: Story = {
+  ...RequiredErrored,
+  args: {...RequiredErrored.args, errored: true, size: 'large', options: ImagesTooltip!.args!.options }
+}
