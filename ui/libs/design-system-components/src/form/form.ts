@@ -20,14 +20,20 @@ interface BaseFieldConfig {
   required?: boolean;
   placeholder?: string;
   label?: string;
-  defaultValue: string;
+  defaultValue: string | boolean;
+  handleInputChangeOverload?: (e: Event, model: any, fields: any) => void;
 }
 
 // Define the interface for select field configuration
 interface SelectFieldConfig extends BaseFieldConfig {
   type: 'select';
   selectOptions: OptionConfig[];
-  // ... other properties specific to select fields
+}
+
+// Define the interface for checkbox field configuration
+interface CheckboxFieldConfig extends BaseFieldConfig {
+  type: 'checkbox';
+  defaultValue: boolean;
 }
 
 // Define the interface for radio group field configuration
@@ -35,23 +41,26 @@ interface RadioGroupFieldConfig extends BaseFieldConfig {
   type: 'radio-group';
   options: String[];
   direction: 'horizontal' | 'vertical';
-  handleInputChangeOverload?: (e: Event, model: any) => void;
-  // ... other properties specific to select fields
 }
 
 // Use a type union for the FieldConfig type
-type FieldConfig = BaseFieldConfig | SelectFieldConfig | RadioGroupFieldConfig;
+type FieldConfig = BaseFieldConfig | SelectFieldConfig | RadioGroupFieldConfig | CheckboxFieldConfig;
 
 // Define the interface for the form configuration
 interface FormConfig {
-  rows: number[];
-  fields: FieldConfig[][];
+  rows: number[]; // Defines the layout
+  fields: FieldConfig[][]; // One sub-array per row, must mirror the `rows` array form
   schema: ObjectSchema<any>;
   progressiveValidation?: boolean;
   
-  submitBtnLabel?: string;
+  // Optional use of custom submit button
   submitBtnRef?: NHButton;
+  // If not using custom submit button
+  submitBtnLabel?: string;
+
+  // Optional overloading of handlers
   submitOverload?: (model: object) => void;
+  inputChangeOverloads?: Array<(model: object, fields: object) => void>; // Will be assigned from the config in the firstUpdated hook
   resetOverload?: () => void;
 }
 
@@ -60,22 +69,27 @@ export default class NHForm extends NHBaseForm {
 
   @state() _model!: object;
   
-  @query("nh-button[type='submit']")
-  submitBtn!: NHButton;
-  @property()
-  _alert!: NHAlert;
+  @query("nh-button[type='submit']") submitBtn!: NHButton;
+  
+  @property() _alert!: NHAlert;
 
   @state() private _selectOpenStates: Record<string, boolean> = {};
   
   firstUpdated(changedProperties: Map<PropertyKey, unknown>): void {
+    this.config.inputChangeOverloads = [];
+
     if (changedProperties.has('config')) {
       this.config.fields.flat().map((field: FieldConfig) => {
         this._model = { ...this._model, [field.name]: field.defaultValue }
 
+        if(field?.handleInputChangeOverload) {
+          console.log('field.handleInputChangeOverload, field.name :>> ', field.handleInputChangeOverload, field.name);
+        }
         if(field.type == 'select') {
           this._selectOpenStates[field.id as string] = false;
         }
       })
+
       super.connectedCallback();
     }
   }
