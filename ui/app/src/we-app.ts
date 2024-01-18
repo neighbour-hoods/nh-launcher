@@ -2,6 +2,7 @@ import { provide } from "@lit/context";
 import { state, query, customElement } from "lit/decorators.js";
 import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
 import { LitElement, html, css } from "lit";
+import './global-toast-styles.css'
 
 import { sharedStyles } from "./sharedStyles";
 import { MatrixStore } from "./matrix-store";

@@ -9,6 +9,7 @@ import NHTooltip from '../tooltip';
 import NHCard from '../card';
 import { NHTextInput } from '../input';
 import NHRadioGroup from '../input/radiogroup';
+import NHAlert from '../alert';
 
 // Define the interface for the field configuration
 interface BaseFieldConfig {
@@ -62,6 +63,8 @@ export default class NHForm extends NHBaseForm {
   
   @query("nh-button[type='submit']")
   submitBtn!: NHButton;
+  @property()
+  _alert!: NHAlert;
 
   @state() private _selectOpenStates: Record<string, boolean> = {};
   
@@ -99,6 +102,13 @@ export default class NHForm extends NHBaseForm {
 
     this.config?.submitOverride?.call(this, this._model);
   }
+  // Sad path form submit handler
+  handleFormError() {
+    this._alert = (this.renderRoot.querySelector('nh-alert') as NHAlert);
+    this._alert.openToast();
+    (this.config?.submitBtnRef || this.submitBtn).loading = false;
+    (this.config?.submitBtnRef || this.submitBtn).requestUpdate("loading");
+  }
 
   // Override the render method to use the config for rendering the form
   render(): TemplateResult {
@@ -116,6 +126,14 @@ export default class NHForm extends NHBaseForm {
         @click=${() => this.handleSubmit(undefined as any)}
         .loading=${false}
       >${this.config?.submitBtnLabel || "Submit"}</nh-button>
+      <nh-alert
+        .open=${false}
+        .closable=${true}
+        .type=${"danger"}
+        .isToast=${true}
+        .title=${"There was an error submitting your form:"}
+        .description=${this._formErrorMessage}>
+      </nh-alert>
     `;
   }
 
@@ -257,6 +275,7 @@ export default class NHForm extends NHBaseForm {
     'nh-text-input': NHTextInput,
     'nh-radio-group': NHRadioGroup,
     'nh-tooltip': NHTooltip,
+    'nh-alert': NHAlert,
   };
 
   static get styles() {

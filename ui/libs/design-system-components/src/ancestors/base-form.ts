@@ -9,6 +9,7 @@ export abstract class NHBaseForm extends NHComponentShoelace {
   @state() protected touched: Record<string, boolean> = {};
   @state() protected formWasSubmitted: boolean = false;
   @state() protected _model: object = {};
+  @state() protected _formErrorMessage: string = 'An error';
 
   // Create a backup model for the purpose of resetting the form generically.
   @state() protected _defaultModel: typeof this._model = {};
@@ -37,7 +38,7 @@ export abstract class NHBaseForm extends NHComponentShoelace {
   protected handleInputChange(e: Event) {
     let name, value;
     let target = e.target as SlInput | SlCheckbox | HTMLInputElement | SlRadio | HTMLOptionElement;
-    debugger;
+
     if(target.tagName === 'SL-RADIO' || target.tagName === 'OPTION') {
       //@ts-ignore
       name = target.parentElement.name || target.parentElement.dataset.name
@@ -57,6 +58,9 @@ export abstract class NHBaseForm extends NHComponentShoelace {
   // Abstract method to handle successful form submission action
   protected abstract handleValidSubmit(): void;
 
+  // Abstract method to handle unsuccessful form submission action
+  protected abstract handleFormError(): void;
+
   protected async handleSubmit(e: Event) {
     e?.preventDefault && e.preventDefault();
     
@@ -70,10 +74,14 @@ export abstract class NHBaseForm extends NHComponentShoelace {
       // Form is valid, proceed with submission logic
       try {
         await this.handleValidSubmit();
-      } catch (error) {
+      } catch (error: any) {
+        this._formErrorMessage = error;
+        this.handleFormError()
         console.error('Error while submitting form: ', error)
       }
     } else {
+      this._formErrorMessage = "Your form was invalid, please check the fields and make sure to follow any validation messages that come up when hovering on the field.";
+      this.handleFormError()
       console.warn('An error was thrown in form validation. Check that it was handled correctly.');
     }
   }

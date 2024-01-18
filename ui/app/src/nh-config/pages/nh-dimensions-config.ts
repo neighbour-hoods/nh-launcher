@@ -193,20 +193,13 @@ export default class NHDimensionsConfig extends NHComponent {
         resetOverride() {
           console.log('reset :>>');
         },
-        submitOverride: (() => {
-          
-        })(),
+        submitOverride() {
+          throw Error('OK')
+        },
         progressiveValidation: false,
         schema: object({
-          assessment_widget: string()
-            .min(1, 'Must be at least 1 characters')
-            .required('Select a widget'),
-          input_dimension: string()
-            .min(1, 'Must be at least 1 characters')
-            .required('Select an input dimension'),
-          output_dimension: string()
-            .min(1, 'Must be at least 1 characters')
-            .required('Select an output dimension'),
+          name: string().min(1, "Must be at least 1 characters").required("Enter a dimension name, e.g. Likes"),
+          number_type: string().required("Pick an option"),
         })
       }}></nh-form>
       <create-input-dimension-form

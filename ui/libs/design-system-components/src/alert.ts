@@ -21,21 +21,35 @@ export default class NHAlert extends NHComponentShoelace {
   @property()
   type: AlertType = "neutral";
 
-  @query('sl-alert')
+  @property()
   alert!: SlAlert;
+  @property()
+  alertStack!: HTMLElement;
 
   openToast() {
     this.alert.toast()
   }
 
+  firstUpdated() {
+    this.alert = (this.renderRoot.querySelector('sl-alert') as SlAlert)
+  }
+
   render() : TemplateResult {
     return html`
       <sl-alert id="main"
+        @sl-hide=${(e: Event) => {
+          // Over-rides Shoelace Alert's implementation which removes the references Sl-Alert from the DOM on close
+          const alert = (e.target as any).cloneNode(true);
+          alert.open = false;
+          this.alert = alert;
+          this.alertStack = (e.target as any).parentElement;
+          this.alertStack.appendChild(alert);
+        }}
         class="alert ${classMap({ [this.type]: !!this.type, 'toast': !!this.isToast })}"
         variant=${this.type}
         ?open=${this.open}
         ?closable=${this.closable}
-        duration=${this.isToast ? 3000 : Infinity}
+        duration=${this.isToast ? 7000 : Infinity}
       >
         <span class="title">${this.title}</span>
         <span class="description">${this.description}</span>
