@@ -7,7 +7,7 @@ import NHSelect, { OptionConfig } from '../input/select';
 import NHButton from '../button';
 import NHTooltip from '../tooltip';
 import NHCard from '../card';
-import { NHTextInput } from '../input';
+import { NHTextInput, NHCheckbox } from '../input';
 import NHRadioGroup from '../input/radiogroup';
 import NHAlert from '../alert';
 
@@ -35,7 +35,7 @@ interface RadioGroupFieldConfig extends BaseFieldConfig {
   type: 'radio-group';
   options: String[];
   direction: 'horizontal' | 'vertical';
-  handleInputChangeOverride?: (model: any) => void;
+  handleInputChangeOverload?: (e: Event, model: any) => void;
   // ... other properties specific to select fields
 }
 
@@ -51,9 +51,8 @@ interface FormConfig {
   
   submitBtnLabel?: string;
   submitBtnRef?: NHButton;
-  submitOverride?: (model: object) => void;
-  resetOverride?: () => void;
-  inputOverrides?: (e: Event) => void[];
+  submitOverload?: (model: object) => void;
+  resetOverload?: () => void;
 }
 
 export default class NHForm extends NHBaseForm {
@@ -112,7 +111,7 @@ export default class NHForm extends NHBaseForm {
   
   async resetForm() {
     super.reset();
-    this.config.resetOverride?.call(this);
+    this.config.resetOverload?.call(this);
 
     this._selectOpenStates = {};
     (this.config?.submitBtnRef || this.submitBtn).loading = false;
@@ -121,7 +120,8 @@ export default class NHForm extends NHBaseForm {
 
   handleInputChange(e: Event) {
     super.handleInputChange(e);
-    // TODO: add individual overridess
+    // TODO: add individual Overloadss
+    // TODO: add mutateValue callbacks if they exist.
   }
 
   // Hapy path form submit handler
@@ -129,7 +129,7 @@ export default class NHForm extends NHBaseForm {
     (this.config?.submitBtnRef || this.submitBtn).loading = true;
     (this.config?.submitBtnRef || this.submitBtn).requestUpdate("loading");
 
-    this.config?.submitOverride?.call(this, this._model);
+    this.config?.submitOverload?.call(this, this._model);
   }
   // Sad path form submit handler
   handleFormError() {
@@ -139,9 +139,8 @@ export default class NHForm extends NHBaseForm {
     (this.config?.submitBtnRef || this.submitBtn).requestUpdate("loading");
   }
 
-  // Override the render method to use the config for rendering the form
+  // Overload the render method to use the config for rendering the form
   render(): TemplateResult {
-    console.log('this.config :>> ', this.config);
     return html`
       <form method="post" action="" autocomplete="off">
         ${this.renderFormLayout()}
@@ -167,7 +166,7 @@ export default class NHForm extends NHBaseForm {
     `;
   }
 
-  // Override the validation schema getter if needed
+  // Overload the validation schema getter if needed
   protected get validationSchema() {
     return this.config.schema;
   }
@@ -233,7 +232,7 @@ export default class NHForm extends NHBaseForm {
               .errored=${this.shouldShowValidationErrorForField(fieldConfig.name)}
               .size=${fieldConfig.size}
               .required=${fieldConfig.required}
-              .id=${fieldConfig.id}
+              id=${fieldConfig.id}
               .name=${fieldConfig.name}
               .placeholder=${fieldConfig.placeholder}
               .label=${fieldConfig.label}
@@ -273,16 +272,15 @@ export default class NHForm extends NHBaseForm {
             .text=${this.getErrorMessage(config.name)}
             .variant=${'danger'}
           >
-          
             <nh-radio-group
               slot="hoverable"
               .errored=${this.shouldShowValidationErrorForField(config.name)}
               .size=${config.size}
               .required=${config.required}
-              .id=${config.id}
+              id=${config.id}
               data-name=${config.name}
               .name=${config.name}
-              @change=${(e: Event) => {this.handleInputChange(e); config?.handleInputChangeOverride && config.handleInputChangeOverride(this._model)}}
+              @change=${(e: Event) => {this.handleInputChange(e); config?.handleInputChangeOverload && config.handleInputChangeOverload(e, this._model)}}
               .direction=${config.direction}
               .options=${config.options}
               .label=${fieldConfig.label}
@@ -292,7 +290,24 @@ export default class NHForm extends NHBaseForm {
           </nh-tooltip>
         `;
       case "checkbox":
-        return html``;
+        return html`
+          <nh-tooltip
+            class="checkbox"
+            .visible=${this.shouldShowValidationErrorForField(fieldConfig.name)}
+            .text=${this.getErrorMessage(fieldConfig.name)}
+            .variant=${'danger'}
+          >
+            <nh-checkbox
+              slot="hoverable"
+              .errored=${this.shouldShowValidationErrorForField(fieldConfig.name)}
+              .size=${fieldConfig.size}
+              .required=${fieldConfig.required}
+              id=${fieldConfig.id}
+              .name=${fieldConfig.name}
+              .label=${fieldConfig.label}
+              @change=${this.handleInputChange}
+            />
+          </nh-tooltip>`;
       default:
         return html``;
     }
@@ -301,6 +316,7 @@ export default class NHForm extends NHBaseForm {
   static elementDefinitions = {
     'nh-button': NHButton,
     'nh-card': NHCard,
+    'nh-checkbox': NHCheckbox,
     'nh-select': NHSelect,
     'nh-text-input': NHTextInput,
     'nh-radio-group': NHRadioGroup,
@@ -382,71 +398,18 @@ export default class NHForm extends NHBaseForm {
           align-items: flex-end;
         }
 
+        .row > .checkbox { /* Single row checkboxes */
+          display: flex;
+          min-width: 18rem;
+          justify-content: center;
+          margin-top: calc(1px * var(--nh-spacing-md));
+        }
+
         /* Bugfix for custom select */
         .tooltip-overflow {
           --select-height: calc(2.5px * var(--nh-spacing-3xl) - 3px); /* accounts for the label (2*) and borders (-3px) */
           overflow: inherit;
           max-height: var(--select-height);
-        }
-
-        /* Radio */
-
-        .field.radio {
-          justify-content: center;
-          padding-top: calc(1px * var(--nh-spacing-md));
-          margin-top: calc(1px * var(--nh-spacing-lg));
-        }
-
-        sl-radio-group,
-        sl-radio-group::part(base) {
-          width: 100%;
-        }
-
-        sl-radio-group::part(base) {
-          display: flex;
-          justify-content: space-around;
-          gap: calc(1px * var(--nh-spacing-md));
-        }
-
-        sl-radio:hover::part(control) {
-          background-color: var(--nh-theme-bg-detail);
-        }
-
-        sl-radio::part(label) {
-          color: var(--nh-theme-fg-default);
-        }
-
-        sl-radio::part(control) {
-          color: var(--nh-theme-accent-default);
-          border-color: var(--nh-theme-accent-default);
-          background-color: transparent;
-        }
-
-        sl-radio {
-          margin-bottom: 0 !important;
-        }
-
-        /* Checkbox */
-
-        sl-checkbox::part(base) {
-          position: relative;
-          right: -9px;
-          bottom: 1px;
-        }
-
-        sl-checkbox::part(control) {
-          color: var(--nh-theme-accent-default);
-          background-color: var(--nh-theme-fg-default);
-          border-color: var(--nh-theme-accent-default);
-          border-radius: 3px;
-        }
-
-        .field.checkbox {
-          justify-content: end;
-          display: flex;
-          width: 8rem;
-          font-size: 90%;
-          flex-direction: initial;
         }
       `,
     ];
