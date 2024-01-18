@@ -147,8 +147,6 @@ export default class NHDimensionsConfig extends NHComponent {
             @click=${() => {
                 const cannotCreateOutputMethod = !(this._inputDimensionList._dimensionEntries && this._inputDimensionList._dimensionEntries.length > 0);
                 if(this._formType == 'method' && cannotCreateOutputMethod) this._formType = 'input-dimension'
-
-                // this._dimensionForm.handleSubmit()
               }
             }
             .loading=${false}
@@ -161,66 +159,10 @@ export default class NHDimensionsConfig extends NHComponent {
 
   private renderMainForm(): TemplateResult {
     if (this._formType == 'input-dimension') {
-      return html`<nh-form
-      .config=${{
-        rows: [1, 1, 2],
-        submitBtnRef: (() => this.submitBtn)(),
-        fields: [
-          [{
-            type: 'text',
-            name: "name",
-            id: "dimension-name",
-            defaultValue: "",
-            size: "medium",
-            required: true,
-            placeholder: 'Enter a dimension name',
-            label: 'Dimension Name',
-          }],
-
-          [{
-            type: 'radio-group',
-            options: ['Whole', 'Decimal'],
-            name: "number_type",
-            id: "number-type",
-            defaultValue: "",
-            size: "large",
-            required: true,
-            label: 'Number type',
-            handleInputChangeOverride: (model) => console.log('model :>> ', model)
-          }],
-
-          [{
-            type: 'text',
-            name: "min",
-            id: "min",
-            defaultValue: "0",
-            size: "small",
-            required: true,
-            placeholder: 'Min',
-            label: 'Min',
-          },
-          {
-            type: 'text',
-            name: "max",
-            id: "max",
-            defaultValue: "100",
-            size: "small",
-            required: true,
-            placeholder: 'Max',
-            label: 'Max',
-          }],
-        ],
-        submitOverride() {
-          throw Error('OK')
-        },
-        progressiveValidation: false,
-        schema: object({
-          name: string().min(1, "Must be at least 1 characters").required("Enter a dimension name, e.g. Likes"),
-          number_type: string().required("Pick an option"),
-        })
-      }}></nh-form>
+      return html`
       <create-input-dimension-form
         .sensemakerStore=${this._sensemakerStore.value}
+        .submitBtn=${this.submitBtn}
       ></create-input-dimension-form>`
       ;
     }
@@ -233,7 +175,6 @@ export default class NHDimensionsConfig extends NHComponent {
   }
 
   static elementDefinitions = {
-    'nh-form': NHForm,
     'nh-button': NHButton,
     'nh-card': NHCard,
     'nh-dialog': NHDialog,

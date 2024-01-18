@@ -50,7 +50,7 @@ interface FormConfig {
   progressiveValidation?: boolean;
   
   submitBtnLabel?: string;
-  submitBtnRef: NHButton;
+  submitBtnRef?: NHButton;
   submitOverride?: (model: object) => void;
   resetOverride?: () => void;
   inputOverrides?: (e: Event) => void[];
@@ -83,7 +83,7 @@ export default class NHForm extends NHBaseForm {
 
   protected updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     
-    if (changedProperties.has('config') && changedProperties.get('config')?.submitBtnRef) {
+    if (changedProperties.has('config') && this.config.submitBtnRef && !this.config.submitBtnRef.dataset.bound) {
       this.bindSubmitHandler()
     }
   }
@@ -94,14 +94,20 @@ export default class NHForm extends NHBaseForm {
   }
 
   unbindSubmitHandler() {
-    if(!this.config.submitBtnRef) return console.error('Could not unbind your submit button handler.')
-    this.submitBtn.removeEventListener('click', this.handleSubmit.bind(this))
-  }
-  bindSubmitHandler() {
-    if(!this.config.submitBtnRef) {
-      return console.error('Could not bind your submit button handler.')
+    if(!this.config?.submitBtnRef) {
+      console.error('Could not unbind your submit button handler.');
+      return;
     }
-    (this.config.submitBtnRef as NHButton).addEventListener('click', this.handleSubmit.bind(this))
+    this.config.submitBtnRef.removeEventListener('click', this.handleSubmit.bind(this))
+  }
+
+  bindSubmitHandler() {
+    if(!this.config?.submitBtnRef) {
+      console.error('Could not bind your submit button handler.');
+      return 
+    }
+    (this.config.submitBtnRef as NHButton).addEventListener('click', this.handleSubmit.bind(this));
+    this.config.submitBtnRef.dataset.bound = 'true'
   }
   
   async resetForm() {
@@ -135,6 +141,7 @@ export default class NHForm extends NHBaseForm {
 
   // Override the render method to use the config for rendering the form
   render(): TemplateResult {
+    console.log('this.config :>> ', this.config);
     return html`
       <form method="post" action="" autocomplete="off">
         ${this.renderFormLayout()}
