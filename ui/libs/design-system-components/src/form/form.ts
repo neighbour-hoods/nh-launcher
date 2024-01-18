@@ -22,6 +22,7 @@ interface BaseFieldConfig {
   label?: string;
   defaultValue: string | boolean;
   handleInputChangeOverload?: (e: Event, model: any, fields: any) => void;
+  mutateValue?: (value: string | boolean) => unknown;
 }
 
 // Define the interface for select field configuration
@@ -46,6 +47,8 @@ interface RadioGroupFieldConfig extends BaseFieldConfig {
 // Use a type union for the FieldConfig type
 type FieldConfig = BaseFieldConfig | SelectFieldConfig | RadioGroupFieldConfig | CheckboxFieldConfig;
 
+type NHField = NHTextInput | NHRadioGroup | NHCheckbox | NHSelect;
+
 // Define the interface for the form configuration
 interface FormConfig {
   rows: number[]; // Defines the layout
@@ -60,12 +63,15 @@ interface FormConfig {
 
   // Optional overloading of handlers
   submitOverload?: (model: object) => void;
-  inputChangeOverloads?: Array<(model: object, fields: object) => void>; // Will be assigned from the config in the firstUpdated hook
   resetOverload?: () => void;
 }
 
 export default class NHForm extends NHBaseForm {
   @property({ type: Object }) config!: FormConfig;
+
+  @property() inputChangeOverloads?: Map<string, (e: Event, model: object, fields: object) => void>; // Will be assigned from the config in the firstUpdated hook
+  @property() inputMutationOverloads?: Map<string, (value: string | boolean) => unknown>; // Will be assigned from the config in the firstUpdated hook
+  @property() fieldRefs: Map<string, NHField> = new Map();// Will be assigned from the config in the firstUpdated hook
 
   @state() _model!: object;
   
@@ -76,18 +82,23 @@ export default class NHForm extends NHBaseForm {
   @state() private _selectOpenStates: Record<string, boolean> = {};
   
   firstUpdated(changedProperties: Map<PropertyKey, unknown>): void {
-    this.config.inputChangeOverloads = [];
+    this.inputChangeOverloads = new Map();
+    this.inputMutationOverloads = new Map();
 
     if (changedProperties.has('config')) {
       this.config.fields.flat().map((field: FieldConfig) => {
         this._model = { ...this._model, [field.name]: field.defaultValue }
 
+        if(field?.mutateValue) {
+          this.inputMutationOverloads?.set(field.name, field.mutateValue)
+        }
         if(field?.handleInputChangeOverload) {
-          console.log('field.handleInputChangeOverload, field.name :>> ', field.handleInputChangeOverload, field.name);
+          this.inputChangeOverloads?.set(field.name, field.handleInputChangeOverload)
         }
         if(field.type == 'select') {
           this._selectOpenStates[field.id as string] = false;
         }
+        this.fieldRefs?.set(field.name, this.renderRoot.querySelector(`#${field.id}`) as NHField)
       })
 
       super.connectedCallback();
@@ -95,7 +106,6 @@ export default class NHForm extends NHBaseForm {
   }
 
   protected updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    
     if (changedProperties.has('config') && this.config.submitBtnRef && !this.config.submitBtnRef.dataset.bound) {
       this.bindSubmitHandler()
     }
@@ -133,9 +143,17 @@ export default class NHForm extends NHBaseForm {
   }
 
   handleInputChange(e: Event) {
+    const target = e.target as any;
+    // Mutate target value if overload given
+    if(target?.value && this.inputMutationOverloads?.has(target.name)) {
+      target.value = (this.inputMutationOverloads!.get(target.name) as (value: string | boolean) => unknown)(target.value)
+    }
     super.handleInputChange(e);
-    // TODO: add individual Overloadss
-    // TODO: add mutateValue callbacks if they exist.
+
+    // Additionally overload input change with a callback that takes the model, form fields (e.g. for manually disabling other inputs)
+    if(this.inputChangeOverloads?.has(target.name)) {
+      this.inputChangeOverloads?.get(target.name)?.apply(null, [e, this._model, Object.fromEntries(this.fieldRefs.entries())]);
+    }
   }
 
   // Hapy path form submit handler
@@ -153,7 +171,7 @@ export default class NHForm extends NHBaseForm {
     (this.config?.submitBtnRef || this.submitBtn).requestUpdate("loading");
   }
 
-  // Overload the render method to use the config for rendering the form
+  // Implement the render method to use the config for rendering the form
   render(): TemplateResult {
     return html`
       <form method="post" action="" autocomplete="off">
@@ -186,6 +204,7 @@ export default class NHForm extends NHBaseForm {
   }
 
   // Method to render the form layout based on the config object
+  // Works for rows of length 1 or 2 
   private renderFormLayout(): TemplateResult {
     return html`${this.config.rows.map((rowLength: number, idx: number) => {
       return html`
@@ -251,7 +270,7 @@ export default class NHForm extends NHBaseForm {
               .placeholder=${fieldConfig.placeholder}
               .label=${fieldConfig.label}
               .value=${(this as any)._model[fieldConfig.name as any]}
-              @change=${this.handleInputChange}
+              @change=${(e: Event) => this.handleInputChange(e)}
             ></nh-text-input>
           </nh-tooltip>`;
       case "select":
@@ -272,7 +291,7 @@ export default class NHForm extends NHBaseForm {
               .name=${fieldConfig.name}
               .placeholder=${fieldConfig.placeholder}
               .label=${fieldConfig.label}
-              @change=${this.handleInputChange}
+              @change=${(e: Event) => this.handleInputChange(e)}
               .options=${(fieldConfig as SelectFieldConfig).selectOptions}
             >
             </nh-select>
@@ -294,7 +313,7 @@ export default class NHForm extends NHBaseForm {
               id=${config.id}
               data-name=${config.name}
               .name=${config.name}
-              @change=${(e: Event) => {this.handleInputChange(e); config?.handleInputChangeOverload && config.handleInputChangeOverload(e, this._model)}}
+              @change=${(e: Event) => this.handleInputChange(e)}
               .direction=${config.direction}
               .options=${config.options}
               .label=${fieldConfig.label}
@@ -319,7 +338,7 @@ export default class NHForm extends NHBaseForm {
               id=${fieldConfig.id}
               .name=${fieldConfig.name}
               .label=${fieldConfig.label}
-              @change=${this.handleInputChange}
+              @change=${(e: Event) => this.handleInputChange(e)}
             />
           </nh-tooltip>`;
       default:
@@ -366,24 +385,6 @@ export default class NHForm extends NHBaseForm {
           justify-content: center;
         }
 
-        nh-button.button-provided {
-          visibility: hidden;
-          opacity: 0;
-          position: absolute;
-        }
-
-        /* Scroll bar */
-
-        :host::-webkit-scrollbar-thumb {
-          background: var(--nh-theme-bg-element);
-          width: 4px;
-          border: 4px solid transparent;
-        }
-        :host::-webkit-scrollbar   {
-          width: 8px;
-          background: transparent !important;
-        }
-
         .row-2 {
           display: flex;
           justify-content: center;
@@ -405,9 +406,11 @@ export default class NHForm extends NHBaseForm {
           margin: 0;
           flex-direction: column;
         }
+
         .row-2 .field:first-child {
           align-items: flex-start;
         }
+
         .row-2 .field:last-child {
           align-items: flex-end;
         }
@@ -424,6 +427,25 @@ export default class NHForm extends NHBaseForm {
           --select-height: calc(2.5px * var(--nh-spacing-3xl) - 3px); /* accounts for the label (2*) and borders (-3px) */
           overflow: inherit;
           max-height: var(--select-height);
+        }
+        
+        /* Hide our submit button when one a ref is provided in config */
+        nh-button.button-provided {
+          visibility: hidden;
+          opacity: 0;
+          position: absolute;
+        }
+
+        /* Scroll bar */
+        :host::-webkit-scrollbar-thumb {
+          background: var(--nh-theme-bg-element);
+          width: 4px;
+          border: 4px solid transparent;
+        }
+
+        :host::-webkit-scrollbar   {
+          width: 8px;
+          background: transparent !important;
         }
       `,
     ];
