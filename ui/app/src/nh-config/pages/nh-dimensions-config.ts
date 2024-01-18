@@ -148,7 +148,7 @@ export default class NHDimensionsConfig extends NHComponent {
                 const cannotCreateOutputMethod = !(this._inputDimensionList._dimensionEntries && this._inputDimensionList._dimensionEntries.length > 0);
                 if(this._formType == 'method' && cannotCreateOutputMethod) this._formType = 'input-dimension'
 
-                this._dimensionForm.handleSubmit()
+                // this._dimensionForm.handleSubmit()
               }
             }
             .loading=${false}
@@ -163,10 +163,8 @@ export default class NHDimensionsConfig extends NHComponent {
     if (this._formType == 'input-dimension') {
       return html`<nh-form
       .config=${{
-        submitBtnRef: (() => {
-          
-        })(),
-        rows: [1, 1],
+        rows: [1, 1, 2],
+        submitBtnRef: (() => this.submitBtn)(),
         fields: [
           [{
             type: 'text',
@@ -178,6 +176,7 @@ export default class NHDimensionsConfig extends NHComponent {
             placeholder: 'Enter a dimension name',
             label: 'Dimension Name',
           }],
+
           [{
             type: 'radio-group',
             options: ['Whole', 'Decimal'],
@@ -189,10 +188,28 @@ export default class NHDimensionsConfig extends NHComponent {
             label: 'Number type',
             handleInputChangeOverride: (model) => console.log('model :>> ', model)
           }],
+
+          [{
+            type: 'text',
+            name: "min",
+            id: "min",
+            defaultValue: "0",
+            size: "small",
+            required: true,
+            placeholder: 'Min',
+            label: 'Min',
+          },
+          {
+            type: 'text',
+            name: "max",
+            id: "max",
+            defaultValue: "100",
+            size: "small",
+            required: true,
+            placeholder: 'Max',
+            label: 'Max',
+          }],
         ],
-        resetOverride() {
-          console.log('reset :>>');
-        },
         submitOverride() {
           throw Error('OK')
         },
@@ -204,7 +221,6 @@ export default class NHDimensionsConfig extends NHComponent {
       }}></nh-form>
       <create-input-dimension-form
         .sensemakerStore=${this._sensemakerStore.value}
-        .submitBtn=${this.submitBtn}
       ></create-input-dimension-form>`
       ;
     }

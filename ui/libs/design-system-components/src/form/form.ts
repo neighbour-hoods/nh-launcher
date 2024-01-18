@@ -1,6 +1,6 @@
 import { classMap } from 'lit/directives/class-map.js';
 import { NHBaseForm } from '../ancestors/base-form';
-import { css, CSSResult, html, TemplateResult } from 'lit';
+import { css, CSSResult, html, PropertyValueMap, TemplateResult } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
 import { ObjectSchema } from 'yup';
 import NHSelect, { OptionConfig } from '../input/select';
@@ -79,6 +79,29 @@ export default class NHForm extends NHBaseForm {
       })
       super.connectedCallback();
     }
+  }
+
+  protected updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    
+    if (changedProperties.has('config') && changedProperties.get('config')?.submitBtnRef) {
+      this.bindSubmitHandler()
+    }
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.unbindSubmitHandler();
+  }
+
+  unbindSubmitHandler() {
+    if(!this.config.submitBtnRef) return console.error('Could not unbind your submit button handler.')
+    this.submitBtn.removeEventListener('click', this.handleSubmit.bind(this))
+  }
+  bindSubmitHandler() {
+    if(!this.config.submitBtnRef) {
+      return console.error('Could not bind your submit button handler.')
+    }
+    (this.config.submitBtnRef as NHButton).addEventListener('click', this.handleSubmit.bind(this))
   }
   
   async resetForm() {
@@ -285,6 +308,8 @@ export default class NHForm extends NHBaseForm {
         /* Layout */
         :host {
           min-height: 22rem;
+          justify-content: center;
+          margin: 0px auto;
         }
 
         form {
@@ -307,6 +332,7 @@ export default class NHForm extends NHBaseForm {
         nh-button.button-provided {
           visibility: hidden;
           opacity: 0;
+          position: absolute;
         }
 
         /* Scroll bar */

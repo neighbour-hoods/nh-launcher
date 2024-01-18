@@ -61,7 +61,7 @@ export abstract class NHBaseForm extends NHComponentShoelace {
   // Abstract method to handle unsuccessful form submission action
   protected abstract handleFormError(): void;
 
-  protected async handleSubmit(e: Event) {
+  protected async handleSubmit(e?: Event) {
     e?.preventDefault && e.preventDefault();
     
     const isValid = await this.validateForm();
@@ -165,7 +165,6 @@ export abstract class NHBaseForm extends NHComponentShoelace {
     css`
       :host {
         display: flex;
-        max-width: 24rem;
       }
   `];
 }

@@ -139,7 +139,9 @@ export default class NHRadioGroup extends NHComponent {
         background-color: var(--nh-theme-bg-detail);
         width: 1rem;
         height: 1rem;
-        display: inline-block;
+        align-items: center;
+        justify-content: center;
+        display: flex;
         top: 4px;
         left: 2px;
       }
