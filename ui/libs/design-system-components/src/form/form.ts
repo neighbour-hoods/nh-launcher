@@ -53,7 +53,7 @@ type NHField = NHTextInput | NHRadioGroup | NHCheckbox | NHSelect;
 interface FormConfig {
   rows: number[]; // Defines the layout
   fields: FieldConfig[][]; // One sub-array per row, must mirror the `rows` array form
-  schema: ObjectSchema<any>;
+  schema: ObjectSchema<any> | ((model: object) => ObjectSchema<any>);
   progressiveValidation?: boolean;
   
   // Optional use of custom submit button
@@ -136,14 +136,15 @@ export default class NHForm extends NHBaseForm {
   private get submitButton() {
     return (this.config?.submitBtnRef || this.submitBtn)
   }
-  
+
   async resetForm() {
     super.reset();
-    this.config.resetOverload?.call(this);
-
+    
     this._selectOpenStates = {};
     this.submitButton.loading = false;
     await this.submitButton.updateComplete;
+
+    this.config.resetOverload?.call(this);
   }
 
   handleInputChange(e: Event) {
@@ -164,9 +165,16 @@ export default class NHForm extends NHBaseForm {
   async handleValidSubmit() {
     this.submitButton.loading = true;
     this.submitButton.requestUpdate("loading");
-
-    this.config?.submitOverload?.call(this, this._model);
+    try {
+      await this.config?.submitOverload?.call(null, this._model);
+    } catch(err) {
+      console.log('err :>> ', err, typeof err);
+      this._formErrorMessage = err as string;
+      this._formErrorMessage = "We couldn't store your data. If this happens again, please log an issue with the Neighbourhoods team, including the message logged in the developer console.";
+      this.handleFormError();
+    }
   }
+
   // Sad path form submit handler
   handleFormError() {
     this._alert = (this.renderRoot.querySelector('nh-alert') as NHAlert);
@@ -202,9 +210,11 @@ export default class NHForm extends NHBaseForm {
     `;
   }
 
-  // Overload the validation schema getter if needed
+  // Overload the validation schema getter if needed, differentiate between static/dynamic schema options
   protected get validationSchema() {
-    return this.config.schema;
+    return typeof this.config.schema == 'function'
+      ? this.config.schema.call(this, this._model)
+      : this.config.schema
   }
 
   // Method to render the form layout based on the config object

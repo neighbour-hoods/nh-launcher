@@ -1,10 +1,11 @@
 import { NHBaseForm, NHButton, NHCard, NHComponent, NHForm, NHTextInput, NHTooltip } from "@neighbourhoods/design-system-components";
-import { html, css, CSSResult } from "lit";
+import { html, css, CSSResult, TemplateResult } from "lit";
 import { SlCheckbox, SlInput, SlRadio, SlRadioGroup } from "@scoped-elements/shoelace";
 import { object, string, number, ObjectSchema, boolean } from 'yup';
 import { Dimension, Range, RangeKind, SensemakerStore, RangeKindFloat, RangeKindInteger } from "@neighbourhoods/client";
 import { property, query, state } from "lit/decorators.js";
 import { MAX_RANGE_FLOAT, MAX_RANGE_INT, MIN_RANGE_FLOAT, MIN_RANGE_INT } from ".";
+import { decode } from "@msgpack/msgpack";
 
 export default class CreateDimension extends NHComponent {
   @property()
@@ -26,7 +27,7 @@ export default class CreateDimension extends NHComponent {
   private get isIntegerRangeKind() { return this._numberType == "Integer" }
 
   // Helper to generate nested, dynamic schema for the Range
-  private _dimensionRangeSchema = () => {
+  private _dimensionRangeSchema = (model: object) => {
     const rangeMin = this.isIntegerRangeKind ? MIN_RANGE_INT : MIN_RANGE_FLOAT
     const rangeMax = this.isIntegerRangeKind ? MAX_RANGE_INT : MAX_RANGE_FLOAT
     const numberType = number().typeError('The input must be numeric').required('Enter a number');
@@ -40,59 +41,65 @@ export default class CreateDimension extends NHComponent {
           ? numberType.integer('Must be an integer') 
           : numberType.test('is-decimal', 'Must be a decimal number', ((value: number) => value.toString().match(/^\d+(\.\d+)?$/)) as any)
         )
-        .min((this._model?.min || - 1) + 1, "The higher extent of this range cannot be lower than the lower extent: " + this._model.min)
+        .min(((model as any)?.min || - 1) + 1, "The higher extent of this range cannot be lower than the lower extent: " + ((model as any)?.min || 0))
         .max(rangeMax, "The higher extent of this range cannot be higher than " + rangeMax),
   }};
 
-  schema() : ObjectSchema<any> { 
+  schema(model: object) : ObjectSchema<any> { 
     return object({
     name: string().min(1, "Must be at least 1 characters").required("Enter a dimension name, e.g. Likes"),
     number_type: string().required("Pick an option"),
     global_min: boolean(),
     global_max: boolean(),
-    ...this._dimensionRangeSchema()
+    ...this._dimensionRangeSchema(model)
   })};
   
   // Extra form state, not in the model
   @property()
-  private _numberType?: (keyof RangeKindInteger | keyof RangeKindFloat);
+  private _numberType?: (keyof RangeKindInteger | keyof RangeKindFloat) | undefined;
 
   @property()
   submitBtn!: NHButton;
-  @query("nh-text-input[name='min']")
-  _minInput!: NHTextInput;
-  @query("nh-text-input[name='max']")
-  _maxInput!: NHTextInput;
+
+  parseZomeError(err: Error) {
+    if(!err!.message) return "Not a valid error type";
+
+    const decodedErrors = err.message.match(/Deserialize\(\[(.*?)\]\)/);
+    const error = decodedErrors![1];
+    return JSON.stringify(error ? decode(JSON.parse("[" + error + "]")) : "{}", null, 2)
+  }
 
   async createEntries(model: object) {
-    debugger;
+    const formData : { name?: string, min?: number, max?: number, } = model;
+    
     let rangeEh, dimensionEh;    
     let inputRange: Range = {
-      name: this._model.name + '_range',
+      name: formData.name + '_range',
       //@ts-ignore
       kind: { [this._numberType]: {
-        min: this._model.min,
-        max: this._model.max
+        min: formData.min,
+        max: formData.max
         }
       }
     }
+    
     try {
       rangeEh = await this.sensemakerStore.createRange(inputRange);
     } catch (error) {
-      console.log('Error creating new range for dimension: ', error);
+      return Promise.reject(Error(' creating new range for dimension: ' + this.parseZomeError(error as Error)))
     }
     if(!rangeEh) return
-    
     let inputDimension: Dimension = {
-      name: this._model.name,
+      name: formData!.name as string,
       computed: false, // Hard coded for input dimensions
       range_eh: rangeEh
     }
     try {
       dimensionEh = await this.sensemakerStore.createDimension(inputDimension);
     } catch (error) {
-      console.log('Error creating new dimension: ', error);
+      return Promise.reject(Error(' creating new dimension: ' + this.parseZomeError(error as Error)))
     }
+
     if(!dimensionEh) return
 
     await this.updateComplete;
@@ -112,13 +119,10 @@ export default class CreateDimension extends NHComponent {
   }
 
   async resetForm() {
-    // this._numberType = "Integer";
-    // this._useGlobalMin = false;
-    // this._useGlobalMax = false;
+    this._numberType = undefined;
   }
 
   setRangeBoundsByNumberType(model: any) {
-    console.log('this.isIntegerRangeKind :>> ', this.isIntegerRangeKind);
     if(model.global_min) {
       model.min = this.isIntegerRangeKind ? MIN_RANGE_INT : MIN_RANGE_FLOAT;
     }
@@ -127,7 +131,7 @@ export default class CreateDimension extends NHComponent {
     }
   }
 
-  render() {
+  render() : TemplateResult {
     return html`
       <nh-form
         .config=${(() => ({
@@ -165,7 +169,6 @@ export default class CreateDimension extends NHComponent {
               type: 'text',
               name: "min",
               id: "min",
-              defaultValue: "0",
               size: "small",
               required: true,
               placeholder: 'Min',
@@ -176,7 +179,6 @@ export default class CreateDimension extends NHComponent {
               type: 'text',
               name: "max",
               id: "max",
-              defaultValue: "100",
               size: "small",
               required: true,
               placeholder: 'Max',
@@ -212,10 +214,10 @@ export default class CreateDimension extends NHComponent {
               }
             }],
           ],
-          submitOverload: (model: object) => this.createEntries(model),
+          submitOverload: this.createEntries.bind(this),
           resetOverload: this.resetForm,
           progressiveValidation: false,
-          schema: (() => this.schema())() // Relies on dynamic elements so use and IIFE
+          schema: (model: object) => (() => this.schema(model))() // Relies on dynamic elements so use and IIFE
         }))()}></nh-form>
     `;
   }

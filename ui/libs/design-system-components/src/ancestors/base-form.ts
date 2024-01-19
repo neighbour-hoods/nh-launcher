@@ -75,14 +75,14 @@ export abstract class NHBaseForm extends NHComponentShoelace {
       try {
         await this.handleValidSubmit();
       } catch (error: any) {
-        this._formErrorMessage = error;
+        this._formErrorMessage = error.message;
         this.handleFormError()
         console.error('Error while submitting form: ', error)
       }
     } else {
-      this._formErrorMessage = "Your form was invalid, please check the fields and make sure to follow any validation messages that come up when hovering on the field.";
-      this.handleFormError()
-      console.warn('An error was thrown in form validation. Check that it was handled correctly.');
+      // this._formErrorMessage = "Your form was invalid, please check the fields and make sure to follow any validation messages that come up when hovering on the field.";
+      // this.handleFormError()
+      // console.warn('An error was thrown in form validation. Check that it was handled correctly.');
     }
   }
 
