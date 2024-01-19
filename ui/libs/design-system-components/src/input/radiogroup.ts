@@ -8,6 +8,8 @@ export default class NHRadioGroup extends NHComponent {
   @property()
   name: string = "Field";
   @property()
+  id: string = "field-id";
+  @property()
   label?: string = "Select your option:";
   @property()
   options?: string[] = ["Cheese", "Crackers"];
@@ -61,7 +63,7 @@ export default class NHRadioGroup extends NHComponent {
             : null
           }
         </div>
-        <sl-radio-group @sl-change=${(e: CustomEvent) => this.handleInputChange(e)} data-name=${this.name} value=${this.value}>
+        <sl-radio-group @sl-change=${(e: CustomEvent) => this.handleInputChange(e)} data-name=${this.name} value=${this.value} id=${this.id}>
           ${
             this.options?.map((option: string) => 
               html`<sl-radio .checked=${this.value == option} value=${option}>${option}</sl-radio>`
