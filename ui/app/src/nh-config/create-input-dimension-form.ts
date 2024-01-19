@@ -11,19 +11,6 @@ export default class CreateDimension extends NHComponent {
   @property()
   sensemakerStore!: SensemakerStore;
 
-  /* Concrete implementations of the abstract BaseForm interface */  
-  // Form model
-  @state()
-  protected _model = { 
-    // This form's model is for two zome calls (Range and Dimension), but keep it in a flat structure for now
-    // Dimension:
-    name: "",
-    range_eh: undefined,
-    // Range:
-    min: undefined as number | undefined,
-    max: undefined as number | undefined,
-  };
-
   private get isIntegerRangeKind() { return this._numberType == "Integer" }
 
   // Helper to generate nested, dynamic schema for the Range
