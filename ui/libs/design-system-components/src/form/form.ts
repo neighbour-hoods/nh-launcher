@@ -44,7 +44,7 @@ interface RadioGroupFieldConfig extends BaseFieldConfig {
   direction: 'horizontal' | 'vertical';
 }
 
-// Use a type union for the FieldConfig type
+// Use a type union for the FieldConfig/Field types
 type FieldConfig = BaseFieldConfig | SelectFieldConfig | RadioGroupFieldConfig | CheckboxFieldConfig;
 
 type NHField = NHTextInput | NHRadioGroup | NHCheckbox | NHSelect;
@@ -58,7 +58,7 @@ interface FormConfig {
   
   // Optional use of custom submit button
   submitBtnRef?: NHButton;
-  // If not using custom submit button
+  // If not using custom submit button, give a label for the default button
   submitBtnLabel?: string;
 
   // Optional overloading of handlers
@@ -132,14 +132,18 @@ export default class NHForm extends NHBaseForm {
     (this.config.submitBtnRef as NHButton).addEventListener('click', this.handleSubmit.bind(this));
     this.config.submitBtnRef.dataset.bound = 'true'
   }
+
+  private get submitButton() {
+    return (this.config?.submitBtnRef || this.submitBtn)
+  }
   
   async resetForm() {
     super.reset();
     this.config.resetOverload?.call(this);
 
     this._selectOpenStates = {};
-    (this.config?.submitBtnRef || this.submitBtn).loading = false;
-    await (this.config?.submitBtnRef || this.submitBtn).updateComplete;
+    this.submitButton.loading = false;
+    await this.submitButton.updateComplete;
   }
 
   handleInputChange(e: Event) {
@@ -158,8 +162,8 @@ export default class NHForm extends NHBaseForm {
 
   // Hapy path form submit handler
   async handleValidSubmit() {
-    (this.config?.submitBtnRef || this.submitBtn).loading = true;
-    (this.config?.submitBtnRef || this.submitBtn).requestUpdate("loading");
+    this.submitButton.loading = true;
+    this.submitButton.requestUpdate("loading");
 
     this.config?.submitOverload?.call(this, this._model);
   }
@@ -167,8 +171,8 @@ export default class NHForm extends NHBaseForm {
   handleFormError() {
     this._alert = (this.renderRoot.querySelector('nh-alert') as NHAlert);
     this._alert.openToast();
-    (this.config?.submitBtnRef || this.submitBtn).loading = false;
-    (this.config?.submitBtnRef || this.submitBtn).requestUpdate("loading");
+    this.submitButton.loading = false;
+    this.submitButton.requestUpdate("loading");
   }
 
   // Implement the render method to use the config for rendering the form
@@ -310,7 +314,7 @@ export default class NHForm extends NHBaseForm {
               .errored=${this.shouldShowValidationErrorForField(config.name)}
               .size=${config.size}
               .required=${config.required}
-              id=${config.id}
+              .id=${config.id}
               data-name=${config.name}
               .name=${config.name}
               @change=${(e: Event) => this.handleInputChange(e)}
