@@ -136,6 +136,10 @@ export default class NHCheckbox extends NHComponent {
         padding: calc(1px * var(--nh-spacing-sm));
       }
 
+      .field.small.checkbox {
+        padding: calc(1px * var(--nh-spacing-xs));
+      }
+
       /* Labels */
       
       sl-checkbox::part(label) {
