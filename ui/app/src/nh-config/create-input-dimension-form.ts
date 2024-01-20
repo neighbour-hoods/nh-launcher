@@ -6,6 +6,7 @@ import { Dimension, Range, RangeKind, SensemakerStore, RangeKindFloat, RangeKind
 import { property, query, state } from "lit/decorators.js";
 import { MAX_RANGE_FLOAT, MAX_RANGE_INT, MIN_RANGE_FLOAT, MIN_RANGE_INT } from ".";
 import { decode } from "@msgpack/msgpack";
+import { parseZomeError } from "../utils";
 
 export default class CreateDimension extends NHComponent {
   @property()
@@ -48,14 +49,6 @@ export default class CreateDimension extends NHComponent {
   @property()
   submitBtn!: NHButton;
 
-  parseZomeError(err: Error) {
-    if(!err!.message) return "Not a valid error type";
-
-    const decodedErrors = err.message.match(/Deserialize\(\[(.*?)\]\)/);
-    const error = decodedErrors![1];
-    return JSON.stringify(error ? decode(JSON.parse("[" + error + "]")) : "{}", null, 2)
-  }
-
   async createEntries(model: object) {
     const formData : { name?: string, min?: number, max?: number, } = model;
     
@@ -73,7 +66,7 @@ export default class CreateDimension extends NHComponent {
     try {
       rangeEh = await this.sensemakerStore.createRange(inputRange);
     } catch (error) {
-      return Promise.reject(Error(' creating new range for dimension: ' + this.parseZomeError(error as Error)))
+      return Promise.reject(Error(' creating new range for dimension: ' + parseZomeError(error as Error)))
     }
     if(!rangeEh) return
     let inputDimension: Dimension = {
@@ -84,7 +77,7 @@ export default class CreateDimension extends NHComponent {
     try {
       dimensionEh = await this.sensemakerStore.createDimension(inputDimension);
     } catch (error) {
-      return Promise.reject(Error(' creating new dimension: ' + this.parseZomeError(error as Error)))
+      return Promise.reject(Error(' creating new dimension: ' + parseZomeError(error as Error)))
     }
 
     if(!dimensionEh) return

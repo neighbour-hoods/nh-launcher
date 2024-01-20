@@ -7,6 +7,14 @@ import { decompressSync, unzipSync } from "fflate";
 import { decode } from "@msgpack/msgpack";
 import { NeighbourhoodApplet, RangeKind } from "@neighbourhoods/client";
 
+export function parseZomeError(err: Error) {
+  if(!err!.message) return "Not a valid error type";
+
+  const decodedErrors = err.message.match(/Deserialize\(\[(.*?)\]\)/);
+  const error = decodedErrors![1];
+  return JSON.stringify(error ? decode(JSON.parse("[" + error + "]")) : "{}", null, 2)
+}
+
 export async function fakeSeededEntryHash(happBytes: Uint8Array): Promise<EntryHash> {
   const sha = await crypto.subtle.digest("SHA-256", happBytes)
   return new Uint8Array([0x84, 0x21, 0x24, ...new Uint8Array(sha), ...new Uint8Array(4)])

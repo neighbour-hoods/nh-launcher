@@ -139,7 +139,6 @@ export default class NHForm extends NHBaseForm {
 
   async resetForm() {
     super.reset();
-    
     this._selectOpenStates = {};
     this.submitButton.loading = false;
     await this.submitButton.updateComplete;
