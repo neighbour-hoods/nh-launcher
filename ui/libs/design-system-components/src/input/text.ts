@@ -20,7 +20,7 @@ export default class NHTextInput extends NHComponent {
   @property()
   errored: boolean = false;
 
-  @state()
+  @property()
   value?: string = '';
   @query('input')
   _input!: HTMLInputElement;

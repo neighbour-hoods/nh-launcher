@@ -214,7 +214,7 @@ export default class CreateOutputDimensionMethod extends NHBaseForm {
     }
   }
 
-  async resetForm() {
+  async reset() {
     super.reset();
 
     this.submitBtn.loading = false;

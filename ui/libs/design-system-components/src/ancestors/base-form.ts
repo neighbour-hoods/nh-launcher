@@ -24,6 +24,7 @@ export abstract class NHBaseForm extends NHComponentShoelace {
 
   protected async reset() {
     this._model = {...this._defaultModel};
+    console.log('this._model, this._defaultModel :>> ', this._model, this._defaultModel);
     this.formWasSubmitted = false;
     this.errors = {};
     this.resetTouchedState();
@@ -48,7 +49,7 @@ export abstract class NHBaseForm extends NHComponentShoelace {
       name = target.name || target.dataset.name; // Fallback to dataset for name
       value = target.value;
     }
-
+console.log('value :>> ', value);
     this.touched[name as string] = true;
     //@ts-ignore
     this._model[name as keyof this] = value;

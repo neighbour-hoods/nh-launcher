@@ -130,7 +130,7 @@ export default class NHDimensionsConfig extends NHComponent {
           id="create-dimension-dialog"
           .dialogType=${'input-form'}
           .size=${'medium'}
-          @form-submitted=${(e: CustomEvent) => { (e.currentTarget as NHDialog).hideDialog(); this._dimensionForm.resetForm() }}
+          @form-submitted=${(e: CustomEvent) => { (e.currentTarget as NHDialog).hideDialog(); this._dimensionForm.form.reset() }}
         >
           <div slot="inner-content" class="container">
             <h2>

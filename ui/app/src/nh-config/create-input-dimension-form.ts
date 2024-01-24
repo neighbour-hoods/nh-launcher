@@ -32,7 +32,7 @@ export default class CreateDimension extends NHComponent {
         .min(((model as any)?.min || - 1) + 1, "The higher extent of this range cannot be lower than the lower extent: " + ((model as any)?.min || 0))
         .max(rangeMax, "The higher extent of this range cannot be higher than " + rangeMax),
   }};
-
+  // This is fed into the nh-form config object
   schema(model: object) : ObjectSchema<any> { 
     return object({
     name: string().min(1, "Must be at least 1 characters").required("Enter a dimension name, e.g. Likes"),
@@ -43,11 +43,11 @@ export default class CreateDimension extends NHComponent {
   })};
   
   // Extra form state, not in the model
-  @property()
-  private _numberType?: (keyof RangeKindInteger | keyof RangeKindFloat) | undefined;
+  @property() private _numberType?: (keyof RangeKindInteger | keyof RangeKindFloat) | undefined;
 
-  @property()
-  submitBtn!: NHButton;
+  @property() submitBtn!: NHButton;
+
+  @query('nh-form') form;
 
   async createEntries(model: object) {
     const formData : { name?: string, min?: number, max?: number, } = model;
@@ -98,15 +98,16 @@ export default class CreateDimension extends NHComponent {
     );
   }
 
-  async resetForm() {
+  async resetLocalState() {
     this._numberType = undefined;
   }
 
+  // Called in input change handler overloads to dynamically keep the range values in bounds for the selected number type
   setRangeBoundsByNumberType(model: any) {
-    if(model.global_min) {
+    if(model.global_min && typeof model.min !== 'undefined') {
       model.min = this.isIntegerRangeKind ? MIN_RANGE_INT : MIN_RANGE_FLOAT;
     }
-    if(model.global_max) {
+    if(model.global_max && typeof model.max !== 'undefined') {
       model.max = this.isIntegerRangeKind ? MAX_RANGE_INT : MAX_RANGE_FLOAT;
     }
   }
@@ -139,9 +140,14 @@ export default class CreateDimension extends NHComponent {
               required: true,
               direction: 'vertical',
               label: 'Number type',
-              handleInputChangeOverload: (_e, model, _fields) => {
+              handleInputChangeOverload: async (_e, model, fields) => {
                 this._numberType = model.number_type == 'Decimal' ? 'Float' : 'Integer' // Need to rely on local state for dynamic schema, and translate from Display number type
                 this.setRangeBoundsByNumberType(model)
+
+                if(typeof model.min !== 'undefined') fields.min._input.value = String(model.min); 
+                if(typeof model.max !== 'undefined') fields.max._input.value = String(model.max); 
+                await fields.min.requestUpdate('value'); await fields.max.requestUpdate('value'); // updates dom input values
+                this.requestUpdate();
               },
             }],
 
@@ -174,10 +180,12 @@ export default class CreateDimension extends NHComponent {
               size: "small",
               required: false,
               label: 'Use Lowest',
-              handleInputChangeOverload: (e, model, fields) => {
-                model.min = this.isIntegerRangeKind ? MIN_RANGE_INT : MIN_RANGE_FLOAT;
+              handleInputChangeOverload: async(e, model, fields) => {
                 if (fields?.min) fields.min.disabled = e.target.value;
                 this.setRangeBoundsByNumberType(model)
+                if(typeof model.min !== 'undefined') fields.min._input.value = String(model.min);
+
+                await fields.min.requestUpdate();
               }},
             {
               type: 'checkbox',
@@ -187,16 +195,18 @@ export default class CreateDimension extends NHComponent {
               size: "small",
               required: false,
               label: 'Use Highest',
-              handleInputChangeOverload: (e, model, fields) => {
-                model.max = this.isIntegerRangeKind ? MAX_RANGE_INT : MAX_RANGE_FLOAT;
+              handleInputChangeOverload: async (e, model, fields) => {
                 if (fields?.max) fields.max.disabled = e.target.value;
-                this.setRangeBoundsByNumberType(model)
+                this.setRangeBoundsByNumberType(model) // updates model bounds
+                if(typeof model.max !== 'undefined') fields.max._input.value = String(model.max); 
+                
+                await fields.max.requestUpdate() // updates dom input value
               }
             }],
           ],
           submitOverload: this.createEntries.bind(this),
-          resetOverload: this.resetForm,
-          progressiveValidation: false,
+          resetOverload: this.resetLocalState,
+          progressiveValidation: true,
           schema: (model: object) => (() => this.schema(model))() // Relies on dynamic elements so use and IIFE
         }))()}></nh-form>
     `;

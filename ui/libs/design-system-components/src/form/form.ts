@@ -69,15 +69,15 @@ interface FormConfig {
 export default class NHForm extends NHBaseForm {
   @property({ type: Object }) config!: FormConfig;
 
-  @property() inputChangeOverloads?: Map<string, (e: Event, model: object, fields: object) => void>; // Will be assigned from the config in the firstUpdated hook
-  @property() inputMutationOverloads?: Map<string, (value: string | boolean) => unknown>; // Will be assigned from the config in the firstUpdated hook
-  @property() fieldRefs: Map<string, NHField> = new Map();// Will be assigned from the config in the firstUpdated hook
+  @property() private inputChangeOverloads?: Map<string, (e: Event, model: object, fields: object) => void>; // Will be assigned from the config in the firstUpdated hook
+  @property() private inputMutationOverloads?: Map<string, (value: string | boolean) => unknown>; // Will be assigned from the config in the firstUpdated hook
+  @property() private fieldRefs: Map<string, NHField> = new Map();// Will be assigned from the config in the firstUpdated hook
 
   @state() _model!: object;
   
   @query("nh-button[type='submit']") submitBtn!: NHButton;
   
-  @property() _alert!: NHAlert;
+  @property() private _alert!: NHAlert;
 
   @state() private _selectOpenStates: Record<string, boolean> = {};
   
@@ -87,17 +87,22 @@ export default class NHForm extends NHBaseForm {
 
     if (changedProperties.has('config')) {
       this.config.fields.flat().map((field: FieldConfig) => {
+        // Set the form model
         this._model = { ...this._model, [field.name]: field.defaultValue }
 
+        // Index overloads ready for use
         if(field?.mutateValue) {
           this.inputMutationOverloads?.set(field.name, field.mutateValue)
         }
+        // Index change handler overloads
         if(field?.handleInputChangeOverload) {
           this.inputChangeOverloads?.set(field.name, field.handleInputChangeOverload)
         }
+        // Set form-level select values (used to prevent multiple open selects at once)
         if(field.type == 'select') {
           this._selectOpenStates[field.id as string] = false;
         }
+        // Index refs of field inputs to be passed through to change handler callbacks
         this.fieldRefs?.set(field.name, this.renderRoot.querySelector(`#${field.id}`) as NHField)
       })
 
@@ -116,7 +121,7 @@ export default class NHForm extends NHBaseForm {
     this.unbindSubmitHandler();
   }
 
-  unbindSubmitHandler() {
+  private unbindSubmitHandler() {
     if(!this.config?.submitBtnRef) {
       console.error('Could not unbind your submit button handler.');
       return;
@@ -124,7 +129,7 @@ export default class NHForm extends NHBaseForm {
     this.config.submitBtnRef.removeEventListener('click', this.handleSubmit.bind(this))
   }
 
-  bindSubmitHandler() {
+  private bindSubmitHandler() {
     if(!this.config?.submitBtnRef) {
       console.error('Could not bind your submit button handler.');
       return 
@@ -137,13 +142,14 @@ export default class NHForm extends NHBaseForm {
     return (this.config?.submitBtnRef || this.submitBtn)
   }
 
-  async resetForm() {
-    super.reset();
+  public async reset() {
     this._selectOpenStates = {};
     this.submitButton.loading = false;
     await this.submitButton.updateComplete;
 
+    Object.values(Object.fromEntries(this.fieldRefs.entries())).forEach(inputRef => {if (inputRef !== null) inputRef.disabled = false});
     this.config.resetOverload?.call(this);
+    super.reset();
   }
 
   handleInputChange(e: Event) {
@@ -154,7 +160,7 @@ export default class NHForm extends NHBaseForm {
     }
     super.handleInputChange(e);
 
-    // Additionally overload input change with a callback that takes the model, form fields (e.g. for manually disabling other inputs)
+    // Additionally overload input change with a callback that takes the model, form field refs (e.g. for manually disabling other inputs)
     if(this.inputChangeOverloads?.has(target.name)) {
       this.inputChangeOverloads?.get(target.name)?.apply(null, [e, this._model, Object.fromEntries(this.fieldRefs.entries())]);
     }
@@ -167,7 +173,6 @@ export default class NHForm extends NHBaseForm {
     try {
       await this.config?.submitOverload?.call(null, this._model);
     } catch(err) {
-      console.log('err :>> ', err, typeof err);
       this._formErrorMessage = err as string;
       this._formErrorMessage = "We couldn't store your data. If this happens again, please log an issue with the Neighbourhoods team, including the message logged in the developer console.";
       this.handleFormError();
@@ -351,6 +356,7 @@ export default class NHForm extends NHBaseForm {
               id=${fieldConfig.id}
               .name=${fieldConfig.name}
               .label=${fieldConfig.label}
+              .value=${(this as any)._model[fieldConfig.name as any]}
               @change=${(e: Event) => this.handleInputChange(e)}
             />
           </nh-tooltip>`;
@@ -389,7 +395,6 @@ export default class NHForm extends NHBaseForm {
           padding: 0;
           margin: calc(1px * var(--nh-spacing-md)) 0 calc(1px * var(--nh-spacing-3xl)) 0;
           gap: 0 calc(1px * var(--nh-spacing-4xl));
-          padding-bottom: 4rem;
         }
 
         form > * {

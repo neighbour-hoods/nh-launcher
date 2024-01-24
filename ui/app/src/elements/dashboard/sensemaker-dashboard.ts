@@ -205,7 +205,6 @@ console.log('appletInstanceInfos :>> ', appletInstanceInfos);
 // const appId = Object.keys(Object.fromEntries((appletInstanceInfos).entries()))[0];
 // if(!appId) return;
 
-debugger;
 const comp = this._matrixStore.createResourceBlockDelegate(decodeHashFromBase64(appId))
 
 console.log('this._sensemakerStore :>> ', comp);

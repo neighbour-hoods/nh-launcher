@@ -272,55 +272,59 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
               this.editingConfig = false;
             }}
           >
-              <div>
-                <h2>Assessment Widget Configuration</h2>
-                ${this.renderMainForm()}
-              </div>
-              <nh-button-group
-                .direction=${"horizontal"}
-                class="action-buttons"
-              >
-                <span slot="buttons">
-                  <nh-button
-                    id="close-widget-config"
-                    .variant=${'warning'}
-                    .size=${'md'}
-                    @click=${() => {
-                      this.editingConfig = false;
-                      this._form?.resetForm()
-                    }}
-                  >
-                    Cancel
-                  </nh-button>
-                  <nh-button
-                    id="update-widget-config"
-                    .variant=${'primary'}
-                    .size=${'md'}
-                    @click=${async () => {
-                      this._formAction = 'update';
-                      await this.requestUpdate();
-                      this._form?.handleSubmit()
-                    }}
-                  >
-                    Update
-                  </nh-button>
-                  <nh-button
-                    type="submit"
-                    @click=${async () => {
-                      this._formAction = 'create';
-                      await this.requestUpdate();
-                      this._form?.handleSubmit()}
-                    }
-                    id="add-widget-config"
-                    .variant=${'success'}
-                    .size=${'md'}
-                  >
-                    Create
-                  </nh-button>
-                </span>
-              </nh-button-group>
+            <div>
+              <h2>Add Assessment Control</h2>
+              ${this.renderMainForm()}
             </div>
-          </sl-details>
+            <nh-button-group
+              .direction=${'horizontal'}
+              class="action-buttons"input
+            >
+              <span slot="buttons">
+                <nh-button
+                  id="close-widget-config"
+                  .variant=${'danger'}
+                  .size=${'md'}
+                  @click=${() => {
+                    this.editingConfig = false;
+                    this._form?.reset();
+                  }}
+                >Cancel</nh-button>
+
+                <nh-button
+                  id="reset-widget-config"
+                  .variant=${'warning'}
+                  .size=${'md'}
+                  @click=${() => {
+                    this._workingWidgetControls = [];
+                    this.selectedWidgetKey = undefined;
+                    this._form?.reset();
+                    this.requestUpdate()
+                  }}
+                >Reset</nh-button>
+                
+                <nh-button
+                  type="submit"
+                  @click=${async () => {
+                    await this._form?.handleSubmit();
+                    this._form?.reset();
+                    // this.editingConfig = false;
+                  }}
+                  id="add-widget-config"
+                  .variant=${'success'}
+                  .size=${'md'}
+                >Add</nh-button>
+              </span>
+            </nh-button-group>
+          </div>
+        </sl-details>
+        <nh-alert 
+          .title=${"You have saved your changes."}
+          .description=${"You have saved your changes."}
+          .closable=${false}
+          .isToast=${true}
+          .open=${false}
+          .type=${"success"}></nh-alert>
         </div>
       </div>
     </main>`;
