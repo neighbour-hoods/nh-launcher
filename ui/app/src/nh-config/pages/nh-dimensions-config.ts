@@ -11,7 +11,6 @@ import {
   NHCard,
   NHComponent,
   NHDialog,
-  NHForm,
   NHPageHeaderCard,
 } from '@neighbourhoods/design-system-components';
 import CreateDimension from '../create-input-dimension-form';
@@ -19,7 +18,6 @@ import DimensionList from '../dimension-list';
 import { property, query, state } from 'lit/decorators.js';
 import { b64images } from '@neighbourhoods/design-system-styles';
 import CreateOutputDimensionMethod from '../create-output-dimension-form';
-import { object, string } from 'yup';
 
 export default class NHDimensionsConfig extends NHComponent {
   @consume({ context: matrixContext, subscribe: true })
@@ -130,7 +128,7 @@ export default class NHDimensionsConfig extends NHComponent {
           id="create-dimension-dialog"
           .dialogType=${'input-form'}
           .size=${'medium'}
-          @form-submitted=${(e: CustomEvent) => { (e.currentTarget as NHDialog).hideDialog(); this._dimensionForm.form.reset() }}
+          @form-submitted=${(e: CustomEvent) => { (e.currentTarget as NHDialog).hideDialog(); this._formType == 'method' ? this._dimensionForm.reset() : this._dimensionForm.form.reset() }}
         >
           <div slot="inner-content" class="container">
             <h2>
@@ -147,6 +145,8 @@ export default class NHDimensionsConfig extends NHComponent {
             @click=${() => {
                 const cannotCreateOutputMethod = !(this._inputDimensionList._dimensionEntries && this._inputDimensionList._dimensionEntries.length > 0);
                 if(this._formType == 'method' && cannotCreateOutputMethod) this._formType = 'input-dimension'
+                // Note: due to the complexity of converting the create-output-dimension-form to use NHForm, it is still using NHBaseForm and needs to be submitted differently 
+                this._dimensionForm?.form ? this._dimensionForm.form.handleSubmit() : this._dimensionForm.handleSubmit()
               }
             }
             .loading=${false}
@@ -162,7 +162,7 @@ export default class NHDimensionsConfig extends NHComponent {
       return html`
       <create-input-dimension-form
         .sensemakerStore=${this._sensemakerStore.value}
-        .submitBtn=${this.submitBtn}
+        .submitBtn=${(() => this.submitBtn)()}
       ></create-input-dimension-form>`
       ;
     }
@@ -170,7 +170,7 @@ export default class NHDimensionsConfig extends NHComponent {
       .sensemakerStore=${this._sensemakerStore.value}
       .inputDimensions=${this._inputDimensionList._dimensionEntries}
       .inputDimensionRanges=${this._inputDimensionList._rangeEntries}
-      .submitBtn=${this.submitBtn}
+      .submitBtn=${(() => this.submitBtn)()}
     ></create-output-dimension-method-form>`;
   }
 

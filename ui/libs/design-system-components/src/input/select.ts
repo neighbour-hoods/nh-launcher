@@ -201,6 +201,8 @@ export default class NHSelect extends NHComponentShoelace {
       .custom-select.active .options{
         display: block;
         z-index: 5;
+        overflow: auto;
+        height: var(--select-height);
       }
 
       .options .option, .custom-select .select-btn{

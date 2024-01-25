@@ -117,7 +117,7 @@ export default class CreateDimension extends NHComponent {
       <nh-form
         .config=${(() => ({
           rows: [1, 1, 2, 2],
-          submitBtnRef: (() => this.submitBtn)(),
+          submitBtnRef: this.submitBtn,
           fields: [
             [{
               type: 'text',

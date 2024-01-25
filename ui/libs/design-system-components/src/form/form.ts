@@ -111,7 +111,7 @@ export default class NHForm extends NHBaseForm {
   }
 
   protected updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    if (changedProperties.has('config') && this.config.submitBtnRef && !this.config.submitBtnRef.dataset.bound) {
+    if (changedProperties.has('config') && this.config?.submitBtnRef && !this.config?.submitBtnRef?.dataset?.bound) {
       this.bindSubmitHandler()
     }
   }
@@ -126,7 +126,12 @@ export default class NHForm extends NHBaseForm {
       console.error('Could not unbind your submit button handler.');
       return;
     }
-    this.config.submitBtnRef.removeEventListener('click', this.handleSubmit.bind(this))
+    this.config.submitBtnRef.removeEventListener('click', this.ifSubmitBtnBoundSubmit)
+  }
+
+  private ifSubmitBtnBoundSubmit() {
+    if(!(this.submitBtn.dataset.bound == 'true')) return
+    this.handleSubmit.bind(this)
   }
 
   private bindSubmitHandler() {
@@ -134,7 +139,7 @@ export default class NHForm extends NHBaseForm {
       console.error('Could not bind your submit button handler.');
       return 
     }
-    (this.config.submitBtnRef as NHButton).addEventListener('click', this.handleSubmit.bind(this));
+    (this.config.submitBtnRef as NHButton).addEventListener('click', this.ifSubmitBtnBoundSubmit);
     this.config.submitBtnRef.dataset.bound = 'true'
   }
 
@@ -200,7 +205,7 @@ export default class NHForm extends NHBaseForm {
         type="submit"
         .size=${'auto'}
         .variant=${'primary'}
-        @click=${() => this.handleSubmit(undefined as any)}
+        @click=${() => this.ifSubmitBtnBoundSubmit()}
         .loading=${false}
       >${this.config?.submitBtnLabel || "Submit"}</nh-button>
       <nh-alert

@@ -49,7 +49,7 @@ export abstract class NHBaseForm extends NHComponentShoelace {
       name = target.name || target.dataset.name; // Fallback to dataset for name
       value = target.value;
     }
-console.log('value :>> ', value);
+    
     this.touched[name as string] = true;
     //@ts-ignore
     this._model[name as keyof this] = value;
@@ -67,7 +67,6 @@ console.log('value :>> ', value);
     
     const isValid = await this.validateForm();
     this.formWasSubmitted = true;
-    
     if (this.isFormUntouched()) { 
       await this.highlightUntouchedFields()
     }

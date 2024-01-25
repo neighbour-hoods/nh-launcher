@@ -155,8 +155,8 @@ export default class CreateOutputDimensionMethod extends NHBaseForm {
     }
   }
 
-  @property()
-  submitBtn!: NHButton;
+  @property() submitBtn!: NHButton;
+  @query('#error-alert') private _alert!: NHAlert;
 
   /* Concrete implementations of the abstract BaseForm interface */
   // Form schema
@@ -212,6 +212,14 @@ export default class CreateOutputDimensionMethod extends NHBaseForm {
     } else if ((e.target?.parentElement as any).dataset?.name === 'program') {
       this.computeOutputDimensionRange();
     }
+  }
+
+  // Sad path form submit handler
+  handleFormError() {
+    this._alert!.type == 'danger';
+    this._alert.openToast();
+    this.submitBtn.loading = false;
+    this.submitBtn.requestUpdate("loading");
   }
 
   async reset() {
@@ -297,6 +305,7 @@ export default class CreateOutputDimensionMethod extends NHBaseForm {
   }
 
   render() {
+    console.log('this.submitBtn :>> ', this.submitBtn);
     return html`
     ${this.inputDimensions && this.inputDimensions.length > 0 ? html`<form>
         <nh-tooltip .visible=${this.shouldShowValidationErrorForField('name')} .text=${this.getErrorMessage('name')} .variant=${"danger"}>
@@ -358,6 +367,15 @@ export default class CreateOutputDimensionMethod extends NHBaseForm {
               .title=${"You have not created any input dimensions"}
               .description=${"Click 'Add' to create an input dimension first"}>
             </nh-alert>`}
+      <nh-alert
+        id="error-alert"
+        .type=${"danger"}
+        .closable=${false}
+        .open=${false}
+        .isToast=${true}
+        .title=${"There was an error!"}
+        .description=${"Look at the console"}>
+      </nh-alert>
     `;
   }
 

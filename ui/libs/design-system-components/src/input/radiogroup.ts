@@ -230,6 +230,26 @@ export default class NHRadioGroup extends NHComponent {
         border-color: var(--nh-theme-input-border-disabled);
         cursor: not-allowed;
       }
+
+      /* Better colors? *?
+      
+      sl-radio:hover::part(control) {
+        background-color: var(--nh-theme-bg-detail); 
+      }
+
+      sl-radio::part(label) {
+        color: var(--nh-theme-fg-default);
+      }
+
+      sl-radio::part(control) {
+        color: var(--nh-theme-accent-default);
+        border-color: var(--nh-theme-accent-default);
+        background-color: transparent;
+      }
+
+      sl-radio {
+        margin-bottom: 0 !important;
+      }
     `,
   ];
 }
