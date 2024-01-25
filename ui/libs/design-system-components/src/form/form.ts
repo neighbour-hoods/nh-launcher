@@ -130,7 +130,7 @@ export default class NHForm extends NHBaseForm {
   }
 
   private ifSubmitBtnBoundSubmit() {
-    if(!(this.submitBtn.dataset.bound == 'true')) return
+    if(!(this?.submitBtn?.dataset?.bound == 'true')) return
     this.handleSubmit.bind(this)
   }
 

@@ -195,7 +195,6 @@ export class FakeInputAssessmentWidgetDelegate implements InputAssessmentWidgetD
    * Mock assessment value
    */
   async getLatestAssessmentForUser(): Promise<Assessment | undefined> {
-    console.log('got latest assessment for user :>> ');
     return Promise.resolve(this.latestAssessment);
   }
 
@@ -203,8 +202,6 @@ export class FakeInputAssessmentWidgetDelegate implements InputAssessmentWidgetD
    * Mock assessment value
    */
   async getLatestAssessment(): Promise<Assessment | undefined> {
-    console.log('got latest assessment :>> ');
-    
     return Promise.resolve(this.latestAssessment);
   }
 

@@ -229,6 +229,10 @@ export default class CreateDimension extends NHComponent {
           color: var(--nh-theme-fg-default);
           margin: 0 auto;
         }
+
+        nh-form {
+          padding-bottom: 3rem;
+        }
       `
     ]
   }

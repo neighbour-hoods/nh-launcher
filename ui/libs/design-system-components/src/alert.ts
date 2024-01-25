@@ -1,6 +1,6 @@
 import { classMap } from 'lit/directives/class-map.js';
 import { css, CSSResult, html, TemplateResult } from 'lit';
-import {property, query } from 'lit/decorators.js';
+import {property } from 'lit/decorators.js';
 import { NHComponentShoelace } from './ancestors/base';
 import SlAlert from '@shoelace-style/shoelace/dist/components/alert/alert.js';
 

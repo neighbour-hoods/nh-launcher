@@ -75,7 +75,8 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   currentApplet!: Applet;
   
   @query('nh-form') private _form;
-  @query('nh-alert') private _successAlert;
+  @query('#success-toast') private _successAlert;
+  @query('#danger-toast') private _dangerAlert;
   @query("nh-button[type='submit']") private submitBtn;
   
   @state() loading: boolean = false;
@@ -152,7 +153,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     if(typeof this.selectedWidgetKey != 'undefined' && this?._workingWidgetControlRendererCache.has(this.selectedWidgetKey) && this?.placeHolderWidget) {
       return repeat([this.selectedWidgetKey], () => +(new Date), (_, _idx) =>this?.placeHolderWidget())
     }
-    return html`<sl-spinner class="icon-spinner"></sl-spinner>`
+    return this.loading ? html`<sl-spinner class="icon-spinner"></sl-spinner>` : null
   }
 
   render(): TemplateResult {
@@ -273,12 +274,22 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
           </div>
         </sl-details>
         <nh-alert 
+          id="success-toast"
           .title=${"You have saved your changes."}
           .description=${"You have saved your changes."}
           .closable=${false}
           .isToast=${true}
           .open=${false}
           .type=${"success"}></nh-alert>
+        </div>
+        <nh-alert 
+          id="danger-toast"
+          .title=${"You do no have any applets yet."}
+          .description=${"Return to your Neighbourhood home page by clicking its icon on the left sidebar, or the back arrow from this page. Then just install an applet to enable configuring of widgets."}
+          .closable=${false}
+          .isToast=${true}
+          .open=${false}
+          .type=${"danger"}></nh-alert>
         </div>
       </div>
     </main>`;
@@ -668,6 +679,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
         this._matrixStore?.getAppletInstanceInfosForGroup(this.weGroupId),
       );
       const applets = get(await this._matrixStore.fetchAllApplets(this.weGroupId));
+      if(!(applets.length > 0)) this._dangerAlert.openToast();
 
       this.currentApplet = applets[0][1]; // TODO: un-hard code this once we are fed an applet Id (maybe from the nav somewhere.. once it distinguishes between applets)
       this._appletInstanceInfo = appletInstanceInfos?.find(appletInfo => {
