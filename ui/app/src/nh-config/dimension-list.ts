@@ -1,8 +1,7 @@
 import { html, css, PropertyValueMap } from "lit";
 import { property, state } from "lit/decorators.js";
 
-import { AppInfo, CallZomeResponse, EntryHash, encodeHashToBase64 } from "@holochain/client";
-import { decode } from "@msgpack/msgpack";
+import { EntryHash, encodeHashToBase64 } from "@holochain/client";
 import { Dimension,  Method,  Range, RangeKind, SensemakerStore } from "@neighbourhoods/client";
 
 import { NHButton, NHCard, NHComponent } from "@neighbourhoods/design-system-components";
@@ -43,90 +42,35 @@ export default class DimensionList extends NHComponent {
   @state()
   private _methodEntries!: Array<Method>;
 
-  // TODO: replace fetches below with new SensemakerStore method calls
-  async fetchDimension(entryHash: EntryHash) : Promise<CallZomeResponse> {
-    try {
-      const appInfo: AppInfo = await this.sensemakerStore.client.appInfo();
-      const cell_id = (appInfo.cell_info['sensemaker'][1] as any).cloned.cell_id;
-      return this.sensemakerStore.client.callZome({
-            cell_id,
-            zome_name: 'sensemaker',
-            fn_name: 'get_dimension',
-            payload: entryHash,
-      });
-    } catch (error) {
-      console.log('Error fetching dimension details: ', error);
-    }
-  }
-
-  async fetchRange(entryHash: EntryHash) : Promise<CallZomeResponse> {
-    try {
-      const appInfo: AppInfo = await this.sensemakerStore.client.appInfo();
-      const cell_id = (appInfo.cell_info['sensemaker'][1] as any).cloned.cell_id;
-      return this.sensemakerStore.client.callZome({
-            cell_id,
-            zome_name: 'sensemaker',
-            fn_name: 'get_range',
-            payload: entryHash,
-      });
-    } catch (error) {
-      console.log('Error fetching range details: ', error);
-    }
-  }
-
-  async fetchDimensionEntriesFromHashes(dimensionEhs: EntryHash[]) : Promise<Dimension[]> {
-    const response = await Promise.all(dimensionEhs.map(eH => this.fetchDimension(eH)))
-    return response.map(payload => {
-      try {
-        return decode(payload.entry.Present.entry) as Dimension
-      } catch (error) {
-        console.log('Error decoding dimension payload: ', error);
-      }
-    }) as Dimension[];
-  }
-
-  async fetchRangeEntries() {
-    await this.fetchRangeEntriesFromHashes(this._dimensionEntries.map((dimension: Dimension) => dimension.range_eh));
-  }
-
   async fetchDimensionEntries() {
     try {
-      const appInfo: AppInfo = await this.sensemakerStore.client.appInfo();
-      const cell_id = (appInfo.cell_info['sensemaker'][1] as any).cloned.cell_id;
-      const response = await this.sensemakerStore.client.callZome({
-        cell_id,
-        zome_name: 'sensemaker',
-        fn_name: 'get_dimensions',
-        payload: null,
-      });
-      this._dimensionEntries = response.map(payload => {
-        try {
-          const entryHash = payload.signed_action.hashed.content.entry_hash;
-          return { ...decode(payload.entry.Present.entry) as Dimension & { dimension_eh: EntryHash }, dimension_eh: entryHash};
-        } catch (error) {
-          console.log('Error decoding dimension payload: ', error);
+      const entryRecords = await this.sensemakerStore.getDimensions();
+      this._dimensionEntries = entryRecords.map(entryRecord => {
+        return {
+          ...entryRecord.entry,
+          dimension_eh: entryRecord.entryHash
         }
-      }) as Array<Dimension & { dimension_eh: EntryHash }>;
+      })
     } catch (error) {
       console.log('Error fetching dimension details: ', error);
     }
   }
 
   async fetchRangeEntriesFromHashes(rangeEhs: EntryHash[]) {
-    const response = await Promise.all(rangeEhs.map(eH => this.fetchRange(eH)))
-    this._rangeEntries = response.map((payload, index) => {
-      try {
-        return { ...decode(payload.entry.Present.entry) as Range, range_eh: rangeEhs[index]}
-      } catch (error) {
-        console.log('Error decoding range payload: ', error);
-      }
-    }) as Array<Range & { range_eh: EntryHash }>;
+    let response;
+    try {
+      response = await Promise.all(rangeEhs.map(eH => this.sensemakerStore.getRange(eH)))
+    } catch (error) {
+      console.log('Error fetching range details: ', error);
+    }
+    this._rangeEntries = response.map((entryRecord) => ({...entryRecord.entry, range_eh: entryRecord.entryHash})) as Array<Range & { range_eh: EntryHash }>;
   }
 
   async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     try {
-      await this.fetchDimensionEntries()
-      await this.fetchRangeEntries()
+      await this.fetchDimensionEntries();
+      await this.fetchRangeEntriesFromHashes(this._dimensionEntries.map((dimension: Dimension) => dimension.range_eh));
+
       this._methodEntries = (await (this.sensemakerStore.getMethods()) as Array<EntryRecord<Method>>).map(eR => eR.entry);
     } catch (error) {
       console.error('Could not fetch: ', error)
