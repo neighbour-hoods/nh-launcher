@@ -53,6 +53,7 @@ import { get } from 'svelte/store';
 import { Applet, AppletInstanceInfo } from '../../types';
 import { FakeInputAssessmentWidgetDelegate } from '@neighbourhoods/app-loader';
 import { dimensionIncludesControlRange } from '../../utils';
+import { EntryRecord } from '@holochain-open-dev/utils';
 
 export default class NHAssessmentWidgetConfig extends NHComponent {
   @consume({ context: matrixContext, subscribe: true })
@@ -102,7 +103,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   /* Temp - need to add Store method that returns records with entry hashes*/
   @state() private _unpartitionedDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
   @state() private _rangeEntries!: Array<Range & { range_eh: EntryHash }>;
-  @state() private _methodEntries!: any;
+  @state() private _methodEntries!: Method[] | undefined;
 
 
   async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
@@ -128,7 +129,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   }
 
   private findInputDimensionsForOutputDimension(outputDimensionEh: EntryHash) {
-    const methods = this._methodEntries.filter((method: Method) => compareUint8Arrays(method.output_dimension_eh, outputDimensionEh))
+    const methods = this._methodEntries!.filter((method: Method) => compareUint8Arrays(method.output_dimension_eh, outputDimensionEh))
     
     return methods.map((method: Method) => method.input_dimension_ehs[0])
   }
@@ -657,7 +658,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
       this._inputDimensionEntries = input;
       this._outputDimensionEntries = output;
     } catch (error) {
-      console.log('Error fetching dimension details: ', error);
+      console.log('Error partitioning dimensions: ', error);
     }
   }
 
@@ -695,56 +696,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     }
   }
 
-  // COPIED FROM dimension-list, this will need lifting up into the layout component
-  // TODO: replace fetches below with new SensemakerStore method calls
-  async fetchDimension(entryHash: EntryHash): Promise<CallZomeResponse> {
-    try {
-      //@ts-ignore
-      const appInfo: AppInfo = await this._sensemakerStore.value.client.appInfo();
-      const cell_id = (appInfo.cell_info['sensemaker'][1] as any).cloned.cell_id;
-
-      //@ts-ignore
-      return this._sensemakerStore.value.client.callZome({
-        cell_id,
-        zome_name: 'sensemaker',
-        fn_name: 'get_dimension',
-        payload: entryHash,
-      });
-    } catch (error) {
-      console.log('Error fetching dimension details: ', error);
-    }
-  }
-
-  async fetchRange(entryHash: EntryHash): Promise<CallZomeResponse> {
-    try {
-      //@ts-ignore
-      const appInfo: AppInfo = await this._sensemakerStore.value.client.appInfo();
-      const cell_id = (appInfo.cell_info['sensemaker'][1] as any).cloned.cell_id;
-
-      //@ts-ignore
-      return this._sensemakerStore.value.client.callZome({
-        cell_id,
-        zome_name: 'sensemaker',
-        fn_name: 'get_range',
-        payload: entryHash,
-      });
-    } catch (error) {
-      console.log('Error fetching range details: ', error);
-    }
-  }
-
-  async fetchDimensionEntriesFromHashes(dimensionEhs: EntryHash[]): Promise<Dimension[]> {
-    const response = await Promise.all(dimensionEhs.map(eH => this.fetchDimension(eH)));
-    return response.map(payload => {
-      try {
-        //@ts-ignore
-        return decode(payload.entry.Present.entry) as Dimension;
-      } catch (error) {
-        console.log('Error decoding dimension payload: ', error);
-      }
-    }) as Dimension[];
-  }
-
   async fetchRangeEntries() {
     await this.fetchRangeEntriesFromHashes(
       this._unpartitionedDimensionEntries.map((dimension: Dimension) => dimension.range_eh),
@@ -752,49 +703,30 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   }
 
   async fetchMethodEntries() {
-    this._methodEntries = await this._sensemakerStore.value?.getMethods();
+    this._methodEntries = (await this._sensemakerStore.value?.getMethods())?.map(eR => eR.entry);
   }
 
   async fetchDimensionEntries() {
     try {
-      //@ts-ignore
-      const appInfo: AppInfo = await this._sensemakerStore.value.client.appInfo();
-      const cell_id = (appInfo.cell_info['sensemaker'][1] as any).cloned.cell_id;
-
-      //@ts-ignore
-      const response = await this._sensemakerStore.value.client.callZome({
-        cell_id,
-        zome_name: 'sensemaker',
-        fn_name: 'get_dimensions',
-        payload: null,
-      });
-      this._unpartitionedDimensionEntries = response.map(payload => {
-        try {
-          const entryHash = payload.signed_action.hashed.content.entry_hash;
-
-          //@ts-ignore
-          return {
-            ...(decode(payload.entry.Present.entry) as Dimension & { dimension_eh: EntryHash }),
-            dimension_eh: entryHash,
-          };
-        } catch (error) {
-          console.log('Error decoding dimension payload: ', error);
+      const entryRecords = await this._sensemakerStore.value?.getDimensions();
+      this._unpartitionedDimensionEntries = entryRecords!.map(entryRecord => {
+        return {
+          ...entryRecord.entry,
+          dimension_eh: entryRecord.entryHash
         }
-      }) as Array<Dimension & { dimension_eh: EntryHash }>;
+      })
     } catch (error) {
       console.log('Error fetching dimension details: ', error);
     }
   }
 
   async fetchRangeEntriesFromHashes(rangeEhs: EntryHash[]) {
-    const response = await Promise.all(rangeEhs.map(eH => this.fetchRange(eH)));
-    this._rangeEntries = response.map((payload, index) => {
-      try {
-        //@ts-ignore
-        return { ...(decode(payload.entry.Present.entry) as Range), range_eh: rangeEhs[index] };
-      } catch (error) {
-        console.log('Error decoding range payload: ', error);
-      }
-    }) as Array<Range & { range_eh: EntryHash }>;
+    let response;
+    try {
+      response = await Promise.all(rangeEhs.map(eH => this._sensemakerStore.value?.getRange(eH)))
+    } catch (error) {
+      console.log('Error fetching range details: ', error);
+    }
+    this._rangeEntries = response.map((entryRecord) => ({...entryRecord.entry, range_eh: entryRecord.entryHash})) as Array<Range & { range_eh: EntryHash }>;
   }
 }
