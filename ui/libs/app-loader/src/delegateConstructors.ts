@@ -18,7 +18,6 @@ import {
   SensemakerStore,
   UnsubscribeFn
 } from "@neighbourhoods/client";
-import { EntryRecord } from "@holochain-open-dev/utils";
 
 export class SubscriberManager extends Array<CallbackFn> {
   public subscribe(cb: CallbackFn): UnsubscribeFn {
@@ -162,8 +161,7 @@ export function createInputAssessmentWidgetDelegate(
         resource_def_eh: resourceDefEh,
         maybe_input_dataset: null
       })
-      const assessmentRecord = await sensemakerStore.getAssessment(assessmentEh)
-      const assessmentEntryRecord = new EntryRecord<Assessment>(assessmentRecord)
+      const assessmentEntryRecord = await sensemakerStore.getAssessment(assessmentEh)
       assessment = assessmentEntryRecord.entry
       subscribers.dispatch(assessment)
       return assessment;
