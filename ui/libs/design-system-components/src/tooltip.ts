@@ -97,6 +97,19 @@ export default class NHSlide extends NHComponentShoelace {
         padding: 4px 8px;
         min-width: 8rem;
       }
+      :host(.left) .tooltip .content {
+        bottom: initial;
+        top: 25%;
+        right: 110%;
+        padding: 4px 8px;
+        min-width: 8rem;
+      }
+      :host(.left) .tooltip .content::after {
+        right: -.75rem;
+        bottom: 34%;
+        transform: rotate(90deg);
+      }
+
       :host(.right) .tooltip .content svg {
         display: none;
       }
