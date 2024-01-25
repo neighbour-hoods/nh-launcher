@@ -162,8 +162,7 @@ export function createInputAssessmentWidgetDelegate(
         resource_def_eh: resourceDefEh,
         maybe_input_dataset: null
       })
-      const assessmentRecord = await sensemakerStore.getAssessment(assessmentEh)
-      const assessmentEntryRecord = new EntryRecord<Assessment>(assessmentRecord)
+      const assessmentEntryRecord = await sensemakerStore.getAssessment(assessmentEh)
       assessment = assessmentEntryRecord.entry
       subscribers.dispatch(assessment)
       return assessment;
