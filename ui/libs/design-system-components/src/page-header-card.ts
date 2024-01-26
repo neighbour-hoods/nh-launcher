@@ -40,11 +40,12 @@ export default class NHPageHeaderCard extends NHComponent {
     
     .container {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
       color: var(--nh-theme-fg-default);
       border-radius: calc(1px * var(--nh-radii-md));
       padding: calc(1px * var(--nh-spacing-sm)) calc(1px * var(--nh-spacing-md));
+      gap: calc(1px * var(--nh-spacing-xl));
       position: relative;
     }
     .container.light {
