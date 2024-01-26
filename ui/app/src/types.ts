@@ -23,7 +23,7 @@ import {
 export enum DashboardMode {
   MainHome,
   WeGroupHome,
-  AssessmentsHome,
+  DashboardOverview,
   AppletGroupInstanceRendering,
   AppletClassRendering,
   Loading,
