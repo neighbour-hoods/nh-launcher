@@ -51,9 +51,9 @@ export default class NHDashBoardOverview extends NHComponent {
   @property() // Selected from the sub-menu of the page
   resourceDef!: ResourceDef & {resource_def_eh: EntryHash };
 
-  // @state() selectedAppletIndex: number = 0;
+  
   // @state() selectedResourceDefIndex: number = -1; // No resource definition selected
-  // @state() selectedContext: string = 'none';
+  // @state() selectedAppletIndex: number = 0;
   // @state() selectedResourceDefEh!: string;
   // @state() selectedWeGroupId!: Uint8Array;
 
@@ -64,44 +64,31 @@ export default class NHDashBoardOverview extends NHComponent {
 
   // @query("#select-context") _contextSelector;
 
-  // async connectedCallback() {
-  //   super.connectedCallback();
+  async connectedCallback() {
+    super.connectedCallback();
 
-  //   if (!this._weGroupId) return;
-  //   this._sensemakerStore = new StoreSubscriber(this, () =>
-  //     this._matrixStore!.sensemakerStore(this._weGroupId),
-  //   ) as StoreSubscriber<SensemakerStore>;
+    if (!this._weGroupId) return;
+    this._sensemakerStore = new StoreSubscriber(this, () =>
+      this._matrixStore!.sensemakerStore(this._weGroupId),
+    ) as StoreSubscriber<SensemakerStore>;
 
-  //   this.setupAssessmentsSubscription();
-  // }
+    this.setupAssessmentsSubscription();
+  }
 
-  // protected updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-  //   if(typeof this.appletDetails !== 'object' || !Object.entries(this.appletDetails)[this.selectedAppletIndex]?.length) return;
-  //   const [installedAppId, appletDetails] = Object.entries(this.appletDetails)[this.selectedAppletIndex];
+  protected updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    // if(typeof this.appletDetails !== 'object' || !Object.entries(this.appletDetails)[this.selectedAppletIndex]?.length) return;
+    // const [installedAppId, appletDetails] = Object.entries(this.appletDetails)[this.selectedAppletIndex];
 
-  //   if(_changedProperties.has('selectedAppletIndex')) {
-  //     // this.context_ehs = Object.fromEntries(
-  //     //   zip(this.appletDetails[installedAppId].contexts, appletDetails.context_ehs),
-  //     //   );
-  //     // this.selectedAppletResourceDefs = flattenRoleAndZomeIndexedResourceDefs(this.appletDetails[installedAppId].resource_defs)
+    if(_changedProperties.has('selectedAppletIndex')) {
+      // this.context_ehs = Object.fromEntries(
+      //   zip(this.appletDetails[installedAppId].contexts, appletDetails.context_ehs),
+      //   );
+      // this.selectedAppletResourceDefs = flattenRoleAndZomeIndexedResourceDefs(this.appletDetails[installedAppId].resource_defs)
 
-  //     this.dimensions = this.appletDetails[installedAppId].dimensions;
-  //     this.requestUpdate('selectedResourceDefIndex')
-  //   }
-
-  //   // if(_changedProperties.has('selectedResourceDefIndex')) {
-  //   //   const resourceName: string = snakeCase(this.appletDetails[installedAppId].appletRenderInfo.resourceNames![this.selectedResourceDefIndex == -1 ? 0 : this.selectedResourceDefIndex]);
-
-  //   //   this.selectedResourceDefEh = encodeHashToBase64(flattenRoleAndZomeIndexedResourceDefs(this.appletDetails[installedAppId].resource_defs)[resourceName]);
-
-  //   //   this.selectedResourceName =
-  //   //     this.selectedResourceDefIndex < 0
-  //   //       ? 'All Resources'
-  //   //       : appletDetails.appletRenderInfo.resourceNames[
-  //   //           this.selectedResourceDefIndex
-  //   //       ];
-  //   // }
-  // }
+      // this.dimensions = this.appletDetails[installedAppId].dimensions;
+      // this.requestUpdate('selectedResourceDefIndex')
+    }
+  }
 
   setupAssessmentsSubscription() {
     // let store = this._matrixStore.sensemakerStore(this.selectedWeGroupId);
@@ -277,7 +264,7 @@ export default class NHDashBoardOverview extends NHComponent {
 
         ${this.loadingState === LoadingState.NoAppletSensemakerData
           ? this.renderMainSkeleton()
-          : html`<tabbed-context-tables .selectedResourceName=${this.resourceDef}></tabbed-context-tables>`
+          : html`<tabbed-context-tables .selectedResourceName=${this.resourceDefresourceDef}></tabbed-context-tables>`
         }
       </main>
     `;

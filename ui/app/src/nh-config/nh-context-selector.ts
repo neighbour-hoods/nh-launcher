@@ -1,16 +1,13 @@
-import { LitElement, html, css } from 'lit';
+import { html, css } from 'lit';
 import { StoreSubscriber } from 'lit-svelte-stores';
-import { customElement, property, state } from 'lit/decorators.js';
-import { SensemakerStore, AppletConfig, sensemakerStoreContext, ComputeContextInput, ContextResult, NeighbourhoodApplet } from '@neighbourhoods/client';
-import { ScopedRegistryHost } from '@lit-labs/scoped-registry-mixin';
+import { property, state } from 'lit/decorators.js';
+import { SensemakerStore, sensemakerStoreContext } from '@neighbourhoods/client';
 import { consume } from '@lit/context';
-import { NHButton, NHButtonGroup } from '@neighbourhoods/design-system-components';
-import { EntryHash, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
-import { get } from '@holochain-open-dev/stores';
-import { MatrixStore } from '../../matrix-store';
-import { matrixContext } from '../../context';
+import { NHButton, NHButtonGroup, NHComponent } from '@neighbourhoods/design-system-components';
+import { matrixContext } from '../context';
+import { MatrixStore } from '../matrix-store';
 
-export class ContextSelector extends ScopedRegistryHost(LitElement) {
+export default class NHContextSelector extends NHComponent {
   @consume({ context: matrixContext, subscribe: true })
   @property({attribute: false})
   matrixStore!: MatrixStore;
@@ -20,25 +17,23 @@ export class ContextSelector extends ScopedRegistryHost(LitElement) {
   sensemakerStore!: SensemakerStore;
 
   // TODO: this is not a store to subscribe from any more. This will be obtained from the app renderer e.g.
-    // config: AppletConfigInput = (await this.matrixStore.queryAppletGui([])).appletConfig;
 
-  @state()
-  selectedContext: string = 'none';
+  @state() selectedContext: string = "";
   
-  @property()
-  resourceAssessments = new StoreSubscriber(this, () => this.sensemakerStore.resourceAssessments());
+  @property() resourceAssessments = new StoreSubscriber(this, () => this.sensemakerStore.resourceAssessments());
     
   async updated(_changedProperties: any) {
       if(_changedProperties.has("selectedContext") && _changedProperties.get("selectedContext") !== 'undefined') {
-        if(!this.selectedContext 
-          || this.selectedContext === 'none'
-          || typeof this.resourceAssessments?.value == 'undefined') return;
+        // if(!this.selectedContext 
+        //   || this.selectedContext === 'none'
+        //   || typeof this.config?.value == 'undefined'
+        //   || typeof this.resourceAssessments?.value == 'undefined') return;
 
-        const resourceEhs : EntryHash[] = Object.keys(this.resourceAssessments.value).flat().map(b64eh => decodeHashFromBase64(b64eh));
-        const input : ComputeContextInput = { resource_ehs: resourceEhs, context_eh: decodeHashFromBase64(this.selectedContext), can_publish_result: false};
-        await this.sensemakerStore.computeContext(this.selectedContext, input);
+        // const resourceEhs : EntryHash[] = Object.keys(this.resourceAssessments.value).flat().map(b64eh => decodeHashFromBase64(b64eh));
+        // const input : ComputeContextInput = { resource_ehs: resourceEhs, context_eh: decodeHashFromBase64(this.selectedContext), can_publish_result: false};
+        // await this.sensemakerStore.computeContext(this.selectedContext, input);
         
-        const results = get(this.sensemakerStore.contextResults())
+        // const results = get(this.sensemakerStore.contextResults())
         // const selectedContextName = Object.entries(this.config.value.cultural_contexts).filter(([contextName, contextHash]) => encodeHashToBase64(contextHash) == this.selectedContext)[0];
         
         // this.dispatchContextSelected(selectedContextName[0], results)

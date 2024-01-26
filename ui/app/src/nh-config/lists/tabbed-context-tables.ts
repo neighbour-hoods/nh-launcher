@@ -2,15 +2,17 @@ import { b64images } from '@neighbourhoods/design-system-styles';
 import { classMap } from 'lit/directives/class-map.js';
 import { snakeCase } from '../../elements/components/helpers/functions';
 import { CSSResult, css, html } from 'lit';
-import { NHButtonGroup, NHComponent, NHPageHeaderCard, NHTooltip } from '@neighbourhoods/design-system-components';
+import { NHButton, NHButtonGroup, NHComponent, NHPageHeaderCard, NHTooltip } from '@neighbourhoods/design-system-components';
 import { property } from 'lit/decorators.js';
 import { SlTabGroup, SlTabPanel } from '@scoped-elements/shoelace';
+import NHContextSelector from '../nh-context-selector';
 
 export default class TabbedContextTables extends NHComponent {
   @property() selectedResourceName!: string;
 
+  @property() selectedContext!: string;
+
   render() {
-    console.log('this.selectedResourceName :>> ', this.selectedResourceName);
     return html` <sl-tab-group
       class="dashboard-tab-group"
       @context-selected=${function (e: CustomEvent) {
@@ -30,28 +32,20 @@ export default class TabbedContextTables extends NHComponent {
         <nh-context-selector
           slot="secondary-action"
           id="select-context"
-          .selectedContext=${'this.selectedContext'}
+          .selectedContext=${this.selectedContext}
         >
           <sl-tab
             slot="button-fixed"
             panel="resource"
             class="dashboard-tab resource ${classMap({
-              // active: this.selectedContext === 'none',
+              active: this.selectedContext === 'none',
             })}"
             @click=${() => {
-              // this.loadingState = LoadingState.FirstRender;
-              // this.selectedContext = 'none';
+              this.selectedContext = 'none';
             }}
           >
-            ${this.selectedResourceName || html`No Resource`}
+            ${this.selectedResourceName || html`No Resource Selected`}
           </sl-tab>
-
-          <nh-alert
-            .title=${"You did not select any resources"}
-            .description=${"Select one on the menu on the left side of the page to view your assessments."}
-            .type=${"danger"}
-          >
-          </nh-alert>
           <div slot="buttons" class="tabs tab-buttons">
             <nh-button-group
               class="dashboard-action-buttons"
@@ -73,16 +67,25 @@ export default class TabbedContextTables extends NHComponent {
       </nh-page-header-card>
 
       <sl-tab-panel active class="dashboard-tab-panel" name="resource"> </sl-tab-panel>
+
+      <nh-alert
+        .open=${!!this.selectedResourceName}
+        .title=${"You did not select any resources"}
+        .description=${"Select one on the menu on the left side of the page to view your assessments."}
+        .type=${"danger"}
+      >
+      </nh-alert>
     </sl-tab-group>`;
   }
 
   static elementDefinitions = {
     'nh-tooltip': NHTooltip,
+    'nh-button': NHButton,
     'nh-button-group': NHButtonGroup,
     'nh-page-header-card': NHPageHeaderCard,
     'sl-tab-panel': SlTabPanel,
     'sl-tab-group': SlTabGroup,
-    // 'nh-context-selector': NHContextSelector,
+    'nh-context-selector': NHContextSelector,
   }
 
   static styles : CSSResult[] = [

@@ -56,7 +56,7 @@ export class SensemakerDashboard extends NHComponentShoelace {
   @state() selectedAppletIndex: number = 0;
   @state() selectedResourceDefIndex: number = -1; // No resource definition selected
   @state() selectedResourceName!: string;
-  @state() selectedContext: string = 'none';
+  // @state() selectedContext: string = 'none';
   @state() selectedResourceDefEh!: string;
   @state() selectedWeGroupId!: Uint8Array;
 

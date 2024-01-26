@@ -1,10 +1,10 @@
 import { html, css, TemplateResult, PropertyValueMap } from 'lit';
-import { consume } from '@lit/context';
+import { consume, provide } from '@lit/context';
 import { StoreSubscriber } from 'lit-svelte-stores';
 
 import { MatrixStore } from '../matrix-store';
 import { ConfigPage } from './types';
-import { matrixContext, weGroupContext } from '../context';
+import { appletContext, appletInstanceInfosContext, matrixContext, resourceDefContext, weGroupContext } from '../context';
 import { DnaHash } from '@holochain/client';
 
 import DimensionsConfig from './pages/nh-dimensions-config';
@@ -17,6 +17,7 @@ import { provideWeGroupInfo } from '../matrix-helpers';
 import { removeResourceNameDuplicates } from '../utils';
 import { ResourceDef } from '@neighbourhoods/client';
 import { cleanForUI } from '../elements/components/helpers/functions';
+import { Applet } from '../types';
 
 export default class NHGlobalConfig extends NHComponent {
   @consume({ context: matrixContext, subscribe: true })
@@ -27,8 +28,21 @@ export default class NHGlobalConfig extends NHComponent {
   @property({ attribute: false })
   weGroupId!: DnaHash;
   
-  @state()
-  selectedResourceDef!: ResourceDef;
+  @provide({ context: appletContext })
+  @property({attribute: false})
+  selectedApplet!: Applet;
+  
+  @provide({ context: appletInstanceInfosContext })
+  @property({attribute: false})
+  _appletInstanceInfosForGroup = new StoreSubscriber(
+    this,
+    () => this._matrixStore.getAppletInstanceInfosForGroup(this.weGroupId),
+    () => [this._matrixStore, this.weGroupId],
+  );
+  
+  @provide({ context: resourceDefContext })
+  @property({attribute: false})
+  selectedResourceDef!: object;
 
   _sensemakerStore = new StoreSubscriber(this, () =>
     this._matrixStore?.sensemakerStore(this.weGroupId),
@@ -42,11 +56,6 @@ export default class NHGlobalConfig extends NHComponent {
     () => [this._matrixStore, this.weGroupId],
   );
 
-  _appletInstanceInfosForGroup = new StoreSubscriber(
-    this,
-    () => this._matrixStore.getAppletInstanceInfosForGroup(this.weGroupId),
-    () => [this._matrixStore, this.weGroupId],
-  );
 
   _nhName!: string;
 
