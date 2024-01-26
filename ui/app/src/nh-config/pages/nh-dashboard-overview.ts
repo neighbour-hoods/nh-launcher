@@ -20,23 +20,28 @@ import CreateOutputDimensionMethod from '../forms/create-output-dimension-form';
 import { sensemakerStoreContext, SensemakerStore, AppletConfig } from '@neighbourhoods/client';
 import { zip } from 'fflate';
 import { classMap } from 'lit-html/directives/class-map.js';
-import { get, snakeCase } from 'lodash-es';
+import { snakeCase } from 'lodash-es';
 import { Readable } from 'svelte/store';
 import { cleanResourceNameForUI } from '../../elements/components/helpers/functions';
-import { LoadingState, DimensionDict, ContextEhDict, AppletRenderInfo, AssessmentTableType } from '../../elements/components/helpers/types';
-import { flattenRoleAndZomeIndexedResourceDefs } from '../../utils';
+import {
+  LoadingState,
+  DimensionDict,
+  ContextEhDict,
+  AppletRenderInfo,
+  AssessmentTableType,
+} from '../types';
 import { StoreSubscriber } from 'lit-svelte-stores';
 
 export default class NHDashBoardOverview extends NHComponent {
   @state() loading: boolean = true;
   @state() loadingState: LoadingState = LoadingState.FirstRender;
 
-  @consume({ context: matrixContext , subscribe: true })
-  @property({attribute: false})
+  @consume({ context: matrixContext, subscribe: true })
+  @property({ attribute: false })
   _matrixStore!: MatrixStore;
 
-  @consume({ context: weGroupContext , subscribe: true })
-  @property({attribute: false})
+  @consume({ context: weGroupContext, subscribe: true })
+  @property({ attribute: false })
   _weGroupId!: Uint8Array;
 
   _sensemakerStore!: StoreSubscriber<SensemakerStore>;
@@ -62,7 +67,7 @@ export default class NHDashBoardOverview extends NHComponent {
   //   this._sensemakerStore = new StoreSubscriber(this, () =>
   //     this._matrixStore!.sensemakerStore(this._weGroupId),
   //   ) as StoreSubscriber<SensemakerStore>;
-  
+
   //   this.setupAssessmentsSubscription();
   // }
 
@@ -79,10 +84,10 @@ export default class NHDashBoardOverview extends NHComponent {
   //     this.dimensions = this.appletDetails[installedAppId].dimensions;
   //     this.requestUpdate('selectedResourceDefIndex')
   //   }
-    
+
   //   // if(_changedProperties.has('selectedResourceDefIndex')) {
   //   //   const resourceName: string = snakeCase(this.appletDetails[installedAppId].appletRenderInfo.resourceNames![this.selectedResourceDefIndex == -1 ? 0 : this.selectedResourceDefIndex]);
-        
+
   //   //   this.selectedResourceDefEh = encodeHashToBase64(flattenRoleAndZomeIndexedResourceDefs(this.appletDetails[installedAppId].resource_defs)[resourceName]);
 
   //   //   this.selectedResourceName =
@@ -97,40 +102,34 @@ export default class NHDashBoardOverview extends NHComponent {
   setupAssessmentsSubscription() {
     // let store = this._matrixStore.sensemakerStore(this.selectedWeGroupId);
     // store.subscribe(store => {
-      // (store?.appletConfigs() as Readable<{ [appletName: string]: AppletConfig }>).subscribe(
-      //   appletConfigs => {
-      //     if(typeof appletConfigs !== 'object') return;
-      //     Object.entries(appletConfigs).forEach(([installedAppId, appletConfig]) => {
-      //       // flatten resource defs by removing the role name and zome name keys
-      //       const flattenedResourceDefs = Object.values(appletConfig.resource_defs).map((zomeResourceMap) => Object.values(zomeResourceMap)).flat().reduce(
-      //         (acc, curr) => ({...acc, ...curr}),
-      //         {}
-      //       );
-      //       this.appletDetails[installedAppId].appletRenderInfo = {
-      //         resourceNames: Object.keys(flattenedResourceDefs)?.map(cleanResourceNameForUI),
-      //       };
-
-      //       // Keep dimensions for dashboard table prop
-      //       this.appletDetails[installedAppId].dimensions = appletConfig.dimensions;
-      //       //Keep context names for display
-      //       this.appletDetails[installedAppId].contexts = Object.keys(appletConfig.cultural_contexts).map(
-      //         cleanResourceNameForUI,
-      //       );
-      //       // Keep context entry hashes and resource_def_eh for filtering in dashboard table
-      //       this.appletDetails[installedAppId].context_ehs = Object.values(appletConfig.cultural_contexts);
-      //       this.appletDetails[installedAppId].resource_defs = appletConfig.resource_defs;
-      //     });
-      //     this.loading = false;
-      //   },
-      // );
+    // (store?.appletConfigs() as Readable<{ [appletName: string]: AppletConfig }>).subscribe(
+    //   appletConfigs => {
+    //     if(typeof appletConfigs !== 'object') return;
+    //     Object.entries(appletConfigs).forEach(([installedAppId, appletConfig]) => {
+    //       // flatten resource defs by removing the role name and zome name keys
+    //       const flattenedResourceDefs = Object.values(appletConfig.resource_defs).map((zomeResourceMap) => Object.values(zomeResourceMap)).flat().reduce(
+    //         (acc, curr) => ({...acc, ...curr}),
+    //         {}
+    //       );
+    //       this.appletDetails[installedAppId].appletRenderInfo = {
+    //         resourceNames: Object.keys(flattenedResourceDefs)?.map(cleanResourceNameForUI),
+    //       };
+    //       // Keep dimensions for dashboard table prop
+    //       this.appletDetails[installedAppId].dimensions = appletConfig.dimensions;
+    //       //Keep context names for display
+    //       this.appletDetails[installedAppId].contexts = Object.keys(appletConfig.cultural_contexts).map(
+    //         cleanResourceNameForUI,
+    //       );
+    //       // Keep context entry hashes and resource_def_eh for filtering in dashboard table
+    //       this.appletDetails[installedAppId].context_ehs = Object.values(appletConfig.cultural_contexts);
+    //       this.appletDetails[installedAppId].resource_defs = appletConfig.resource_defs;
+    //     });
+    //     this.loading = false;
+    //   },
+    // );
     // });
   }
 
-  setLoadingState(state: LoadingState) {
-    this.loadingState = state;
-  }
-
-  // Render helpers
   renderIcons() {
     return html`
       <div class="icon-container">
@@ -170,21 +169,19 @@ export default class NHDashBoardOverview extends NHComponent {
     `;
   }
   async renderSidebar(appletIds: string[]) {
+    // const appletInstanceInfos = get(this._matrixStore?.getAppletInstanceInfosForGroup(this._weGroupId))
+    // console.log('appletInstanceInfos :>> ', appletInstanceInfos);
+    // // const appId = Object.keys(Object.fromEntries((appletInstanceInfos).entries()))[0];
+    // // if(!appId) return;
 
-// const appletInstanceInfos = get(this._matrixStore?.getAppletInstanceInfosForGroup(this._weGroupId))
-// console.log('appletInstanceInfos :>> ', appletInstanceInfos);
-// // const appId = Object.keys(Object.fromEntries((appletInstanceInfos).entries()))[0];
-// // if(!appId) return;
+    // const comp = this._matrixStore.createResourceBlockDelegate(decodeHashFromBase64(appId))
 
-// const comp = this._matrixStore.createResourceBlockDelegate(decodeHashFromBase64(appId))
-
-// console.log('this._sensemakerStore :>> ', comp);
-//     console.log('this._matrixStore :>> ', appId);
+    // console.log('this._sensemakerStore :>> ', comp);
+    //     console.log('this._matrixStore :>> ', appId);
     // const componentNhDelegate = createInputAssessmentWidgetDelegate(this._sensemakerStore, )
     return html`
       <nav>
-
-    <resource-block-renderer .component=${null} .nhDelegate=${null}></resource-block-renderer>
+        <resource-block-renderer .component=${null} .nhDelegate=${null}></resource-block-renderer>
         <div>
           <sl-input class="search-input" placeholder="SEARCH" size="small"></sl-input>
         </div>
@@ -239,43 +236,7 @@ export default class NHDashBoardOverview extends NHComponent {
       </nav>
     `;
   }
-  renderMainSkeleton() {
-    return html`
-      <div class="container skeleton-overview">
-        <main>
-        <div class="alert-wrapper">
-          <nh-alert
-            .title=${"There are no applets installed"}
-            .description=${"Go to your Neighbourhood Home to install them, then visit the applets and return here for data."}
-            .type=${"danger"}
-            style="display: flex; flex: 1; gap: 8px;"
-          >
-          </nh-alert>
-        </div>
-          <div class="skeleton-nav-container">
-            ${[50, 40, 40, 55].map(
-              width =>
-                html`<sl-skeleton
-                  effect="sheen"
-                  class="skeleton-part"
-                  style="width: ${width}%; height: 2rem;"
-                ></sl-skeleton>`,
-            )}
-            <sl-skeleton
-              effect="sheen"
-              class="skeleton-part"
-              style="width: 80%; height: 2rem; opacity: 0"
-            ></sl-skeleton>
-          </div>
-          <div class="skeleton-main-container">
-                ${Array.from(Array(24)).map(
-                  () => html`<sl-skeleton effect="sheen" class="skeleton-part"></sl-skeleton>`,
-                )}
-          </div>
-        </main>
-      </div>
-    `;
-  }
+
   render() {
     // const appletIds = this?.appletDetails ? Object.keys(this.appletDetails) : [];
     // const appletDetails =
@@ -297,131 +258,83 @@ export default class NHDashBoardOverview extends NHComponent {
     //   this.loadingState = LoadingState.NoAppletSensemakerData;
     // }
     return html`
-        <main>
-          <nh-page-header-card .heading=${'Sensemaker Dashboard Overview'}>
-            <nh-button
-              slot="secondary-action"
-              .variant=${'neutral'}
-              .size=${'icon'}
-              .iconImageB64=${b64images.icons.backCaret}
-              @click=${() => this.onClickBackButton()}
-            >
-            </nh-button>
-          </nh-page-header-card>
+      <main>
+        <nh-page-header-card .heading=${'Sensemaker Dashboard Overview'}>
+          <nh-button
+            slot="secondary-action"
+            .variant=${'neutral'}
+            .size=${'icon'}
+            .iconImageB64=${b64images.icons.backCaret}
+            @click=${() => this.onClickBackButton()}
+          >
+          </nh-button>
+        </nh-page-header-card>
 
-          ${this.loadingState === LoadingState.NoAppletSensemakerData
-            ? this.renderMainSkeleton()
-            : null && html`<sl-tab-group class="dashboard-tab-group" @context-selected=${function(e: CustomEvent) {
-              ([...(e.currentTarget as any).querySelectorAll('sl-tab-panel')]
-                .forEach(tab =>{
-                  tab.name === snakeCase(e.detail.contextName) 
-                    && tab.dispatchEvent(new CustomEvent('context-display', 
-                    {
+        ${this.loadingState === LoadingState.NoAppletSensemakerData
+          ? this.renderMainSkeleton()
+          : null &&
+          html`
+          <sl-tab-group
+            class="dashboard-tab-group"
+            @context-selected=${function (e: CustomEvent) {
+              [...(e.currentTarget as any).querySelectorAll('sl-tab-panel')].forEach(tab => {
+                tab.name === snakeCase(e.detail.contextName) &&
+                  tab.dispatchEvent(
+                    new CustomEvent('context-display', {
                       detail: e.detail,
                       bubbles: false,
-                      composed: true
-                    }
-              ))})) }.bind(this)}>
-                <nh-page-header-card slot="nav" role="nav" .heading=${""}>
-                  <nh-context-selector slot="secondary-action" id="select-context" .selectedContext=${this.selectedContext}>
-                    <sl-tab
-                      slot="button-fixed"
-                      panel="resource"
-                      class="dashboard-tab resource ${classMap({
-                        // active: this.selectedContext === 'none',
-                      })}"
-                      @click=${() => {
-                        // this.loadingState = LoadingState.FirstRender;
-                        // this.selectedContext = 'none';
-                      }}
-                      >
-                      ${
-                        'this.selectedResourceName' || "No Applets Installed"
-                    }</sl-tab
-                    >
-                    <div
-                      slot="buttons"
-                      class="tabs" style="width: 100%; display: flex; justify-content: space-between;">
-                        ${contexts ?
-                          html`<div>${contexts.map(
-                            context =>
-                            this.context_ehs[context] ? 
-                              html`<nh-tab-button><sl-tab
-                                  panel="${snakeCase(context)}" 
-                                  class="dashboard-tab ${classMap({
-                                    active:
-                                      encodeHashToBase64(this.context_ehs[context]) ===
-                                      this.selectedContext,
-                                  })}"
-                                  @click=${() => {
-                                    this.loadingState = LoadingState.FirstRender;
-                                    this.selectedContext = encodeHashToBase64(this.context_ehs[context]);
-                                  }}
-                                >${context}</sl-tab-panel></nh-tab-button>`
-                                : null,
-                          )}
-                          </div>
-                          <nh-button-group
-                            class="dashboard-action-buttons"
-                            style="display: flex; align-items: center;"
-                            .direction=${"horizontal"}
-                            .fixedFirstItem=${false}
-                            .addItemButton=${false}
-                          >
-                          <div slot="buttons">
-                            <nh-button @click=${async () => { await this._contextSelector.requestUpdate("resourceAssessments");  // TODO test this
-                          }} .iconImageB64=${b64images.icons.refresh} .variant=${"neutral"} .size=${"icon"}></nh-button>
-                          </nh-button-group></div>` : html``}
-                        </div>
-                      </div>
-                    </nh-context-selector>
-                </nh-page-header-card>
+                      composed: true,
+                    }),
+                  );
+              });
+            }.bind(this)}
+          >
+            <nh-page-header-card slot="nav" role="nav" .heading=${''}>
+              <nh-context-selector
+                slot="secondary-action"
+                id="select-context"
+                .selectedContext=${'this.selectedContext'}
+              >
+                <sl-tab
+                  slot="button-fixed"
+                  panel="resource"
+                  class="dashboard-tab resource ${classMap({
+                    // active: this.selectedContext === 'none',
+                  })}"
+                  @click=${() => {
+                    // this.loadingState = LoadingState.FirstRender;
+                    // this.selectedContext = 'none';
+                  }}
+                >
+                  ${'this.selectedResourceName' || 'No Applets Installed'}</sl-tab
+                >
 
-                <sl-tab-panel active class="dashboard-tab-panel" name="resource">
-                  ${this.selectedContext !== 'none'
-                    ? ''
-                    : html`<dashboard-filter-map
-                        .selectedAppletResourceDefs=${this.selectedAppletResourceDefs}
-                        .resourceName=${this.selectedResourceName}
-                        .resourceDefEh=${this.selectedResourceDefEh}
-                        .tableType=${AssessmentTableType.Resource}
-                        .selectedContext=${this.selectedContext}
-                        .selectedDimensions=${this.dimensions}
-                      >
-                      </dashboard-filter-map>`}
-                </sl-tab-panel>
-                ${contexts ?
-                contexts.map(context =>
-                  {return !(this.context_ehs[context] && encodeHashToBase64(this.context_ehs[context]) == this.selectedContext)
-                    ? ''
-                    : html`<sl-tab-panel 
-                              @context-display=${(e: CustomEvent) => {
-                                const flatResults = typeof e.detail.results == "object" ? e.detail.results[this.selectedContext].flat() : [];
-                                const dashboardFilterComponent = (e.currentTarget as any).children[0];
-                                dashboardFilterComponent.contextEhs = flatResults;
-                                }}
-                              class="dashboard-tab-panel ${classMap({
-                                active:
-                                  encodeHashToBase64(this.context_ehs[context]) === this.selectedContext,
-                              })}"
-                              name="${snakeCase(context)}"
-                          >
-                            <dashboard-filter-map
-                              .selectedAppletResourceDefs=${this.selectedAppletResourceDefs}
-                              .resourceName=${this.selectedResourceName}
-                              .resourceDefEh=${this.selectedResourceDefEh}
-                              .tableType=${AssessmentTableType.Context}
-                              .selectedContext=${this.selectedContext}
-                              .selectedDimensions=${this.dimensions}
-                            >
-                            </dashboard-filter-map>
-                          </sl-tab-panel>`},
-                    ) : html``}
-              </sl-tab-group>`
-            }
+                <div slot="buttons" class="tabs tab-buttons">
+                  <nh-button-group
+                    class="dashboard-action-buttons"
+                    style="display: flex; align-items: center;"
+                    .direction=${'horizontal'}
+                    .fixedFirstItem=${false}
+                    .addItemButton=${false}
+                  >
+                    <div slot="buttons">
+                      <nh-button
+                        .iconImageB64=${b64images.icons.refresh}
+                        .variant=${'neutral'}
+                        .size=${'icon'}
+                      ></nh-button>
+                    </div>
+                  </nh-button-group>
+                </div>
+              </nh-context-selector>
+            </nh-page-header-card>
 
-        </main>
-      `;
+            <sl-tab-panel active class="dashboard-tab-panel" name="resource">
+
+            </sl-tab-panel>
+          </sl-tab-group>`}
+      </main>
+    `;
   }
 
   static elementDefinitions = {
@@ -438,12 +351,56 @@ export default class NHDashBoardOverview extends NHComponent {
     this.dispatchEvent(new CustomEvent('return-home', { bubbles: true, composed: true }));
   }
 
+  renderMainSkeleton() {
+    return html`
+      <div class="container skeleton-overview">
+        <main>
+          <div class="alert-wrapper">
+            <nh-alert
+              .title=${'There are no applets installed'}
+              .description=${'Go to your Neighbourhood Home to install them, then visit the applets and return here for data.'}
+              .type=${'danger'}
+              style="display: flex; flex: 1; gap: 8px;"
+            >
+            </nh-alert>
+          </div>
+          <div class="skeleton-nav-container">
+            ${[50, 40, 40, 55].map(
+              width =>
+                html`<sl-skeleton
+                  effect="sheen"
+                  class="skeleton-part"
+                  style="width: ${width}%; height: 2rem;"
+                ></sl-skeleton>`,
+            )}
+            <sl-skeleton
+              effect="sheen"
+              class="skeleton-part"
+              style="width: 80%; height: 2rem; opacity: 0"
+            ></sl-skeleton>
+          </div>
+          <div class="skeleton-main-container">
+            ${Array.from(Array(24)).map(
+              () => html`<sl-skeleton effect="sheen" class="skeleton-part"></sl-skeleton>`,
+            )}
+          </div>
+        </main>
+      </div>
+    `;
+  }
+
   static get styles() {
     return css`
       :host,
       .container {
         display: flex;
         width: 100%;
+      }
+
+      .tab-buttons {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
       }
 
       .container {
@@ -471,11 +428,6 @@ export default class NHDashBoardOverview extends NHComponent {
 
       nh-page-header-card {
         grid-column: 1 / -1;
-      }
-      dimension-list {
-        grid-column: 1 / -1;
-        display: flex;
-        align-items: start;
       }
     `;
   }
