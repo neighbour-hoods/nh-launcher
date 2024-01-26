@@ -110,9 +110,10 @@ export default class NHSlide extends NHComponentShoelace {
         transform: rotate(90deg);
       }
 
-      :host(.right) .tooltip .content svg {
+      :host(.left) .tooltip .content svg, :host(.right) .tooltip .content svg {
         display: none;
       }
+      
       :host(.right) .tooltip .content::after {
         left: -0.5rem;
         right: initial;
