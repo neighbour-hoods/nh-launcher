@@ -149,6 +149,15 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     return widgets;
   }
 
+  private async resetWorkingState() {
+    await this.fetchExistingWidgetConfigBlock();
+    this.configuredWidgetsPersisted = true
+    this._workingWidgetControls = [];
+    this.configuredInputWidgets = this._fetchedConfig
+    this.selectedWidgetKey = undefined;
+    this.requestUpdate()
+  }
+
   renderWidgetControlPlaceholder() {
     if(typeof this.selectedWidgetKey != 'undefined' && this?._workingWidgetControlRendererCache.has(this.selectedWidgetKey) && this?.placeHolderWidget) {
       return repeat([this.selectedWidgetKey], () => +(new Date), (_, _idx) =>this?.placeHolderWidget())
@@ -211,7 +220,11 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
               .disabled=${!this.loading && this._fetchedConfig && this.configuredWidgetsPersisted}
               .size=${'md'}
               @click=${async () => {
-                await this.createEntries();
+                try {
+                  await this.createEntries();
+                } catch (error) {
+                  console.warn('error :>> ', error);
+                }
                 this._successAlert.openToast();
                 this.configuredWidgetsPersisted = true
               }}
@@ -240,9 +253,10 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                   id="close-widget-config"
                   .variant=${'danger'}
                   .size=${'md'}
-                  @click=${() => {
+                  @click=${async () => {
                     this.editingConfig = false;
                     this._form?.reset();
+                    await this.resetWorkingState()
                   }}
                 >Cancel</nh-button>
 
@@ -250,20 +264,21 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                   id="reset-widget-config"
                   .variant=${'warning'}
                   .size=${'md'}
-                  @click=${() => {
-                    this._workingWidgetControls = [];
-                    this.selectedWidgetKey = undefined;
+                  @click=${async () => {
                     this._form?.reset();
-                    this.requestUpdate()
+                    await this.resetWorkingState()
                   }}
                 >Reset</nh-button>
                 
                 <nh-button
                   type="submit"
                   @click=${async () => {
-                    await this._form?.handleSubmit();
-                    this._form?.reset();
-                    // this.editingConfig = false;
+                    try {
+                      await this._form?.handleSubmit();
+                      this._form?.reset();
+                      this.selectedWidgetKey = undefined;
+                    } catch (error) {
+                    }
                   }}
                   id="add-widget-config"
                   .variant=${'success'}
@@ -277,7 +292,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
           id="success-toast"
           .title=${"You have saved your changes."}
           .description=${"You have saved your changes."}
-          .closable=${false}
+          .closable=${true}
           .isToast=${true}
           .open=${false}
           .type=${"success"}></nh-alert>
@@ -302,7 +317,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
       ([_widgetEh, widget]) => widget.name == assessment_widget,
     );
     const selectedWidgetEh = selectedWidgetDetails?.[0];
-    if (!selectedWidgetEh) throw Error('Could not get an entry hash for your selected widget.');
+    if (!selectedWidgetEh) return Promise.reject('Could not get an entry hash for your selected widget.');
 
     const inputDimensionBinding = {
       type: "applet",
@@ -323,7 +338,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
 
     this.configuredInputWidgets = [ ...this?.getCombinedWorkingAndFetchedWidgets(), input];
     this._workingWidgetControls = [ ...(this?._workingWidgetControls || []), input];
-    
     this.configuredWidgetsPersisted = false;
     this.requestUpdate();
   }
@@ -338,8 +352,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
         this._sensemakerStore?.value as SensemakerStore
       ).setAssessmentWidgetTrayConfig(resource_def_eh, this.getCombinedWorkingAndFetchedWidgets());
     } catch (error) {
-      // TODO: after nh-form integration, return a Promise.resolve here
-      console.log('Error setting assessment widget config: ', error);
+      return Promise.reject('Error setting assessment widget config');
     }
     if (!successful) return;
     console.log('successfully set the widget tray config? ', successful);
@@ -476,7 +489,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
               },
             ],
           ],
-          submitOverride: model => {console.log('submitted'); this.pushToInMemoryWidgetControls(model)},
+          submitOverload: model => this.pushToInMemoryWidgetControls(model),
           progressiveValidation: true,
           schema: object({
             assessment_widget: string()
@@ -646,7 +659,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   async fetchExistingWidgetConfigBlock() {
     if (!this._sensemakerStore.value || !this.resourceDef) return;
     try {
-      this._fetchedConfig ||= await this._sensemakerStore.value.getAssessmentWidgetTrayConfig(
+      this._fetchedConfig = await this._sensemakerStore.value.getAssessmentWidgetTrayConfig(
         this.resourceDef?.resource_def_eh,
       );
       this.configuredWidgetsPersisted = true;

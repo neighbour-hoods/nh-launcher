@@ -202,7 +202,11 @@ export default class NHSelect extends NHComponentShoelace {
         display: block;
         z-index: 5;
         overflow: auto;
-        height: var(--select-height);
+        height: calc(1 * var(--select-height));
+      }
+
+      .field.large .custom-select.active .options{
+        height: calc(1.5 * var(--select-height));
       }
 
       .options .option, .custom-select .select-btn{
@@ -342,7 +346,7 @@ export default class NHSelect extends NHComponentShoelace {
       .field.with-icons .option {
         padding: calc(1px * var(--nh-spacing-sm)) calc(1px * var(--nh-spacing-3xl));
       }
-      .field.large  .options .option {
+      .field.large .options .option {
         --scale: 2px;
         height: calc(var(--scale) * var(--nh-spacing-3xl));
       }

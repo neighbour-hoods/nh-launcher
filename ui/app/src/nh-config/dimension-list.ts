@@ -69,6 +69,7 @@ export default class DimensionList extends NHComponent {
   async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     try {
       await this.fetchDimensionEntries();
+      if(!this._dimensionEntries) return
       await this.fetchRangeEntriesFromHashes(this._dimensionEntries.map((dimension: Dimension) => dimension.range_eh));
 
       this._methodEntries = (await (this.sensemakerStore.getMethods()) as Array<EntryRecord<Method>>).map(eR => eR.entry);

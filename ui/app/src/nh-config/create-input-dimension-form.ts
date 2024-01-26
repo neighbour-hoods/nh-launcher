@@ -104,10 +104,10 @@ export default class CreateDimension extends NHComponent {
 
   // Called in input change handler overloads to dynamically keep the range values in bounds for the selected number type
   setRangeBoundsByNumberType(model: any) {
-    if(model.global_min && typeof model.min !== 'undefined') {
+    if(model.global_min) {
       model.min = this.isIntegerRangeKind ? MIN_RANGE_INT : MIN_RANGE_FLOAT;
     }
-    if(model.global_max && typeof model.max !== 'undefined') {
+    if(model.global_max) {
       model.max = this.isIntegerRangeKind ? MAX_RANGE_INT : MAX_RANGE_FLOAT;
     }
   }

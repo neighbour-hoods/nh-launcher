@@ -24,7 +24,6 @@ export abstract class NHBaseForm extends NHComponentShoelace {
 
   protected async reset() {
     this._model = {...this._defaultModel};
-    console.log('this._model, this._defaultModel :>> ', this._model, this._defaultModel);
     this.formWasSubmitted = false;
     this.errors = {};
     this.resetTouchedState();
@@ -80,9 +79,8 @@ export abstract class NHBaseForm extends NHComponentShoelace {
         console.error('Error while submitting form: ', error)
       }
     } else {
-      // this._formErrorMessage = "Your form was invalid, please check the fields and make sure to follow any validation messages that come up when hovering on the field.";
-      // this.handleFormError()
-      // console.warn('An error was thrown in form validation. Check that it was handled correctly.');
+      console.warn('An error was thrown in form validation. Check that it was handled correctly.');
+      throw new Error('Form is invalid')
     }
   }
 
