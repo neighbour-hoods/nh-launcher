@@ -298,15 +298,6 @@ export default class NHDashBoardOverview extends NHComponent {
     return html`
       <div class="container skeleton-overview">
         <main>
-          <div class="alert-wrapper">
-            <nh-alert
-              .title=${'There are no applets installed'}
-              .description=${'Go to your Neighbourhood Home to install them, then visit the applets and return here for data.'}
-              .type=${'danger'}
-              style="display: flex; flex: 1; gap: 8px;"
-            >
-            </nh-alert>
-          </div>
           <div class="skeleton-nav-container">
             ${[50, 40, 40, 55].map(
               width =>

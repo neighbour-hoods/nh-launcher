@@ -1,9 +1,10 @@
 import { b64images } from '@neighbourhoods/design-system-styles';
 import { classMap } from 'lit/directives/class-map.js';
 import { snakeCase } from '../../elements/components/helpers/functions';
-import { css, html } from 'lit';
-import { NHComponent, NHTooltip } from '@neighbourhoods/design-system-components';
+import { CSSResult, css, html } from 'lit';
+import { NHButtonGroup, NHComponent, NHPageHeaderCard, NHTooltip } from '@neighbourhoods/design-system-components';
 import { property } from 'lit/decorators.js';
+import { SlTabGroup, SlTabPanel } from '@scoped-elements/shoelace';
 
 export default class TabbedContextTables extends NHComponent {
   @property() selectedResourceName!: string;
@@ -42,9 +43,15 @@ export default class TabbedContextTables extends NHComponent {
               // this.selectedContext = 'none';
             }}
           >
-            ${this.selectedResourceName || 'No Applets Installed'}</sl-tab
-          >
+            ${this.selectedResourceName || html`No Resource`}
+          </sl-tab>
 
+          <nh-alert
+            .title=${"You did not select any resources"}
+            .description=${"Select one on the menu on the left side of the page to view your assessments."}
+            .type=${"danger"}
+          >
+          </nh-alert>
           <div slot="buttons" class="tabs tab-buttons">
             <nh-button-group
               class="dashboard-action-buttons"
@@ -69,15 +76,18 @@ export default class TabbedContextTables extends NHComponent {
     </sl-tab-group>`;
   }
 
-  static get elementDefinitions() {
-    return {
-      'nh-tooltip': NHTooltip,
-      // 'nh-context-selector': NHContextSelector,
-    };
+  static elementDefinitions = {
+    'nh-tooltip': NHTooltip,
+    'nh-button-group': NHButtonGroup,
+    'nh-page-header-card': NHPageHeaderCard,
+    'sl-tab-panel': SlTabPanel,
+    'sl-tab-group': SlTabGroup,
+    // 'nh-context-selector': NHContextSelector,
   }
 
-  static get styles() {
-    return css`
+  static styles : CSSResult[] = [
+    super.styles as CSSResult,
+    css`
       /* Side scrolling **/
       .dashboard-tab-group {
         max-width: calc(100vw - calc(1px * var(--nh-spacing-sm)));
@@ -168,6 +178,5 @@ export default class TabbedContextTables extends NHComponent {
       .dashboard-tab-group::part(tabs) {
         border: none;
       }
-    `;
-  }
+    `]
 }
