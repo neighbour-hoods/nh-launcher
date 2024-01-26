@@ -12,7 +12,7 @@ import AssessmentWidgetConfig from './pages/nh-assessment-widget-config';
 import NHDashBoardOverview from './pages/nh-dashboard-overview';
 
 import { NHComponent, NHMenu } from '@neighbourhoods/design-system-components';
-import { property, state } from 'lit/decorators.js';
+import { property, query, state } from 'lit/decorators.js';
 import { provideWeGroupInfo } from '../matrix-helpers';
 import { removeResourceNameDuplicates } from '../utils';
 import { ResourceDef } from '@neighbourhoods/client';
@@ -26,7 +26,7 @@ export default class NHGlobalConfig extends NHComponent {
   @consume({ context: weGroupContext, subscribe: true })
   @property({ attribute: false })
   weGroupId!: DnaHash;
-  // this._matrixStore.getAppletInstanceInfosForGroup(this._weGroupId);
+  
   @state()
   selectedResourceDef!: ResourceDef;
 
@@ -42,9 +42,17 @@ export default class NHGlobalConfig extends NHComponent {
     () => [this._matrixStore, this.weGroupId],
   );
 
+  _appletInstanceInfosForGroup = new StoreSubscriber(
+    this,
+    () => this._matrixStore.getAppletInstanceInfosForGroup(this.weGroupId),
+    () => [this._matrixStore, this.weGroupId],
+  );
+
   _nhName!: string;
-  @state()
-  _page?: ConfigPage = ConfigPage.DashboardOverview;
+
+  @state() _page?: ConfigPage = ConfigPage.DashboardOverview;
+  
+  @query('nh-menu') _menu?: NHMenu;
 
   protected async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     if (this._neighbourhoodInfo?.value && !this?._nhName) {
@@ -57,7 +65,7 @@ export default class NHGlobalConfig extends NHComponent {
       this._resourceDefEntries = removeResourceNameDuplicates(result.map((entryRec) => ({...entryRec.entry, resource_def_eh: entryRec.entryHash}))); // This de-duplicates resources with the same name from other applets (including uninstalled) 
     }
   }
-  
+
   renderPage() : TemplateResult {
     switch (this._page) {
       case ConfigPage.DashboardOverview:
@@ -106,13 +114,16 @@ export default class NHGlobalConfig extends NHComponent {
                 {
                   label: 'Dimensions',
                   subSectionMembers: [],
-                  callback: () => (this._page = ConfigPage.Dimensions),
+                  callback: () => {
+                    this._page = ConfigPage.Dimensions;
+                  },
                 },
                 {
                   label: 'Assessments',
                   subSectionMembers: this._resourceDefEntries.map(rd =>  cleanForUI(rd.resource_name)),
                   callback: () => {
                     this.selectedResourceDef = this._resourceDefEntries[0];
+                    if(this?._menu) this!._menu!.selectedMenuItemId = "Sensemaker-1-0"; // pick the first resource as a default
                     this._page = ConfigPage.Widgets
                   },
                 },
