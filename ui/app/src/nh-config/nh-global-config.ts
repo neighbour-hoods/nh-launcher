@@ -69,7 +69,7 @@ export default class NHGlobalConfig extends NHComponent {
   renderPage() : TemplateResult {
     switch (this._page) {
       case ConfigPage.DashboardOverview:
-        return html`<dashboard-overview></dashboard-overview>`;
+        return html`<dashboard-overview .resourceDef=${this.selectedResourceDef}></dashboard-overview>`;
       case ConfigPage.Dimensions:
         return html`<dimensions-config></dimensions-config>`;
       case ConfigPage.Widgets:
@@ -79,14 +79,23 @@ export default class NHGlobalConfig extends NHComponent {
     }
   }
 
+  choosePageFromSubMenuItemId(itemId: string) {
+    switch (itemId) {
+      case 'sensemaker':
+        return ConfigPage.Widgets
+      case 'neighbourhood':
+        return ConfigPage.DashboardOverview
+    }
+  }
   render() : TemplateResult {
     return html`
       <main>
         <nh-menu
           @sub-nav-item-selected=${(e: CustomEvent) => {
-            this._page = ConfigPage.Widgets;
-            const [mainMenuItemName, mainMenuItemIndex, subMenuItemIndex] = e.detail.itemId.split(/\-/);
-            if (mainMenuItemName !== 'Sensemaker') return; // Only current active main menu item is Sensemaker, but you can change this later
+            const [mainMenuItemName, _mainMenuItemIndex, subMenuItemIndex] = e.detail.itemId.split(/\-/);
+            this._page = this.choosePageFromSubMenuItemId(mainMenuItemName.toLowerCase());
+            // TODO: fix submenu implementation and choose a different static name for menu item 0 other than Neighbourhood
+            if (!(['Sensemaker', this._nhName].includes(mainMenuItemName))) return; // Only current active main menu item is Sensemaker, but you can change this later
 
             // THIS RELIES ON THE SAME ORDERING/INDEXING OCCURRING IN `this._resourceDefEntries` AS IN THE RENDERED SUBMENU and may need to be changed
             this.selectedResourceDef = this._resourceDefEntries[subMenuItemIndex]
@@ -94,12 +103,16 @@ export default class NHGlobalConfig extends NHComponent {
           }
           .menuSectionDetails=${
             (() => ([{
-              sectionName: this._nhName,
+              sectionName: "Neighbourhood",
               sectionMembers: [
                 {
                   label: 'Overview',
-                  subSectionMembers: [],
-                  callback: () => (this._page = ConfigPage.DashboardOverview),
+                  subSectionMembers: this._resourceDefEntries.map(rd =>  cleanForUI(rd.resource_name)),
+                  callback: () => { 
+                      this.selectedResourceDef = this._resourceDefEntries[0];
+                      if(this?._menu) this!._menu!.selectedMenuItemId = "Neighbourhood" + "-1-0"; // pick the first resource as a default
+                      this._page = ConfigPage.DashboardOverview
+                    }
                 },
                 {
                   label: 'Roles',
@@ -150,7 +163,7 @@ export default class NHGlobalConfig extends NHComponent {
               ],
             }]))()
           } 
-          .selectedMenuItemId=${this._nhName + '-0-0' // This is the default selected item
+          .selectedMenuItemId=${'Neighbourhood' + '-0-0' // This is the default selected item
         }
         >
         </nh-menu>

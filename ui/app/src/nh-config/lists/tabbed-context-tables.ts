@@ -1,11 +1,15 @@
 import { b64images } from '@neighbourhoods/design-system-styles';
 import { classMap } from 'lit/directives/class-map.js';
-import { snakeCase } from './../../elements/components/helpers/functions';
+import { snakeCase } from '../../elements/components/helpers/functions';
 import { css, html } from 'lit';
 import { NHComponent, NHTooltip } from '@neighbourhoods/design-system-components';
+import { property } from 'lit/decorators.js';
 
-export default class ContextTabTables extends NHComponent {
+export default class TabbedContextTables extends NHComponent {
+  @property() selectedResourceName!: string;
+
   render() {
+    console.log('this.selectedResourceName :>> ', this.selectedResourceName);
     return html` <sl-tab-group
       class="dashboard-tab-group"
       @context-selected=${function (e: CustomEvent) {
@@ -38,7 +42,7 @@ export default class ContextTabTables extends NHComponent {
               // this.selectedContext = 'none';
             }}
           >
-            ${'this.selectedResourceName' || 'No Applets Installed'}</sl-tab
+            ${this.selectedResourceName || 'No Applets Installed'}</sl-tab
           >
 
           <div slot="buttons" class="tabs tab-buttons">

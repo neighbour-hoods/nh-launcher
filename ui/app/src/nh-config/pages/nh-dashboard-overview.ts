@@ -3,22 +3,23 @@ import { consume, provide } from '@lit/context';
 
 import { MatrixStore } from '../../matrix-store';
 import { matrixContext, weGroupContext } from '../../context';
-import { decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
+import { EntryHash, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
 
 import {
+  NHAlert,
   NHButton,
   NHCard,
   NHComponent,
   NHDialog,
   NHPageHeaderCard,
 } from '@neighbourhoods/design-system-components';
-import ContextTabTables from '../lists/context-tab-tables';
+import TabbedContextTables from '../lists/tabbed-context-tables';
 import CreateDimension from '../forms/create-input-dimension-form';
 import DimensionList from '../lists/dimension-list';
 import { property, query, state } from 'lit/decorators.js';
 import { b64images } from '@neighbourhoods/design-system-styles';
 import CreateOutputDimensionMethod from '../forms/create-output-dimension-form';
-import { sensemakerStoreContext, SensemakerStore, AppletConfig } from '@neighbourhoods/client';
+import { sensemakerStoreContext, SensemakerStore, AppletConfig, ResourceDef } from '@neighbourhoods/client';
 import { zip } from 'fflate';
 import { classMap } from 'lit-html/directives/class-map.js';
 import { snakeCase } from 'lodash-es';
@@ -46,10 +47,12 @@ export default class NHDashBoardOverview extends NHComponent {
   _weGroupId!: Uint8Array;
 
   _sensemakerStore!: StoreSubscriber<SensemakerStore>;
+  
+  @property() // Selected from the sub-menu of the page
+  resourceDef!: ResourceDef & {resource_def_eh: EntryHash };
 
   // @state() selectedAppletIndex: number = 0;
   // @state() selectedResourceDefIndex: number = -1; // No resource definition selected
-  // @state() selectedResourceName!: string;
   // @state() selectedContext: string = 'none';
   // @state() selectedResourceDefEh!: string;
   // @state() selectedWeGroupId!: Uint8Array;
@@ -238,7 +241,6 @@ export default class NHDashBoardOverview extends NHComponent {
     `;
   }
 
-  render() {
     // const appletIds = this?.appletDetails ? Object.keys(this.appletDetails) : [];
     // const appletDetails =
     //   typeof this.appletDetails == 'object' ? Object.values(this.appletDetails) : [];
@@ -258,6 +260,8 @@ export default class NHDashBoardOverview extends NHComponent {
     // if (!appletConfig![0] || contexts == 0) {
     //   this.loadingState = LoadingState.NoAppletSensemakerData;
     // }
+
+  render() {
     return html`
       <main>
         <nh-page-header-card .heading=${'Sensemaker Dashboard Overview'}>
@@ -273,18 +277,17 @@ export default class NHDashBoardOverview extends NHComponent {
 
         ${this.loadingState === LoadingState.NoAppletSensemakerData
           ? this.renderMainSkeleton()
-          : html`<context-tab-tables></context-tab-tables>`
+          : html`<tabbed-context-tables .selectedResourceName=${this.resourceDef}></tabbed-context-tables>`
         }
       </main>
     `;
   }
 
   static elementDefinitions = {
+    'nh-alert': NHAlert,
     'nh-button': NHButton,
     'nh-page-header-card': NHPageHeaderCard,
-    'nh-card': NHCard,
-    'nh-dialog': NHDialog,
-    'context-tab-tables': ContextTabTables
+    'tabbed-context-tables': TabbedContextTables
   };
 
   private onClickBackButton() {
@@ -335,12 +338,6 @@ export default class NHDashBoardOverview extends NHComponent {
       .container {
         display: flex;
         width: 100%;
-      }
-
-      .tab-buttons {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
       }
 
       .container {
