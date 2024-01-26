@@ -13,11 +13,11 @@ import {
   NHDialog,
   NHPageHeaderCard,
 } from '@neighbourhoods/design-system-components';
-import CreateDimension from '../create-input-dimension-form';
-import DimensionList from '../dimension-list';
+import CreateDimension from '../forms/create-input-dimension-form';
+import DimensionList from '../lists/dimension-list';
 import { property, query, state } from 'lit/decorators.js';
 import { b64images } from '@neighbourhoods/design-system-styles';
-import CreateOutputDimensionMethod from '../create-output-dimension-form';
+import CreateOutputDimensionMethod from '../forms/create-output-dimension-form';
 
 export default class NHDimensionsConfig extends NHComponent {
   @consume({ context: matrixContext, subscribe: true })
