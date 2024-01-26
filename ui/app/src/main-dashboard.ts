@@ -105,27 +105,21 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
       return html`
         ${appletInstanceInfos ? this.renderAppletInstanceList(appletInstanceInfos) : html``}
 
-        <div style="display: flex; right: 16px; position: absolute; gap: calc(1px * var(--nh-spacing-lg));">
-        ${this._dashboardMode !== DashboardMode.AssessmentsHome
-          ? html`<div style="margin: auto;"><nh-button .variant=${"primary"} .size=${"sm"} @click=${() => {this._dashboardMode = DashboardMode.NHGlobalConfig}}>Config</nh-button></div>`
-          : null
-        }
-          ${this._dashboardMode == DashboardMode.AssessmentsHome
-            ? html`<nh-tooltip class="right" .text=${"Add Applet"}>
+        <nav id="sensemaker-buttons">
+          <nh-tooltip class="left" .text=${"Add Applet"}>
             <button slot="hoverable" class="applet-add" @click=${async () => {this._dashboardMode = DashboardMode.WeGroupHome; (await this._neighbourhoodHome).showLibrary();}}></button>
-          </nh-tooltip>`
-            : html`
-            <nh-tooltip class="left" .text=${"Dashboard"}>
+          </nh-tooltip>
+          <nh-tooltip class="left" .text=${"Dashboard"}>
             <button
               slot="hoverable"
               class="dashboard-icon"
               @click=${() => {
                 this._selectedAppletInstanceId = undefined;
-                this._dashboardMode = DashboardMode.AssessmentsHome;
+                this._dashboardMode = DashboardMode.NHGlobalConfig;
               }}
             ></button>
-          </nh-tooltip>`}
-        </div>
+          </nh-tooltip>
+        </nav>
       `;
       // show all applet classes in NavigationMode.Agnostic
     } else {
@@ -155,7 +149,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
           </nh-home>
         </we-group-context>
       `;
-    } else if (this._dashboardMode === DashboardMode.AssessmentsHome) {
+    } else if (this._dashboardMode === DashboardMode.DashboardOverview) {
       return html`
         <we-group-context .weGroupId=${this._selectedWeGroupId}>
           <sensemaker-dashboard id="sensemaker-dashboard"> </sensemaker-dashboard>
@@ -592,7 +586,11 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
         overflow: hidden;
       }
 
-      .column:last-child {
+      nav#sensemaker-buttons {
+        display: flex;
+        right: 16px;
+        position: absolute;
+        gap: calc(1px * var(--nh-spacing-lg));
       }
 
       .top-left-corner {
@@ -639,7 +637,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
         6% {opacity: 0;}
         7% {opacity: 0; z-index:1}
         100% {opacity: 0; z-index:1}
-      }NHGlobalConfig
+      }
 
       .tlcbgGroupCentric {
         border-color: var(--nh-colors-eggplant-800);
