@@ -3,11 +3,13 @@ import { consume } from '@lit/context';
 import { StoreSubscriber } from 'lit-svelte-stores';
 
 import { MatrixStore } from '../matrix-store';
+import { ConfigPage } from './types';
 import { matrixContext, weGroupContext } from '../context';
 import { DnaHash } from '@holochain/client';
 
 import DimensionsConfig from './pages/nh-dimensions-config';
 import AssessmentWidgetConfig from './pages/nh-assessment-widget-config';
+import NHDashBoardOverview from './pages/nh-dashboard-overview';
 
 import { NHComponent, NHMenu } from '@neighbourhoods/design-system-components';
 import { property, state } from 'lit/decorators.js';
@@ -15,7 +17,6 @@ import { provideWeGroupInfo } from '../matrix-helpers';
 import { removeResourceNameDuplicates } from '../utils';
 import { ResourceDef } from '@neighbourhoods/client';
 import { cleanForUI } from '../elements/components/helpers/functions';
-import { EntryRecord } from '@holochain-open-dev/utils';
 
 export default class NHGlobalConfig extends NHComponent {
   @consume({ context: matrixContext, subscribe: true })
@@ -25,7 +26,7 @@ export default class NHGlobalConfig extends NHComponent {
   @consume({ context: weGroupContext, subscribe: true })
   @property({ attribute: false })
   weGroupId!: DnaHash;
-
+  // this._matrixStore.getAppletInstanceInfosForGroup(this._weGroupId);
   @state()
   selectedResourceDef!: ResourceDef;
 
@@ -43,7 +44,7 @@ export default class NHGlobalConfig extends NHComponent {
 
   _nhName!: string;
   @state()
-  _page: 'dimensions' | 'widgets' | undefined = 'dimensions'; // TODO: make this an enum
+  _page?: ConfigPage = ConfigPage.DashboardOverview;
 
   protected async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     if (this._neighbourhoodInfo?.value && !this?._nhName) {
@@ -59,9 +60,11 @@ export default class NHGlobalConfig extends NHComponent {
   
   renderPage() : TemplateResult {
     switch (this._page) {
-      case 'dimensions':
+      case ConfigPage.DashboardOverview:
+        return html`<dashboard-overview></dashboard-overview>`;
+      case ConfigPage.Dimensions:
         return html`<dimensions-config></dimensions-config>`;
-      case 'widgets':
+      case ConfigPage.Widgets:
         return html`<assessment-widget-config .resourceDef=${this.selectedResourceDef}></assessment-widget-config>`;
       default:
         return html`Default Page`;
@@ -73,7 +76,7 @@ export default class NHGlobalConfig extends NHComponent {
       <main>
         <nh-menu
           @sub-nav-item-selected=${(e: CustomEvent) => {
-            this._page = 'widgets';
+            this._page = ConfigPage.Widgets;
             const [mainMenuItemName, mainMenuItemIndex, subMenuItemIndex] = e.detail.itemId.split(/\-/);
             if (mainMenuItemName !== 'Sensemaker') return; // Only current active main menu item is Sensemaker, but you can change this later
 
@@ -88,7 +91,7 @@ export default class NHGlobalConfig extends NHComponent {
                 {
                   label: 'Overview',
                   subSectionMembers: [],
-                  callback: () => (this._page = undefined),
+                  callback: () => (this._page = ConfigPage.DashboardOverview),
                 },
                 {
                   label: 'Roles',
@@ -103,13 +106,15 @@ export default class NHGlobalConfig extends NHComponent {
                 {
                   label: 'Dimensions',
                   subSectionMembers: [],
-                  callback: () => (this._page = 'dimensions'),
+                  callback: () => (this._page = ConfigPage.Dimensions),
                 },
                 {
                   label: 'Assessments',
                   subSectionMembers: this._resourceDefEntries.map(rd =>  cleanForUI(rd.resource_name)),
-                  callback: () => {this.selectedResourceDef = this._resourceDefEntries[0]; this._page = 'widgets'},
-
+                  callback: () => {
+                    this.selectedResourceDef = this._resourceDefEntries[0];
+                    this._page = ConfigPage.Widgets
+                  },
                 },
                 {
                   label: 'Contexts',
@@ -134,7 +139,7 @@ export default class NHGlobalConfig extends NHComponent {
               ],
             }]))()
           } 
-          .selectedMenuItemId=${'Sensemaker-0' // This is the default selected item
+          .selectedMenuItemId=${this._nhName + '-0-0' // This is the default selected item
         }
         >
         </nh-menu>
@@ -147,6 +152,7 @@ export default class NHGlobalConfig extends NHComponent {
     'nh-menu': NHMenu,
     'dimensions-config': DimensionsConfig,
     'assessment-widget-config': AssessmentWidgetConfig,
+    'dashboard-overview': NHDashBoardOverview,
   };
 
   static get styles() {

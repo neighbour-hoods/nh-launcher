@@ -15,7 +15,7 @@ import {
 } from '@neighbourhoods/client';
 import { property, query, state } from 'lit/decorators.js';
 import { NHAlert } from '@neighbourhoods/design-system-components';
-import { MAX_RANGE_FLOAT, MAX_RANGE_INT, MIN_RANGE_FLOAT, MIN_RANGE_INT, DEFAULT_RANGE_MIN } from ".";
+import { MAX_RANGE_FLOAT, MAX_RANGE_INT, MIN_RANGE_FLOAT, MIN_RANGE_INT, DEFAULT_RANGE_MIN } from "..";
 
 export default class CreateOutputDimensionMethod extends NHBaseForm {
   @property()

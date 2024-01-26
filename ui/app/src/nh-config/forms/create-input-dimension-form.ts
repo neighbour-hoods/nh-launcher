@@ -4,9 +4,9 @@ import { SlCheckbox, SlInput, SlRadio, SlRadioGroup } from "@scoped-elements/sho
 import { object, string, number, ObjectSchema, boolean } from 'yup';
 import { Dimension, Range, RangeKind, SensemakerStore, RangeKindFloat, RangeKindInteger } from "@neighbourhoods/client";
 import { property, query, state } from "lit/decorators.js";
-import { MAX_RANGE_FLOAT, MAX_RANGE_INT, MIN_RANGE_FLOAT, MIN_RANGE_INT } from ".";
+import { MAX_RANGE_FLOAT, MAX_RANGE_INT, MIN_RANGE_FLOAT, MIN_RANGE_INT } from "..";
 import { decode } from "@msgpack/msgpack";
-import { parseZomeError } from "../utils";
+import { parseZomeError } from "../../utils";
 
 export default class CreateDimension extends NHComponent {
   @property()
