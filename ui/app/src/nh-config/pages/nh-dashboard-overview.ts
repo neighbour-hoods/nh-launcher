@@ -2,7 +2,7 @@ import { html, css, PropertyValueMap } from 'lit';
 import { consume, provide } from '@lit/context';
 
 import { MatrixStore } from '../../matrix-store';
-import { matrixContext, weGroupContext } from '../../context';
+import { matrixContext, resourceDefContext, weGroupContext } from '../../context';
 import { EntryHash, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
 
 import {
@@ -16,6 +16,7 @@ import {
 import TabbedContextTables from '../lists/tabbed-context-tables';
 import CreateDimension from '../forms/create-input-dimension-form';
 import DimensionList from '../lists/dimension-list';
+import NHDashboardSkeleton from './nh-dashboard-skeleton';
 import { property, query, state } from 'lit/decorators.js';
 import { b64images } from '@neighbourhoods/design-system-styles';
 import CreateOutputDimensionMethod from '../forms/create-output-dimension-form';
@@ -32,7 +33,6 @@ import {
   AppletRenderInfo,
   AssessmentTableType,
 } from '../types';
-import { StoreSubscriber } from 'lit-svelte-stores';
 
 export default class NHDashBoardOverview extends NHComponent {
   @state() loading: boolean = true;
@@ -46,35 +46,50 @@ export default class NHDashBoardOverview extends NHComponent {
   @property({ attribute: false })
   _weGroupId!: Uint8Array;
 
-  _sensemakerStore!: StoreSubscriber<SensemakerStore>;
+  @consume({ context: resourceDefContext, subscribe: true })
+  @property({ attribute: false })
+  resourceDef!: object;
+
+  sensemakerStore!: SensemakerStore;
   
-  @property() // Selected from the sub-menu of the page
-  resourceDef!: ResourceDef & {resource_def_eh: EntryHash };
-
   
-  // @state() selectedResourceDefIndex: number = -1; // No resource definition selected
-  // @state() selectedAppletIndex: number = 0;
-  // @state() selectedResourceDefEh!: string;
-  // @state() selectedWeGroupId!: Uint8Array;
-
-  // @state() appletDetails!: object;
-  // @state() selectedAppletResourceDefs!: object;
-  // @state() dimensions: DimensionDict = {};
-  // @state() context_ehs: ContextEhDict = {};
-
-  // @query("#select-context") _contextSelector;
 
   async connectedCallback() {
     super.connectedCallback();
-
-    if (!this._weGroupId) return;
-    this._sensemakerStore = new StoreSubscriber(this, () =>
-      this._matrixStore!.sensemakerStore(this._weGroupId),
-    ) as StoreSubscriber<SensemakerStore>;
-
     this.setupAssessmentsSubscription();
   }
-
+  
+  setupAssessmentsSubscription() {
+    // let store = this._matrixStore.sensemakerStore(this.selectedWeGroupId);
+    // store.subscribe(store => {
+      // (store?.appletConfigs() as Readable<{ [appletName: string]: AppletConfig }>).subscribe(
+        //   appletConfigs => {
+          //     if(typeof appletConfigs !== 'object') return;
+          //     Object.entries(appletConfigs).forEach(([installedAppId, appletConfig]) => {
+            //       // flatten resource defs by removing the role name and zome name keys
+            //       const flattenedResourceDefs = Object.values(appletConfig.resource_defs).map((zomeResourceMap) => Object.values(zomeResourceMap)).flat().reduce(
+    //         (acc, curr) => ({...acc, ...curr}),
+    //         {}
+    //       );
+    //       this.appletDetails[installedAppId].appletRenderInfo = {
+      //         resourceNames: Object.keys(flattenedResourceDefs)?.map(cleanResourceNameForUI),
+      //       };
+      //       // Keep dimensions for dashboard table prop
+      //       this.appletDetails[installedAppId].dimensions = appletConfig.dimensions;
+      //       //Keep context names for display
+      //       this.appletDetails[installedAppId].contexts = Object.keys(appletConfig.cultural_contexts).map(
+        //         cleanResourceNameForUI,
+        //       );
+        //       // Keep context entry hashes and resource_def_eh for filtering in dashboard table
+        //       this.appletDetails[installedAppId].context_ehs = Object.values(appletConfig.cultural_contexts);
+        //       this.appletDetails[installedAppId].resource_defs = appletConfig.resource_defs;
+    //     });
+    //     this.loading = false;
+    //   },
+    // );
+    // });
+  }
+  
   protected updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     // if(typeof this.appletDetails !== 'object' || !Object.entries(this.appletDetails)[this.selectedAppletIndex]?.length) return;
     // const [installedAppId, appletDetails] = Object.entries(this.appletDetails)[this.selectedAppletIndex];
@@ -89,37 +104,19 @@ export default class NHDashBoardOverview extends NHComponent {
       // this.requestUpdate('selectedResourceDefIndex')
     }
   }
+  // @state() selectedResourceDefIndex: number = -1; // No resource definition selected
+  // @state() selectedAppletIndex: number = 0;
+  // @state() selectedResourceDefEh!: string;
+  // @state() selectedWeGroupId!: Uint8Array;
+  
+  // @state() appletDetails!: object;
+  // @state() selectedAppletResourceDefs!: object;
+  // @state() dimensions: DimensionDict = {};
+  // @state() context_ehs: ContextEhDict = {};
+  
+  // @query("#select-context") _contextSelector;
+  
 
-  setupAssessmentsSubscription() {
-    // let store = this._matrixStore.sensemakerStore(this.selectedWeGroupId);
-    // store.subscribe(store => {
-    // (store?.appletConfigs() as Readable<{ [appletName: string]: AppletConfig }>).subscribe(
-    //   appletConfigs => {
-    //     if(typeof appletConfigs !== 'object') return;
-    //     Object.entries(appletConfigs).forEach(([installedAppId, appletConfig]) => {
-    //       // flatten resource defs by removing the role name and zome name keys
-    //       const flattenedResourceDefs = Object.values(appletConfig.resource_defs).map((zomeResourceMap) => Object.values(zomeResourceMap)).flat().reduce(
-    //         (acc, curr) => ({...acc, ...curr}),
-    //         {}
-    //       );
-    //       this.appletDetails[installedAppId].appletRenderInfo = {
-    //         resourceNames: Object.keys(flattenedResourceDefs)?.map(cleanResourceNameForUI),
-    //       };
-    //       // Keep dimensions for dashboard table prop
-    //       this.appletDetails[installedAppId].dimensions = appletConfig.dimensions;
-    //       //Keep context names for display
-    //       this.appletDetails[installedAppId].contexts = Object.keys(appletConfig.cultural_contexts).map(
-    //         cleanResourceNameForUI,
-    //       );
-    //       // Keep context entry hashes and resource_def_eh for filtering in dashboard table
-    //       this.appletDetails[installedAppId].context_ehs = Object.values(appletConfig.cultural_contexts);
-    //       this.appletDetails[installedAppId].resource_defs = appletConfig.resource_defs;
-    //     });
-    //     this.loading = false;
-    //   },
-    // );
-    // });
-  }
 
   renderIcons() {
     return html`
@@ -170,62 +167,62 @@ export default class NHDashBoardOverview extends NHComponent {
     // console.log('this._sensemakerStore :>> ', comp);
     //     console.log('this._matrixStore :>> ', appId);
     // const componentNhDelegate = createInputAssessmentWidgetDelegate(this._sensemakerStore, )
-    return html`
-      <nav>
-        <resource-block-renderer .component=${null} .nhDelegate=${null}></resource-block-renderer>
-        <div>
-          <sl-input class="search-input" placeholder="SEARCH" size="small"></sl-input>
-        </div>
-        <sl-menu class="dashboard-menu-section">
-          <sl-menu-label class="nav-label">NH NAME</sl-menu-label>
-          <sl-menu-item class="nav-item" value="overview">Overview</sl-menu-item>
-          <sl-menu-item class="nav-item" value="roles">Roles</sl-menu-item>
-        </sl-menu>
-        <sl-menu class="dashboard-menu-section">
-          <sl-menu-label class="nav-label">SENSEMAKER</sl-menu-label>
-          ${appletIds.map((id, i) => {
-            const applet = this.appletDetails[id];
-            const appletName = this.appletDetails[id]?.customName;
-            return !!applet
-              ? html`
-                  <sl-menu-item
-                    class="nav-item ${classMap({
-                      active: this.selectedAppletIndex === i,
-                    })}"
-                    value="${appletName}"
-                    @click=${() => {
-                      this.selectedAppletIndex = i;
-                      this.selectedResourceDefIndex = -1;
-                      this.setupAssessmentsSubscription();
-                    }}
-                    >${appletName}</sl-menu-item
-                  >
-                  <div role="navigation" class="sub-nav indented">
-                    ${applet?.appletRenderInfo?.resourceNames &&
-                    applet?.appletRenderInfo?.resourceNames.map(
-                      (resource, resourceIndex) => html`<sl-menu-item
-                        class="nav-item"
-                        value="${resource.toLowerCase()}"
-                        @click=${() => {
-                          this.selectedAppletIndex = i;
-                          this.selectedResourceDefIndex = resourceIndex;
-                          this.setupAssessmentsSubscription();
-                        }}
-                        >${resource}</sl-menu-item
-                      >`,
-                    )}
-                  </div>
-                `
-              : html``;
-          })}
-        </sl-menu>
-        <sl-menu class="dashboard-menu-section">
-          <sl-menu-label class="nav-label">Member Management</sl-menu-label>
-          <sl-menu-item class="nav-item" value="overview">Members</sl-menu-item>
-          <sl-menu-item class="nav-item" value="roles">Invitees</sl-menu-item>
-        </sl-menu>
-      </nav>
-    `;
+    // return html`
+    //   <nav>
+    //     <resource-block-renderer .component=${null} .nhDelegate=${null}></resource-block-renderer>
+    //     <div>
+    //       <sl-input class="search-input" placeholder="SEARCH" size="small"></sl-input>
+    //     </div>
+    //     <sl-menu class="dashboard-menu-section">
+    //       <sl-menu-label class="nav-label">NH NAME</sl-menu-label>
+    //       <sl-menu-item class="nav-item" value="overview">Overview</sl-menu-item>
+    //       <sl-menu-item class="nav-item" value="roles">Roles</sl-menu-item>
+    //     </sl-menu>
+    //     <sl-menu class="dashboard-menu-section">
+    //       <sl-menu-label class="nav-label">SENSEMAKER</sl-menu-label>
+    //       ${appletIds.map((id, i) => {
+    //         const applet = this.appletDetails[id];
+    //         const appletName = this.appletDetails[id]?.customName;
+    //         return !!applet
+    //           ? html`
+    //               <sl-menu-item
+    //                 class="nav-item ${classMap({
+    //                   active: this.selectedAppletIndex === i,
+    //                 })}"
+    //                 value="${appletName}"
+    //                 @click=${() => {
+    //                   this.selectedAppletIndex = i;
+    //                   this.selectedResourceDefIndex = -1;
+    //                   this.setupAssessmentsSubscription();
+    //                 }}
+    //                 >${appletName}</sl-menu-item
+    //               >
+    //               <div role="navigation" class="sub-nav indented">
+    //                 ${applet?.appletRenderInfo?.resourceNames &&
+    //                 applet?.appletRenderInfo?.resourceNames.map(
+    //                   (resource, resourceIndex) => html`<sl-menu-item
+    //                     class="nav-item"
+    //                     value="${resource.toLowerCase()}"
+    //                     @click=${() => {
+    //                       this.selectedAppletIndex = i;
+    //                       this.selectedResourceDefIndex = resourceIndex;
+    //                       this.setupAssessmentsSubscription();
+    //                     }}
+    //                     >${resource}</sl-menu-item
+    //                   >`,
+    //                 )}
+    //               </div>
+    //             `
+    //           : html``;
+    //       })}
+    //     </sl-menu>
+    //     <sl-menu class="dashboard-menu-section">
+    //       <sl-menu-label class="nav-label">Member Management</sl-menu-label>
+    //       <sl-menu-item class="nav-item" value="overview">Members</sl-menu-item>
+    //       <sl-menu-item class="nav-item" value="roles">Invitees</sl-menu-item>
+    //     </sl-menu>
+    //   </nav>
+    // `;
   }
 
     // const appletIds = this?.appletDetails ? Object.keys(this.appletDetails) : [];
@@ -262,9 +259,9 @@ export default class NHDashBoardOverview extends NHComponent {
           </nh-button>
         </nh-page-header-card>
 
-        ${this.loadingState === LoadingState.NoAppletSensemakerData
-          ? this.renderMainSkeleton()
-          : html`<tabbed-context-tables .selectedResourceName=${this.resourceDefresourceDef}></tabbed-context-tables>`
+        ${this.loadingState !== LoadingState.NoAppletSensemakerData
+          ? html`<nh-dashboard-skeleton></nh-dashboard-skeleton>`
+          : html`<tabbed-context-tables .selectedResourceName=${this.resourceDef}></tabbed-context-tables>`
         }
       </main>
     `;
@@ -274,40 +271,12 @@ export default class NHDashBoardOverview extends NHComponent {
     'nh-alert': NHAlert,
     'nh-button': NHButton,
     'nh-page-header-card': NHPageHeaderCard,
+    'nh-dashboard-skeleton': NHDashboardSkeleton,
     'tabbed-context-tables': TabbedContextTables
   };
 
   private onClickBackButton() {
     this.dispatchEvent(new CustomEvent('return-home', { bubbles: true, composed: true }));
-  }
-
-  renderMainSkeleton() {
-    return html`
-      <div class="container skeleton-overview">
-        <main>
-          <div class="skeleton-nav-container">
-            ${[50, 40, 40, 55].map(
-              width =>
-                html`<sl-skeleton
-                  effect="sheen"
-                  class="skeleton-part"
-                  style="width: ${width}%; height: 2rem;"
-                ></sl-skeleton>`,
-            )}
-            <sl-skeleton
-              effect="sheen"
-              class="skeleton-part"
-              style="width: 80%; height: 2rem; opacity: 0"
-            ></sl-skeleton>
-          </div>
-          <div class="skeleton-main-container">
-            ${Array.from(Array(24)).map(
-              () => html`<sl-skeleton effect="sheen" class="skeleton-part"></sl-skeleton>`,
-            )}
-          </div>
-        </main>
-      </div>
-    `;
   }
 
   static get styles() {

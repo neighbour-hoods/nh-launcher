@@ -31,7 +31,7 @@ export default class NHGlobalConfig extends NHComponent {
   @provide({ context: appletContext })
   @property({attribute: false})
   selectedApplet!: Applet;
-  
+
   @provide({ context: appletInstanceInfosContext })
   @property({attribute: false})
   _appletInstanceInfosForGroup = new StoreSubscriber(
@@ -78,7 +78,7 @@ export default class NHGlobalConfig extends NHComponent {
   renderPage() : TemplateResult {
     switch (this._page) {
       case ConfigPage.DashboardOverview:
-        return html`<dashboard-overview .resourceDef=${this.selectedResourceDef}></dashboard-overview>`;
+        return html`<dashboard-overview .sensemakerStore=${this._sensemakerStore.value} .resourceDef=${this.selectedResourceDef}></dashboard-overview>`;
       case ConfigPage.Dimensions:
         return html`<dimensions-config></dimensions-config>`;
       case ConfigPage.Widgets:
