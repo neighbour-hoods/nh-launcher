@@ -18,9 +18,8 @@ export class TestHarness extends LitElement {
    */
   
   @provide({ context: mockContext })
-  @property({attribute: false})
   // Create a mock store with the mock data
-  _sensemakerStore: Object = MockFactory.mockStoreResponse('all')
+  sensemakerStore: object = MockFactory.mockStoreResponse('all')
 
   render() {
     return html`<slot></slot>`;

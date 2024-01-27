@@ -5,7 +5,7 @@ import { StoreSubscriber } from 'lit-svelte-stores';
 import { MatrixStore } from '../matrix-store';
 import { ConfigPage } from './types';
 import { appletContext, appletInstanceInfosContext, matrixContext, resourceDefContext, weGroupContext } from '../context';
-import { DnaHash } from '@holochain/client';
+import { DnaHash, EntryHash } from '@holochain/client';
 
 import DimensionsConfig from './pages/nh-dimensions-config';
 import AssessmentWidgetConfig from './pages/nh-assessment-widget-config';
@@ -18,19 +18,20 @@ import { removeResourceNameDuplicates } from '../utils';
 import { ResourceDef } from '@neighbourhoods/client';
 import { cleanForUI } from '../elements/components/helpers/functions';
 import { Applet } from '../types';
+import { get } from 'svelte/store';
 
 export default class NHGlobalConfig extends NHComponent {
   @consume({ context: matrixContext, subscribe: true })
   @property({ attribute: false })
   _matrixStore!: MatrixStore;
-
+  
   @consume({ context: weGroupContext, subscribe: true })
   @property({ attribute: false })
   weGroupId!: DnaHash;
   
   @provide({ context: appletContext })
   @property({attribute: false})
-  selectedApplet!: Applet;
+  currentApplet!: Applet;
 
   @provide({ context: appletInstanceInfosContext })
   @property({attribute: false})
@@ -41,7 +42,7 @@ export default class NHGlobalConfig extends NHComponent {
   );
   
   @provide({ context: resourceDefContext })
-  @property({attribute: false})
+  @property()
   selectedResourceDef!: object;
 
   _sensemakerStore = new StoreSubscriber(this, () =>
@@ -63,6 +64,13 @@ export default class NHGlobalConfig extends NHComponent {
   
   @query('nh-menu') _menu?: NHMenu;
 
+  protected async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    // applet entry hash, applet, and federated groups' dnahashes
+    const applets : [EntryHash, Applet, DnaHash[]][] = get(await this._matrixStore.fetchAllApplets(this.weGroupId));
+    this.currentApplet = applets[0][1]; // Set context of the default applet - being the first, (up until a e.g. menu is used to set it)
+    console.log('this.currentApplet :>> ', this.currentApplet);
+  }
+
   protected async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     if (this._neighbourhoodInfo?.value && !this?._nhName) {
       this._nhName = this._neighbourhoodInfo?.value.name;
@@ -78,7 +86,7 @@ export default class NHGlobalConfig extends NHComponent {
   renderPage() : TemplateResult {
     switch (this._page) {
       case ConfigPage.DashboardOverview:
-        return html`<dashboard-overview .sensemakerStore=${this._sensemakerStore.value} .resourceDef=${this.selectedResourceDef}></dashboard-overview>`;
+        return html`<dashboard-overview .sensemakerStore=${this._sensemakerStore.value}></dashboard-overview>`;
       case ConfigPage.Dimensions:
         return html`<dimensions-config></dimensions-config>`;
       case ConfigPage.Widgets:
@@ -104,9 +112,10 @@ export default class NHGlobalConfig extends NHComponent {
             const [mainMenuItemName, _mainMenuItemIndex, subMenuItemIndex] = e.detail.itemId.split(/\-/);
             this._page = this.choosePageFromSubMenuItemId(mainMenuItemName.toLowerCase());
             // TODO: fix submenu implementation and choose a different static name for menu item 0 other than Neighbourhood
-            if (!(['Sensemaker', this._nhName].includes(mainMenuItemName))) return; // Only current active main menu item is Sensemaker, but you can change this later
 
-            // THIS RELIES ON THE SAME ORDERING/INDEXING OCCURRING IN `this._resourceDefEntries` AS IN THE RENDERED SUBMENU and may need to be changed
+            if (!(['Sensemaker', "Neighbourhood"].includes(mainMenuItemName))) return; // Only current active main menu item is Sensemaker, but you can change this later
+            
+            // THIS RELIES ON THE SAME ORDERING/INDEXING OCCURRING IN `this._resourceDefEntries` AS IN THE RENDERED SUBMENUS for ['Sensemaker', "Neighbourhood"], and may need to be changed
             this.selectedResourceDef = this._resourceDefEntries[subMenuItemIndex]
           }
           }

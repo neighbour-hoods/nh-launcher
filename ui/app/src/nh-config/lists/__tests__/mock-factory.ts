@@ -1,17 +1,20 @@
+import { AssessmentDict } from './../../../elements/components/helpers/types';
 import { AppletConfig } from '@neighbourhoods/client/dist/applet';
-import { AssessmentDict, AssessmentTableRecord } from '../components/helpers/types';
 import { FieldDefinition } from '@adaburrows/table-web-component';
-import { generateHeaderHTML } from '../components/helpers/functions';
 import { html } from 'lit';
 
 import { EntryHash, DnaHash, HoloHash } from '@holochain/client';
-import { AppletTuple, testAppletBaseRoleName } from '../dashboard/__tests__/matrix-test-harness';
 import { writable } from 'svelte/store';
 import { vi } from 'vitest';
 import { Dimension, SensemakerStore } from '@neighbourhoods/client';
 import { encode } from '@msgpack/msgpack';
-import { Profile, ProfilesStore } from '@holochain-open-dev/profiles';
+
 import { Applet, AppletInstanceInfo } from '../../../types';
+import { AssessmentTableRecord } from '../../types';
+import { generateHeaderHTML } from '../../../elements/components/helpers/functions';
+import { AppletTuple } from '../../../elements/dashboard/__tests__/matrix-test-harness';
+
+export const testAppletBaseRoleName = 'test-applet';
 
 export class MockFactory {
   static createAssessment(
@@ -70,7 +73,7 @@ export class MockFactory {
   ): AppletConfig {
     return {
       name: name,
-      role_name: role_name,
+      // role_name: role_name,
       ranges: ranges,
       dimensions: dimensions,
       resource_defs: resource_defs,
@@ -137,15 +140,15 @@ export class MockFactory {
     return applet;
   }
 
-  static createAppletInstanceInfos(numberInArray: number): Partial<AppletInstanceInfo>[] {
-    return this.createAppletTuples(numberInArray).map(tuple => ({
-      appInfo: { installed_app_id: tuple[1].installed_app_id },
-      applet: tuple[1] as Applet,
-    }));
-  }
-  static createAppletTuples(numberInArray: number): AppletTuple[] {
-    return [...new Array(numberInArray)].map((_, index) => this.createAppletTuple(index));
-  }
+  // static createAppletInstanceInfos(numberInArray: number): Partial<AppletInstanceInfo>[] {
+  //   return this.createAppletTuples(numberInArray).map(tuple => ({
+  //     appInfo: { installed_app_id: tuple[1].installed_app_id },
+  //     applet: tuple[1] as Applet,
+  //   }));
+  // }
+  // static createAppletTuples(numberInArray: number): AppletTuple[] {
+  //   return [...new Array(numberInArray)].map((_, index) => this.createAppletTuple(index));
+  // }
 
   static createConfigDimensions(numberInArray: number, subjectivity: string = "subjective"): any {
     return [...new Array(numberInArray)].map((_, index) => ({
@@ -160,7 +163,7 @@ export class MockFactory {
   }));
   }
 
-  static mockStoreResponse(methodName: string) {
+  static mockStoreResponse(methodName: string) : object {
     let mockStore: any = {};
     
     // Set up mocks for direct zome calls as needed/implemented by your component
@@ -192,55 +195,55 @@ export class MockFactory {
 
     switch (methodName) {
       case 'profiles-inner':
-      case 'profiles':
-        const mockMyProfileWritable = writable<Profile>();
-        const mockAllProfilesDict = new Map<HoloHash,object>();
-        mockAllProfilesDict.get = vi.fn((key: HoloHash) => ({status: "complete", "value": {
-          nickname: "a mock name",
-        }}))
-        const mockProfilesStoreWritable = writable<{}>({
-          myProfile: {
-            subscribe: mockMyProfileWritable.subscribe,
-            unsubscribe: vi.fn(),
-            mockSetSubscribeValue: (value: Profile): void =>
-            mockMyProfileWritable.update(_ => value),
-          },
-          profiles: mockAllProfilesDict,
-        });
-        if(methodName == 'profiles-inner') return mockProfilesStoreWritable
+      // case 'profiles':
+      //   const mockMyProfileWritable = writable<Profile>();
+      //   const mockAllProfilesDict = new Map<HoloHash,object>();
+      //   mockAllProfilesDict.get = vi.fn((key: HoloHash) => ({status: "complete", "value": {
+      //     nickname: "a mock name",
+      //   }}))
+      //   const mockProfilesStoreWritable = writable<{}>({
+      //     myProfile: {
+      //       subscribe: mockMyProfileWritable.subscribe,
+      //       unsubscribe: vi.fn(),
+      //       mockSetSubscribeValue: (value: Profile): void =>
+      //       mockMyProfileWritable.update(_ => value),
+      //     },
+      //     profiles: mockAllProfilesDict,
+      //   });
+      //   if(methodName == 'profiles-inner') return mockProfilesStoreWritable
 
-        const mockProfilesResponse = {
-          value: null,
-          store: () => mockProfilesStoreWritable,
-          subscribe: mockProfilesStoreWritable.subscribe,
-          unsubscribe: vi.fn(),
-          mockSetSubscribeValue: (value: Profile): void => mockUpdateProfilesStore(value),
-        };
-        // Helper to make mockResourceAssessmentsResponse like a reactive StoreSubscriber
-        function mockUpdateProfilesStore(newValue) {
-          mockProfilesResponse.value = newValue;
-          mockProfilesStoreWritable.update(_ => newValue);
-        }
-        return mockProfilesResponse
+      //   const mockProfilesResponse = {
+      //     value: null,
+      //     store: () => mockProfilesStoreWritable,
+      //     subscribe: mockProfilesStoreWritable.subscribe,
+      //     unsubscribe: vi.fn(),
+      //     mockSetSubscribeValue: (value: Profile): void => mockUpdateProfilesStore(value),
+      //   };
+      //   // Helper to make mockResourceAssessmentsResponse like a reactive StoreSubscriber
+      //   function mockUpdateProfilesStore(newValue) {
+      //     mockProfilesResponse.value = newValue;
+      //     mockProfilesStoreWritable.update(_ => newValue);
+      //   }
+      //   return mockProfilesResponse
 
-      case 'matrix-sensemaker-for-we-group-id':
-        // A nested mock Sensemaker store
-        const mockSMStore = this.mockStoreResponse('all');
-        const mockStoreWritable = writable<Partial<SensemakerStore>>(mockSMStore);
-        return {
-          store: () => mockStoreWritable,
-          subscribe: mockStoreWritable.subscribe,
-          unsubscribe: vi.fn(),
-          mockSetStoreResourceAssessments: (value: AssessmentDict): void => {
-            mockSMStore.setResourceAssessments(value);
-            mockStoreWritable.update(_ => mockSMStore);
-          },
-          mockSetStoreAppConfigs: (value: { [appletInstanceId: string]: AppletConfig }): void => {
-            mockSMStore.setAppletConfigs(value);
-            mockStoreWritable.update(_ => mockSMStore);
-          },
-          client: mockClient,
-        };
+      // case 'matrix-sensemaker-for-we-group-id':
+      //   // A nested mock Sensemaker store
+      //   const mockSMStore = this.mockStoreResponse('all');
+      //   const mockStoreWritable = writable<Partial<SensemakerStore>>(mockSMStore);
+      //   return {
+      //     store: () => mockStoreWritable,
+      //     subscribe: mockStoreWritable.subscribe,
+      //     unsubscribe: vi.fn(),
+      //     mockSetStoreResourceAssessments: (value: AssessmentDict): void => {
+      //       mockSMStore.setResourceAssessments(value);
+      //       mockStoreWritable.update(_ => mockSMStore);
+      //     },
+      //     mockSetStoreAppConfigs: (value: { [appletInstanceId: string]: AppletConfig }): void => {
+      //       mockSMStore.setAppletConfigs(value);
+      //       mockStoreWritable.update(_ => mockSMStore);
+      //     },
+      //     client: mockClient,
+      //   };
 
       case 'fetchAllApplets':
         const mockAppletsWritable = writable<AppletTuple[]>([]);

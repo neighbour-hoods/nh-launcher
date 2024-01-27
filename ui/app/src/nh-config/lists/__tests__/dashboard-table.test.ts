@@ -1,5 +1,4 @@
 import '@webcomponents/scoped-custom-element-registry/scoped-custom-element-registry.min.js';
-import { MockFactory } from './../../__tests__/mock-factory';
 const { JSDOM } = require('jsdom');
 import { fixture, html } from '@open-wc/testing';
 import { describe, expect, test, beforeAll, beforeEach } from 'vitest';
@@ -11,22 +10,24 @@ import {
 } from './sensemaker-store-test-harness';
 import { addedAssessment, removedAssessment, mapMockedAssessment, stateful } from './helpers';
 import '../dashboard-table';
-import { assessmentTableId } from '../../types';
+import { AssessmentTableType, assessmentTableId } from '../../types';
+import { MockFactory } from './mock-factory';
 /**
  * @vitest-environment jsdom
  */
 
 export const mockResourceName = 'abc';
 
-describe('StatefulTable', () => {
+describe('Web Component Table', () => {
   let component, harness, componentDom, toBeTestedSubComponent;
   let mockStore;
 
-  const initialRender = async testComponent => {
+  const initialRender = async (testComponent) => {
     harness = await stateful(component);
     componentDom = harness.querySelector('dashboard-table');
     await componentDom.updateComplete;
   };
+
   const renderAndReturnDom = async (testComponent, subComponentTag) => {
     await initialRender(testComponent);
 
@@ -47,7 +48,7 @@ describe('StatefulTable', () => {
         .tableType=${AssessmentTableType.Resource}
         .contextFieldDefs=${undefined}
       ></dashboard-table>`;
-      mockStore = MockFactory.mockStoreResponse('resourceAssessments').resourceAssessments();
+      mockStore = (MockFactory.mockStoreResponse('resourceAssessments')as any).resourceAssessments();
       mockStore.mockSetSubscribeValue({ abc: [] });
       await initialRender(component);
     });
@@ -71,7 +72,7 @@ describe('StatefulTable', () => {
 
   describe('Given a SensemakerStore with one resource and two assessments', () => {
     beforeEach(async () => {
-      mockStore = MockFactory.mockStoreResponse('resourceAssessments').resourceAssessments();
+      mockStore = (MockFactory.mockStoreResponse('resourceAssessments') as any).resourceAssessments();
       mockStore.mockSetSubscribeValue(mockAssessments);
       const mappedAssessmentDict = { 'abc' : mockAssessments['abc'].map(mapMockedAssessment)};
 

@@ -7,10 +7,10 @@ import { SensemakerStore } from '@neighbourhoods/client';
 import { AssessmentDict } from '../../types';
 
 // Create a mock context with the mock store
-export const mockContext = createContext<Partial<SensemakerStore>>('sensemaker-store-context');
+export const mockContext = createContext<object>('sensemaker-store-context');
 
 export const stateful = async component =>
-  fixture(html`<sensemaker-store-test-harness>${component}</sensemaker-store-test-harness> `);
+  fixture(html`<sensemaker-store-test-harness>${component}</sensemaker-store-test-harness>`);
 
 export function addedAssessment(
   mockAssessments: AssessmentDict,

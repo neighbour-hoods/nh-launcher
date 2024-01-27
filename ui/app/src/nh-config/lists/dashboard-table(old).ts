@@ -11,13 +11,14 @@ import {
 
 import { SlAlert, SlSkeleton } from '@scoped-elements/shoelace';
 import { NHComponentShoelace } from '@neighbourhoods/design-system-components';
-
 // import { WithProfile } from './profile/with-profile';
 import { consume } from '@lit/context';
 import { AgentPubKeyB64, DnaHash, encodeHashToBase64 } from '@holochain/client';
-import { weGroupContext } from '../../context';
+import { matrixContext, weGroupContext } from '../../context';
 import { AssessmentTableRecord, AssessmentTableType, assessmentTableId } from '../types';
-
+// import { WeGroupContext } from '../../elements/we-group-context';
+import { generateHashHTML, generateHeaderHTML } from '../../elements/components/helpers/functions';
+import { MatrixStore } from '../../matrix-store';
 
 @customElement('dashboard-table')
 export class DashboardTable extends NHComponentShoelace {
@@ -25,26 +26,19 @@ export class DashboardTable extends NHComponentShoelace {
   @property({ attribute: false })
   _matrixStore!: MatrixStore;
 
-  @consume({ context: weGroupContext, subscribe: true })
-  @property({ attribute: false })
-  weGroupId!: DnaHash;
+  // @consume({ context: weGroupContext, subscribe: true })
+  // @property({ attribute: false })
+  // weGroupId!: DnaHash;
 
-  @property({ type: Array })
-  assessments: AssessmentTableRecord[] = [];
+  @property() assessments: AssessmentTableRecord[] = [];
 
-  @property({ type: Object })
-  tableStore!: TableStore<AssessmentTableRecord>;
+  @property() tableStore!: TableStore<AssessmentTableRecord>;
 
-  @property()
-  resourceName!: string;
-  @state()
-  columns: number = 0;
-  @state()
-  loading: boolean = true;
-  @property()
-  contextFieldDefs!: { [x: string]: FieldDefinition<AssessmentTableRecord> };
-  @property()
-  tableType!: AssessmentTableType;
+  @property() resourceName!: string;
+  @state() columns: number = 0;
+  @state() loading: boolean = true;
+  @property() contextFieldDefs!: { [x: string]: FieldDefinition<AssessmentTableRecord> };
+  @property() tableType!: AssessmentTableType;
 
   updateTable() {
     this.tableStore.fieldDefs = this.generateFieldDefs(this.resourceName, this.contextFieldDefs);
@@ -144,9 +138,9 @@ export class DashboardTable extends NHComponentShoelace {
   static elementDefinitions = {
     'wc-table': Table,
     'sl-alert': SlAlert,
-    'we-group-context': WeGroupContext,
+    // 'we-group-context': WeGroupContext,
     'sl-skeleton': SlSkeleton,
-    'with-profile': WithProfile,
+    // 'with-profile': WithProfile,
   };
 
   static styles = css`

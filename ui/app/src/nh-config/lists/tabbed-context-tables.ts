@@ -66,7 +66,8 @@ export default class TabbedContextTables extends NHComponent {
         </nh-context-selector>
       </nh-page-header-card>
 
-      <sl-tab-panel active class="dashboard-tab-panel" name="resource"> </sl-tab-panel>
+      <sl-tab-panel active class="dashboard-tab-panel" name="resource">
+      </sl-tab-panel>
 
       <nh-alert
         .open=${!!this.selectedResourceName}
