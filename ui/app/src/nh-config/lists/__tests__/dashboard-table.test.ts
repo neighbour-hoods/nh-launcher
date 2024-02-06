@@ -9,12 +9,15 @@ import {
   mockFieldDefsResourceTable,
 } from './sensemaker-store-test-harness';
 import { addedAssessment, removedAssessment, mapMockedAssessment, stateful } from './helpers';
-import '../dashboard-table';
+import { DashboardTable } from '../dashboard-table';
 import { AssessmentTableType, assessmentTableId } from '../../types';
 import { MockFactory } from './mock-factory';
 /**
  * @vitest-environment jsdom
  */
+
+
+customElements.define('dashboard-table', DashboardTable)
 
 export const mockResourceName = 'abc';
 
@@ -23,7 +26,7 @@ describe('Web Component Table', () => {
   let mockStore;
 
   const initialRender = async (testComponent) => {
-    harness = await stateful(component);
+    harness = await stateful(testComponent);
     componentDom = harness.querySelector('dashboard-table');
     await componentDom.updateComplete;
   };
@@ -57,7 +60,7 @@ describe('Web Component Table', () => {
       expect(mockStore.value[mockResourceName].length).toEqual(0);
 
       expect(componentDom.tableStore).toBeDefined();
-      expect(componentDom.tableStore.records[mockResourceName].length).toEqual(0);
+      expect(componentDom.tableStore.records.length).toEqual(0);
     });
 
     test('And it renders no table but renders a skeleton', async () => {

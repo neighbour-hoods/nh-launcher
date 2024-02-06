@@ -66,11 +66,9 @@ export class DashboardTable extends NHComponentShoelace {
       showHeader: true,
       records: [] as AssessmentTableRecord[]
     });
-    console.log('fieldDefs :>> ',fieldDefs);
   }
 
   updated(changedProps) {
-    debugger;
     if (changedProps.has('assessments') || changedProps.has('contextFieldDefs') || changedProps.has('resourceName')) {
       this.updateTable();
       this.loading = false;
