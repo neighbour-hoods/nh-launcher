@@ -7,13 +7,12 @@ import {
 } from '@neighbourhoods/client';
 import { LitElement, css, html } from 'lit';
 import { property, state } from 'lit/decorators.js';
-import { AppInfo, EntryHash, DnaHash, encodeHashToBase64 } from '@holochain/client';
+import { EntryHash, DnaHash, encodeHashToBase64, EntryHashB64 } from '@holochain/client';
 import { consume } from '@lit/context';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import { DashboardTable } from './dashboard-table';
 import { FieldDefinition } from '@adaburrows/table-web-component';
 import { AssessmentTableRecord, AssessmentTableType, DimensionDict } from '../types';
-import { decode } from '@msgpack/msgpack';
 import { MatrixStore } from '../../matrix-store';
 import { matrixContext, weGroupContext } from '../../context';
 import { EntryRecord } from '@holochain-open-dev/utils';
@@ -31,9 +30,10 @@ export class DashboardFilterMap extends LitElement {
   @property({attribute: false}) weGroupId!: DnaHash;
 
   @property()
-  _allAssessments = new StoreSubscriber(
+  _rawAssessments = new StoreSubscriber(
     this,
     () =>  derived(this._sensemakerStore.resourceAssessments(), (assessments) => {
+      // Might want to mutate this in some way before returning
       return assessments
     }),
     () => [this._sensemakerStore],
@@ -44,8 +44,7 @@ export class DashboardFilterMap extends LitElement {
   @property({ type: String }) resourceDefEh;
   @property({ type: Object }) selectedAppletResourceDefs;
   @property({ type: String }) selectedContext;
-  @property() contextEhs!: EntryHash[];
-  @state() contextEhsB64!: string[];
+  @state() contextEhsB64!: EntryHashB64[];
   @state() selectedDimensions!: DimensionDict;
   @state() private _dimensionEntries!: Dimension[];
   @state() private _objectiveDimensionNames: string[] = [];
@@ -54,30 +53,26 @@ export class DashboardFilterMap extends LitElement {
 
   // To be fed as props to the dashboard table component
   @property() fieldDefs;
-  @property() filteredAssessments: Assessment[] = [];
+  @property() filteredTableRecords: AssessmentTableRecord[] = [];
 
   async connectedCallback() {
     super.connectedCallback();
     
-    if(!this._allAssessments?.value) return
-    this.filterAssessments();
+    if(!this._rawAssessments?.value) return
+    this.filterMapRawAssessmentsToTableRecords();
   }
 
   async updated(changedProps) {
     if ((changedProps.has('selectedAppletResourceDefs') || changedProps.has('resourceDefEh')) && this.resourceDefEh) {
-      this._allAssessments.unsubscribe();
-      this.filterAssessments();
+      this.filterMapRawAssessmentsToTableRecords();
       this.requestUpdate('selectedDimensions')
     }
     if (changedProps.has('selectedContext')) {
       await this.fetchCurrentContextEntry();
-      this._allAssessments.unsubscribe();
-      this.filterAssessments();
+      this.filterMapRawAssessmentsToTableRecords();
     }
-    if (changedProps.has('contextEhs') && this.tableType == AssessmentTableType.Context) {
-      this._allAssessments.unsubscribe();
-      this.contextEhsB64 = this.contextEhs.map(eh => encodeHashToBase64(eh));
-      this.filterAssessments();
+    if (changedProps.has('contextEhsB64') && this.tableType == AssessmentTableType.Context) {
+      this.filterMapRawAssessmentsToTableRecords();
     }
     if (changedProps.has('selectedDimensions')) {
       await this.fetchSelectedDimensionEntries();
@@ -89,31 +84,25 @@ export class DashboardFilterMap extends LitElement {
       typeof changedProps.get('_objectiveDimensionNames') !== 'undefined'
     ) {
       this.fieldDefs = this.generateContextFieldDefs();
-      this._allAssessments.unsubscribe();
-      this.filterAssessments();
+      this.filterMapRawAssessmentsToTableRecords();
     }
   }
 
-  filterAssessments() {
-    const resourceAssessments = this._allAssessments.value;
-    if(typeof resourceAssessments !== 'object') return
-
-    if (
+  filterMapRawAssessmentsToTableRecords() {
+    const resourceAssessments = this._rawAssessments.value;
+    if(typeof resourceAssessments !== 'object' || !(
       Object.values(resourceAssessments) &&
       Object.values(resourceAssessments)?.length !== undefined &&
       this.tableType
-    ) {
-      let allAssessments = Object.values(resourceAssessments) as Assessment[][];
-      let assessmentTableRecords;
-      try {
-        let filteredAssessments = this.flatFiltered(allAssessments);
-        assessmentTableRecords = filteredAssessments.map(
-          this.mapAssessmentToAssessmentTableRecord.bind(this),
-        );
-      } catch (error) {
-        console.log('Error filtering assessments :>> ', error);
-      }
-      this.filteredAssessments = assessmentTableRecords;
+      )
+    ) return
+
+    try {
+      this.filteredTableRecords = this.flatFiltered(Object.values(resourceAssessments) as Assessment[][]).map(
+        this.mapAssessmentToAssessmentTableRecord.bind(this),
+      );
+    } catch (error) {
+      console.log('Error filtering assessments :>> ', error);
     }
   }
 
@@ -210,7 +199,7 @@ export class DashboardFilterMap extends LitElement {
   mapAssessmentToAssessmentTableRecord(assessment: Assessment): AssessmentTableRecord {
     // Base record with basic fields
 
-    // get the view from the matrix store
+    // get the view from the matrix store TODO: replace with resource renderer
     const resourceView = this._matrixStore.getResourceView(this.weGroupId, assessment.resource_def_eh);
     const baseRecord = {
       neighbour: encodeHashToBase64(assessment.author),
@@ -242,7 +231,7 @@ export class DashboardFilterMap extends LitElement {
         this.tableType === AssessmentTableType.Resource
           ? this._subjectiveDimensionNames.includes(dimensionName)
           : this._objectiveDimensionNames.includes(dimensionName) &&
-            this.filteredAssessments.every(a => a[dimensionName] !== ''),
+            this.filteredTableRecords.every(a => a[dimensionName] !== ''),
     );
     switch (this.tableType) {
       case AssessmentTableType.Resource:
@@ -277,13 +266,13 @@ export class DashboardFilterMap extends LitElement {
 
   render() {
     console.log('this.resourceName :>> ', this.resourceName);
-    console.log('this.filteredAssessments :>> ', this.filteredAssessments);
+    console.log('this.filteredTableRecords :>> ', this.filteredTableRecords);
     console.log('this.tableType :>> ', this.tableType);
     console.log('this.fieldDefs :>> ', this.fieldDefs);
     return html`
       <dashboard-table
         .resourceName=${this.resourceName}
-        .assessments=${this.filteredAssessments}
+        .assessments=${this.filteredTableRecords}
         .tableType=${this.tableType}
         .contextFieldDefs=${this.fieldDefs}
       ></dashboard-table>
@@ -306,20 +295,6 @@ export class DashboardFilterMap extends LitElement {
     ];
   }
 
-  partitionDimensionEntries() {
-    if (!this._dimensionEntries) return;
-
-    let [subjective, objective] = this._dimensionEntries.reduce(
-      (partitioned, dimension) => {
-        partitioned[dimension.computed ? 1 : 0].push(dimension.name);
-        return partitioned;
-      },
-      [[], []] as any,
-    );
-    this._objectiveDimensionNames = objective;
-    this._subjectiveDimensionNames = subjective;
-  }
-
   async fetchCurrentContextEntry() {
     if (this.selectedContext == 'none') return;
 
@@ -335,24 +310,24 @@ export class DashboardFilterMap extends LitElement {
     if (!this.selectedDimensions) return;
 
     try {
-      const appInfo: AppInfo = await this._sensemakerStore.client.appInfo();
-      const cell_id = (appInfo.cell_info['sensemaker'][1] as any).cloned.cell_id;
-      const response = await this._sensemakerStore.client.callZome({
-        cell_id,
-        zome_name: 'sensemaker',
-        fn_name: 'get_dimensions',
-        payload: null,
-      });
-      this._dimensionEntries = response.map(payload => {
-        try {
-          let dimension = decode(payload.entry.Present.entry) as any;
-          return dimension;
-        } catch (error) {
-          console.log('Error decoding dimension payload: ', error);
-        }
-      }) as Dimension[];
+      const entryRecords = await this._sensemakerStore.getDimensions();
+      this._dimensionEntries = entryRecords.map(eR => eR.entry) as Dimension[];
     } catch (error) {
       console.log('Error fetching dimension details: ', error);
     }
+  }
+
+  partitionDimensionEntries() {
+    if (!this._dimensionEntries) return;
+
+    let [subjective, objective] = this._dimensionEntries.reduce(
+      (partitioned, dimension) => {
+        partitioned[dimension.computed ? 1 : 0].push(dimension.name);
+        return partitioned;
+      },
+      [[], []] as any,
+    );
+    this._objectiveDimensionNames = objective;
+    this._subjectiveDimensionNames = subjective;
   }
 }

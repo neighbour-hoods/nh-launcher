@@ -92,8 +92,8 @@ export default class TabbedContextTables extends NHComponent {
         @display-context=${(e: CustomEvent) => {
           const flatResults = typeof e.detail.results == "object" ? e.detail.results[this.selectedContextEhB64].flat() : [];
           const dashboardFilterComponent = (e.currentTarget as any).children[0];
-          dashboardFilterComponent.contextEhs = flatResults;
-          console.log('flatResults :>> ', flatResults);
+          dashboardFilterComponent.contextEhsB64 = flatResults.map(eh => encodeHashToBase64(eh));
+          console.log('dashboardFilterComponent.contextEhsB64 :>> ', dashboardFilterComponent.contextEhsB64);
         }}
       >
         <dashboard-filter-map
