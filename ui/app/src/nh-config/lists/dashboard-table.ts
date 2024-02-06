@@ -70,6 +70,7 @@ export class DashboardTable extends NHComponentShoelace {
   }
 
   updated(changedProps) {
+    debugger;
     if (changedProps.has('assessments') || changedProps.has('contextFieldDefs') || changedProps.has('resourceName')) {
       this.updateTable();
       this.loading = false;

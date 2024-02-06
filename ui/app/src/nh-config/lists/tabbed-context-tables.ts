@@ -3,7 +3,7 @@ import { b64images } from '@neighbourhoods/design-system-styles';
 import { classMap } from 'lit/directives/class-map.js';
 import { cleanForUI, snakeCase } from '../../elements/components/helpers/functions';
 import { CSSResult, css, html } from 'lit';
-import { NHButton, NHButtonGroup, NHComponent, NHPageHeaderCard, NHTooltip } from '@neighbourhoods/design-system-components';
+import { NHAlert, NHButton, NHButtonGroup, NHComponent, NHPageHeaderCard, NHTooltip } from '@neighbourhoods/design-system-components';
 import { property, state } from 'lit/decorators.js';
 import { SlTab, SlTabGroup, SlTabPanel } from '@scoped-elements/shoelace';
 import NHContextSelector from '../nh-context-selector';
@@ -57,7 +57,6 @@ export default class TabbedContextTables extends NHComponent {
         class="dashboard-tab-group"
         @context-selected=${function(e: CustomEvent) {
           [...(e.currentTarget as any).querySelectorAll('sl-tab-panel')].forEach(tab => {
-            // tab.name === snakeCase(e.detail.contextName) &&
               tab.dispatchEvent(
                 new CustomEvent('display-context', {
                   detail: e.detail,
@@ -65,7 +64,6 @@ export default class TabbedContextTables extends NHComponent {
                   composed: true,
                 }),
               );
-              console.log('dispatched :>> ',);
           });
         }.bind(this)}
       >
@@ -112,16 +110,14 @@ export default class TabbedContextTables extends NHComponent {
           ? html`
               <sl-tab-panel active class="dashboard-tab-panel" name="resource">
                 <dashboard-filter-map
-                    .resourceName=${this.selectedResourceDef?.resource_name}
-                    .resourceDefEh=${this.selectedResourceDef?.resource_def_eh}
-                    .tableType=${AssessmentTableType.Resource}
-                    .selectedContextEhB64=${this.selectedContextEhB64}
-                  ></dashboard-filter-map>
+                  .tableType=${AssessmentTableType.Resource}
+                  .resourceName=${this.selectedResourceDef?.resource_name}
+                  .resourceDefEh=${this.selectedResourceDef?.resource_def_eh}
+                  .selectedContextEhB64=${this.selectedContextEhB64}
+                ></dashboard-filter-map>
               </sl-tab-panel>
             `
-          : html`<sl-tab-panel 
-                    class="dashboard-tab-panel"
-                    name="context"
+          : html`<sl-tab-panel class="dashboard-tab-panel" name="context"
                     @display-context=${(e: CustomEvent) => {
                         const flatResults = typeof e.detail.results == "object" ? e.detail.results[this.selectedContextEhB64].flat() : [];
                         const dashboardFilterComponent = (e.currentTarget as any).children[0];
@@ -130,9 +126,9 @@ export default class TabbedContextTables extends NHComponent {
                       }}
                   >
                     <dashboard-filter-map
+                      .tableType=${AssessmentTableType.Context}
                       .resourceName=${this.selectedResourceDef?.resource_name}
                       .resourceDefEh=${this.selectedResourceDef?.resource_def_eh}
-                      .tableType=${AssessmentTableType.Context}
                       .selectedContext=${this.selectedContextEhB64}
                     ></dashboard-filter-map>
                 </sl-tab-panel>
@@ -151,6 +147,7 @@ export default class TabbedContextTables extends NHComponent {
   }
 
   static elementDefinitions = {
+    'nh-alert': NHAlert,
     'nh-tooltip': NHTooltip,
     'nh-button': NHButton,
     'nh-button-group': NHButtonGroup,

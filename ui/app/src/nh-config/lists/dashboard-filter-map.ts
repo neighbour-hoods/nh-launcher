@@ -1,4 +1,3 @@
-import { Readable, derived, get } from '@holochain-open-dev/stores';
 import {
   Assessment,
   CulturalContext,
@@ -6,9 +5,9 @@ import {
   SensemakerStore,
   sensemakerStoreContext,
 } from '@neighbourhoods/client';
-import { LitElement, css, html, unsafeCSS } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { AppInfo, EntryHash, DnaHash, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
+import { LitElement, css, html } from 'lit';
+import { property, state } from 'lit/decorators.js';
+import { AppInfo, EntryHash, DnaHash, encodeHashToBase64 } from '@holochain/client';
 import { consume } from '@lit/context';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import { DashboardTable } from './dashboard-table';
@@ -19,19 +18,17 @@ import { MatrixStore } from '../../matrix-store';
 import { matrixContext, weGroupContext } from '../../context';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import { cleanResourceNameForUI, generateHeaderHTML } from '../../elements/components/helpers/functions';
+import { derived } from 'svelte/store';
 
 export class DashboardFilterMap extends LitElement {
   @consume({ context: sensemakerStoreContext, subscribe: true })
-  @property({attribute: false})
-  _sensemakerStore!: SensemakerStore;
+  @property({attribute: false}) _sensemakerStore!: SensemakerStore;
 
   @consume({ context: matrixContext, subscribe: true })
-  @property({attribute: false})
-  _matrixStore!: MatrixStore;
+  @property({attribute: false}) _matrixStore!: MatrixStore;
 
   @consume({ context: weGroupContext, subscribe: true })
-  @property({attribute: false})
-  weGroupId!: DnaHash;
+  @property({attribute: false}) weGroupId!: DnaHash;
 
   @property()
   _allAssessments = new StoreSubscriber(
@@ -42,70 +39,50 @@ export class DashboardFilterMap extends LitElement {
     () => [this._sensemakerStore],
   );
 
-  @property({ type: String })
-  resourceName;
-  @property({ type: String })
-  resourceDefEh;
-  @property({ type: AssessmentTableType })
-  tableType;
-  @property({ type: Object })
-  selectedAppletResourceDefs;
-  @property({ type: String })
-  selectedContext;
-  @property()
-  contextEhs!: EntryHash[];
-  @property()
-  contextEhsB64!: string[];
-  @state()
-  private _dimensionEntries!: Dimension[];
-  @state()
-  selectedDimensions!: DimensionDict;
-  @state()
-  private _objectiveDimensionNames: string[] = [];
-  @state()
-  private _subjectiveDimensionNames: string[] = [];
-  @state()
-  private _contextEntry!: CulturalContext;
+  @property({ type: String }) resourceName;
+  @property({ type: String }) resourceDefEh;
+  @property({ type: AssessmentTableType }) tableType;
+  @property({ type: Object }) selectedAppletResourceDefs;
+  @property({ type: String }) selectedContext;
+  @property() contextEhs!: EntryHash[];
+  @property() contextEhsB64!: string[];
+  @state() selectedDimensions!: DimensionDict;
+  @state() private _dimensionEntries!: Dimension[];
+  @state() private _objectiveDimensionNames: string[] = [];
+  @state() private _subjectiveDimensionNames: string[] = [];
+  @state() private _contextEntry!: CulturalContext;
 
   // To be fed as props to the dashboard table component
-  @property()
-  fieldDefs;
-  @property({ type: Array })
-  filteredAssessments: Assessment[] = [];
+  @property() fieldDefs;
+  @property() filteredAssessments: Assessment[] = [];
 
   async connectedCallback() {
     super.connectedCallback();
     
     if(!this._allAssessments?.value) return
-    this.setupAssessmentFilteringSubscription();
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    this._allAssessments.unsubscribe();
+    this.filterAssessments();
   }
 
   async updated(changedProps) {
-    console.log('changedProps :>> ', changedProps);
     if ((changedProps.has('selectedAppletResourceDefs') || changedProps.has('resourceDefEh')) && this.resourceDefEh) {
       this._allAssessments.unsubscribe();
-      this.setupAssessmentFilteringSubscription();
+      this.filterAssessments();
       this.requestUpdate('selectedDimensions')
     }
     if (changedProps.has('selectedContext')) {
       await this.fetchCurrentContextEntry();
       this._allAssessments.unsubscribe();
-      this.setupAssessmentFilteringSubscription();
+      this.filterAssessments();
     }
     if (changedProps.has('contextEhs') && this.tableType == AssessmentTableType.Context) {
       this._allAssessments.unsubscribe();
       this.contextEhsB64 = this.contextEhs.map(eh => encodeHashToBase64(eh));
-      this.setupAssessmentFilteringSubscription();
+      this.filterAssessments();
     }
     if (changedProps.has('selectedDimensions')) {
       await this.fetchSelectedDimensionEntries();
       this.fieldDefs = this.generateContextFieldDefs();
-      this.filterSelectedDimensionsByComputedMethod();
+      this.partitionDimensionEntries();
     }
     if (
       changedProps.has('_subjectiveDimensionNames') &&
@@ -113,80 +90,30 @@ export class DashboardFilterMap extends LitElement {
     ) {
       this.fieldDefs = this.generateContextFieldDefs();
       this._allAssessments.unsubscribe();
-      this.setupAssessmentFilteringSubscription();
+      this.filterAssessments();
     }
   }
 
-  setupAssessmentFilteringSubscription() {
-    // Subscribe to resourceAssessments, filtering using this component's props when a new value is emitted
-    (this._allAssessments.store as Readable<any>).subscribe(resourceAssessments => {
-      if (
-        Object.values(resourceAssessments) &&
-        Object.values(resourceAssessments)?.length !== undefined &&
-        this.tableType
-      ) {
-        let allAssessments = Object.values(resourceAssessments) as Assessment[][];
-        let assessmentTableRecords;
-        try {
-          let filteredAssessments = this.flatFiltered(allAssessments);
-          assessmentTableRecords = filteredAssessments.map(
-            this.mapAssessmentToAssessmentTableRecord.bind(this),
-          );
-        } catch (error) {
-          console.log('Error filtering assessments :>> ', error);
-        }
-        this.filteredAssessments = assessmentTableRecords;
+  filterAssessments() {
+    const resourceAssessments = this._allAssessments.value;
+    if(typeof resourceAssessments !== 'object') return
+
+    if (
+      Object.values(resourceAssessments) &&
+      Object.values(resourceAssessments)?.length !== undefined &&
+      this.tableType
+    ) {
+      let allAssessments = Object.values(resourceAssessments) as Assessment[][];
+      let assessmentTableRecords;
+      try {
+        let filteredAssessments = this.flatFiltered(allAssessments);
+        assessmentTableRecords = filteredAssessments.map(
+          this.mapAssessmentToAssessmentTableRecord.bind(this),
+        );
+      } catch (error) {
+        console.log('Error filtering assessments :>> ', error);
       }
-    });
-  }
-
-  filterSelectedDimensionsByComputedMethod() {
-    if (!this._dimensionEntries) return;
-
-    let [subjective, objective] = this._dimensionEntries.reduce(
-      (partitioned, dimension) => {
-        partitioned[dimension.computed ? 1 : 0].push(dimension.name);
-        return partitioned;
-      },
-      [[], []] as any,
-    );
-    this._objectiveDimensionNames = objective;
-    this._subjectiveDimensionNames = subjective;
-  }
-
-  async fetchCurrentContextEntry() {
-    if (this.selectedContext == 'none') return;
-
-    const context: EntryRecord<CulturalContext> = await this._sensemakerStore.getCulturalContext(this.selectedContext);
-    try {
-      this._contextEntry = context.entry as CulturalContext;
-    } catch (error) {
-      console.log('No context entry exists for that context entry hash!');
-    }
-  }
-
-  async fetchSelectedDimensionEntries() {
-    if (!this.selectedDimensions) return;
-
-    try {
-      const appInfo: AppInfo = await this._sensemakerStore.client.appInfo();
-      const cell_id = (appInfo.cell_info['sensemaker'][1] as any).cloned.cell_id;
-      const response = await this._sensemakerStore.client.callZome({
-        cell_id,
-        zome_name: 'sensemaker',
-        fn_name: 'get_dimensions',
-        payload: null,
-      });
-      this._dimensionEntries = response.map(payload => {
-        try {
-          let dimension = decode(payload.entry.Present.entry) as any;
-          return dimension;
-        } catch (error) {
-          console.log('Error decoding dimension payload: ', error);
-        }
-      }) as Dimension[];
-    } catch (error) {
-      console.log('Error fetching dimension details: ', error);
+      this.filteredAssessments = assessmentTableRecords;
     }
   }
 
@@ -324,6 +251,7 @@ export class DashboardFilterMap extends LitElement {
             [dimensionName]: new FieldDefinition<AssessmentTableRecord>({
               heading: generateHeaderHTML('Assessment', cleanResourceNameForUI(dimensionName)),
               decorator: (value: any) => {
+                return value
                 // TODO: Get assessment value from OutputAssessmentWidget
               },
             }),
@@ -336,6 +264,7 @@ export class DashboardFilterMap extends LitElement {
             [dimensionName]: new FieldDefinition<AssessmentTableRecord>({
               heading: generateHeaderHTML('Dimension', cleanResourceNameForUI(dimensionName)),
               decorator: (value: any) => {
+                return value
                 // TODO: Get assessment value from OutputAssessmentWidget
               },
             }),
@@ -346,11 +275,22 @@ export class DashboardFilterMap extends LitElement {
     return {};
   }
 
-  static get elementDefinitions() {
-    return {
-      'dashboard-table': DashboardTable,
-    };
+  render() {
+    console.log('this.resourceName :>> ', this.resourceName);
+    console.log('this.filteredAssessments :>> ', this.filteredAssessments);
+    console.log('this.tableType :>> ', this.tableType);
+    console.log('this.fieldDefs :>> ', this.fieldDefs);
+    return html`
+      <dashboard-table
+        .resourceName=${this.resourceName}
+        .assessments=${this.filteredAssessments}
+        .tableType=${this.tableType}
+        .contextFieldDefs=${this.fieldDefs}
+      ></dashboard-table>
+    `;
   }
+  
+  static elementDefinitions = { 'dashboard-table': DashboardTable }
 
   static get styles() {
     return [
@@ -366,14 +306,53 @@ export class DashboardFilterMap extends LitElement {
     ];
   }
 
-  render() {
-    return html`
-      <dashboard-table
-        .resourceName=${this.resourceName}
-        .assessments=${this.filteredAssessments}
-        .tableType=${this.tableType}
-        .contextFieldDefs=${this.fieldDefs}
-      ></dashboard-table>
-    `;
+  partitionDimensionEntries() {
+    if (!this._dimensionEntries) return;
+
+    let [subjective, objective] = this._dimensionEntries.reduce(
+      (partitioned, dimension) => {
+        partitioned[dimension.computed ? 1 : 0].push(dimension.name);
+        return partitioned;
+      },
+      [[], []] as any,
+    );
+    this._objectiveDimensionNames = objective;
+    this._subjectiveDimensionNames = subjective;
+  }
+
+  async fetchCurrentContextEntry() {
+    if (this.selectedContext == 'none') return;
+
+    const context: EntryRecord<CulturalContext> = await this._sensemakerStore.getCulturalContext(this.selectedContext);
+    try {
+      this._contextEntry = context.entry as CulturalContext;
+    } catch (error) {
+      console.log('No context entry exists for that context entry hash!');
+    }
+  }
+
+  async fetchSelectedDimensionEntries() {
+    if (!this.selectedDimensions) return;
+
+    try {
+      const appInfo: AppInfo = await this._sensemakerStore.client.appInfo();
+      const cell_id = (appInfo.cell_info['sensemaker'][1] as any).cloned.cell_id;
+      const response = await this._sensemakerStore.client.callZome({
+        cell_id,
+        zome_name: 'sensemaker',
+        fn_name: 'get_dimensions',
+        payload: null,
+      });
+      this._dimensionEntries = response.map(payload => {
+        try {
+          let dimension = decode(payload.entry.Present.entry) as any;
+          return dimension;
+        } catch (error) {
+          console.log('Error decoding dimension payload: ', error);
+        }
+      }) as Dimension[];
+    } catch (error) {
+      console.log('Error fetching dimension details: ', error);
+    }
   }
 }
