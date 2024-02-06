@@ -692,7 +692,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
         this._matrixStore?.getAppletInstanceInfosForGroup(this.weGroupId),
       );
       const applets = get(await this._matrixStore.fetchAllApplets(this.weGroupId));
-      if(!(applets.length > 0)) this._dangerAlert.openToast();
+      if(!(applets.length > 0)) return this._dangerAlert.openToast();
 
       this.currentApplet = applets[0][1]; // TODO: un-hard code this once we are fed an applet Id (maybe from the nav somewhere.. once it distinguishes between applets)
       this._appletInstanceInfo = appletInstanceInfos?.find(appletInfo => {

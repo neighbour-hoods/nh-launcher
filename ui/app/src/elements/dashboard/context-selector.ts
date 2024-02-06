@@ -29,6 +29,7 @@ export class ContextSelector extends ScopedRegistryHost(LitElement) {
   resourceAssessments = new StoreSubscriber(this, () => this.sensemakerStore.resourceAssessments());
     
   async updated(_changedProperties: any) {
+    const config = await this.sensemakerStore.checkIfAppletConfigExists('applet@we-ddd12a84bb4dab6c57a3c18f4abee04e2f62d8da-Todos');
       if(_changedProperties.has("selectedContext") && _changedProperties.get("selectedContext") !== 'undefined') {
         if(!this.selectedContext 
           || this.selectedContext === 'none'

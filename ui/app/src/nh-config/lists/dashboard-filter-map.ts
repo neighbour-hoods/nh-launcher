@@ -11,16 +11,15 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { AppInfo, EntryHash, DnaHash, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
 import { consume } from '@lit/context';
 import { StoreSubscriber } from 'lit-svelte-stores';
-import { StatefulTable } from './dashboard-table';
+import { DashboardTable } from './dashboard-table';
 import { FieldDefinition } from '@adaburrows/table-web-component';
-import { AssessmentTableRecord, AssessmentTableType, DimensionDict } from './helpers/types';
-import { generateHeaderHTML, cleanResourceNameForUI } from './helpers/functions';
+import { AssessmentTableRecord, AssessmentTableType, DimensionDict } from '../types';
 import { decode } from '@msgpack/msgpack';
 import { MatrixStore } from '../../matrix-store';
 import { matrixContext, weGroupContext } from '../../context';
 import { EntryRecord } from '@holochain-open-dev/utils';
+import { cleanResourceNameForUI, generateHeaderHTML } from '../../elements/components/helpers/functions';
 
-@customElement('dashboard-filter-map')
 export class DashboardFilterMap extends LitElement {
   @consume({ context: sensemakerStoreContext, subscribe: true })
   @property({attribute: false})
@@ -35,7 +34,13 @@ export class DashboardFilterMap extends LitElement {
   weGroupId!: DnaHash;
 
   @property()
-  private _allAssessments;
+  _allAssessments = new StoreSubscriber(
+    this,
+    () =>  derived(this._sensemakerStore.resourceAssessments(), (assessments) => {
+      return assessments
+    }),
+    () => [this._sensemakerStore],
+  );
 
   @property({ type: String })
   resourceName;
@@ -70,12 +75,8 @@ export class DashboardFilterMap extends LitElement {
 
   async connectedCallback() {
     super.connectedCallback();
-
-    this._allAssessments = new StoreSubscriber(this, () =>
-      this._sensemakerStore.resourceAssessments(),
-      () => [this._subjectiveDimensionNames, this._objectiveDimensionNames]
-    );
-
+    
+    if(!this._allAssessments?.value) return
     this.setupAssessmentFilteringSubscription();
   }
 
@@ -85,6 +86,7 @@ export class DashboardFilterMap extends LitElement {
   }
 
   async updated(changedProps) {
+    console.log('changedProps :>> ', changedProps);
     if ((changedProps.has('selectedAppletResourceDefs') || changedProps.has('resourceDefEh')) && this.resourceDefEh) {
       this._allAssessments.unsubscribe();
       this.setupAssessmentFilteringSubscription();
@@ -117,7 +119,7 @@ export class DashboardFilterMap extends LitElement {
 
   setupAssessmentFilteringSubscription() {
     // Subscribe to resourceAssessments, filtering using this component's props when a new value is emitted
-    (this._allAssessments.store() as Readable<any>).subscribe(resourceAssessments => {
+    (this._allAssessments.store as Readable<any>).subscribe(resourceAssessments => {
       if (
         Object.values(resourceAssessments) &&
         Object.values(resourceAssessments)?.length !== undefined &&
@@ -346,7 +348,7 @@ export class DashboardFilterMap extends LitElement {
 
   static get elementDefinitions() {
     return {
-      'dashboard-table': StatefulTable,
+      'dashboard-table': DashboardTable,
     };
   }
 

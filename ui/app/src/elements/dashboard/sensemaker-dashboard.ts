@@ -345,18 +345,6 @@ console.log('this._sensemakerStore :>> ', comp);
               ))})) }.bind(this)}>
                 <nh-page-header-card slot="nav" role="nav" .heading=${""}>
                   <nh-context-selector slot="secondary-action" id="select-context" .selectedContext=${this.selectedContext}>
-                    <sl-tab
-                      slot="button-fixed"
-                      panel="resource"
-                      class="dashboard-tab resource ${classMap({
-                        active: this.selectedContext === 'none',
-                      })}"
-                      @click=${() => {
-                        this.loadingState = LoadingState.FirstRender;
-                        this.selectedContext = 'none';
-                      }}
-                      >${this.selectedResourceName || "No Applets Installed"}</sl-tab
-                    >
                     <div
                       slot="buttons"
                       class="tabs" style="width: 100%; display: flex; justify-content: space-between;">

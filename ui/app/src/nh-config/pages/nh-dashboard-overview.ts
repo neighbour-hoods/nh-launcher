@@ -1,43 +1,27 @@
-import { AppletConfig } from '@neighbourhoods/client/dist/applet';
-import { EntryHashB64 } from '@holochain/client';
-import { ResourceDef } from '@neighbourhoods/client';
 import { html, css, PropertyValueMap } from 'lit';
-import { consume, provide } from '@lit/context';
+import { consume } from '@lit/context';
 
 import { MatrixStore } from '../../matrix-store';
 import { appletContext, matrixContext, appletInstanceInfosContext, resourceDefContext, weGroupContext } from '../../context';
-import { EntryHash, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
 
 import {
   NHAlert,
   NHButton,
-  NHCard,
   NHComponent,
-  NHDialog,
   NHPageHeaderCard,
 } from '@neighbourhoods/design-system-components';
 import TabbedContextTables from '../lists/tabbed-context-tables';
-import CreateDimension from '../forms/create-input-dimension-form';
-import DimensionList from '../lists/dimension-list';
 import NHDashboardSkeleton from './nh-dashboard-skeleton';
-import { property, query, state } from 'lit/decorators.js';
+import { property, state } from 'lit/decorators.js';
 import { b64images } from '@neighbourhoods/design-system-styles';
-import CreateOutputDimensionMethod from '../forms/create-output-dimension-form';
-import { sensemakerStoreContext, SensemakerStore, AppletConfig, ResourceDef } from '@neighbourhoods/client';
-import { zip } from 'fflate';
-import { classMap } from 'lit-html/directives/class-map.js';
-import { snakeCase } from 'lodash-es';
-import { Readable, derived } from 'svelte/store';
-import { cleanForUI, cleanResourceNameForUI } from '../../elements/components/helpers/functions';
+import { SensemakerStore, AppletConfig } from '@neighbourhoods/client';
+import { derived } from 'svelte/store';
 import {
   LoadingState,
-  DimensionDict,
-  ContextEhDict,
-  AppletRenderInfo,
-  AssessmentTableType,
 } from '../types';
 import { Applet, AppletInstanceInfo } from '../../types';
 import { StoreSubscriber } from 'lit-svelte-stores';
+import { compareUint8Arrays } from '@neighbourhoods/app-loader';
 
 export default class NHDashBoardOverview extends NHComponent {
   @state() loading: boolean = true;
@@ -61,90 +45,25 @@ export default class NHDashBoardOverview extends NHComponent {
 
   sensemakerStore!: SensemakerStore;
 
-  async connectedCallback() {
-    super.connectedCallback();
-    this.setupAssessmentsSubscription();
-  }
-
-  // Map of applet configs cached and keyed by AppletEh
-  _allAppletConfigs: Map<EntryHashB64, AppletConfig> = new Map();
-  
-  _currentAppletDetails = new StoreSubscriber(
+  _currentAppletConfig = new StoreSubscriber(
     this,
-    () =>  derived(this.appletInstanceInfos.store, (applets) => {
-      const currentApplet =  applets?.find((applet: AppletInstanceInfo) => applet.applet.title == this.currentApplet.title);
-      return {
-        ...currentApplet
-      }
+    () =>  derived(this.appletInstanceInfos.store, async (applets) => {
+      if(!this.currentApplet) return {}
+      const currentAppletInstanceInfo = applets?.find((applet: AppletInstanceInfo) => compareUint8Arrays(applet.applet.devhubHappReleaseHash, this.currentApplet.devhubHappReleaseHash));
+      
+      const maybe_config = await this.sensemakerStore.checkIfAppletConfigExists(currentAppletInstanceInfo!.appInfo.installed_app_id);
+      return maybe_config || {}
     }),
     () => [this.appletInstanceInfos, this.currentApplet],
   );
 
-  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    if(this.appletInstanceInfos && this.currentApplet) {
-    console.log('this._currentAppletDetails :>> ', this._currentAppletDetails);
+  @state() _currentAppletContexts : any[] = [];
+
+  protected async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    if(this._currentAppletConfig?.value) {
+      const currentConfig = await this._currentAppletConfig.value as  AppletConfig;
+      this._currentAppletContexts = Object.entries(currentConfig!.cultural_contexts);
     }
-  }
-  
-  setupAssessmentsSubscription() {
-
-    //       this.appletDetails[installedAppId].appletRenderInfo = {
-      //         resourceNames: Object.keys(flattenedResourceDefs)?.map(cleanResourceNameForUI),
-      //       };
-      //       // Keep dimensions for dashboard table prop
-      //       this.appletDetails[installedAppId].dimensions = appletConfig.dimensions;
-      //       //Keep context names for display
-      //       this.appletDetails[installedAppId].contexts = Object.keys(appletConfig.cultural_contexts).map(
-        //         cleanResourceNameForUI,
-        //       );
-        //       // Keep context entry hashes and resource_def_eh for filtering in dashboard table
-        //       this.appletDetails[installedAppId].context_ehs = Object.values(appletConfig.cultural_contexts);
-        //       this.appletDetails[installedAppId].resource_defs = appletConfig.resource_defs;
-    //     });
-    //     this.loading = false;
-    //   },
-    // );
-    // });
-  }
-  
-  protected updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    if(_changedProperties.has('currentApplet')) {
-      // console.log('this.appletIn :>> ', this.appletInstanceInfos);
-      // this.context_ehs = Object.fromEntries(
-      //   zip(this.appletDetails[installedAppId].contexts, appletDetails.context_ehs),
-      //   );
-      // this.selectedAppletResourceDefs = flattenRoleAndZomeIndexedResourceDefs(this.appletDetails[installedAppId].resource_defs)
-
-      // this.dimensions = this.appletDetails[installedAppId].dimensions;
-      // this.requestUpdate('selectedResourceDefIndex')
-    }
-  }
-  // @state() context_ehs: ContextEhDict = {};
-  
-  // @query("#select-context") _contextSelector;
-  
-  async renderSidebar(appletIds: string[]) {
-    // // const appId = Object.keys(Object.fromEntries((appletInstanceInfos).entries()))[0];
-    // // if(!appId) return;
-    // const appletIds = this?.appletDetails ? Object.keys(this.appletDetails) : [];
-    // const appletDetails =
-    //   typeof this.appletDetails == 'object' ? Object.values(this.appletDetails) : [];
-    // const appletConfig =
-    //   appletDetails.length &&
-    //   ([appletDetails[this.selectedAppletIndex]?.appletRenderInfo] as AppletRenderInfo[]);
-
-    // if (appletConfig && appletDetails[this.selectedAppletIndex]) {
-    //   this.selectedResourceName =
-    //     this.selectedResourceDefIndex < 0
-    //       ? 'All Resources'
-    //       : appletDetails[this.selectedAppletIndex].appletRenderInfo.resourceNames[
-    //           this.selectedResourceDefIndex
-    //         ];
-    // }
-    // const contexts = appletConfig && appletDetails[this.selectedAppletIndex]?.contexts;
-    // if (!appletConfig![0] || contexts == 0) {
-    //   this.loadingState = LoadingState.NoAppletSensemakerData;
-    // 
   }
 
   render() {
@@ -163,7 +82,7 @@ export default class NHDashBoardOverview extends NHComponent {
 
         ${this.loadingState == LoadingState.NoAppletSensemakerData
           ? html`<nh-dashboard-skeleton></nh-dashboard-skeleton>`
-          : html`<tabbed-context-tables .selectedResourceName=${!this?.selectedResourceDef ? "All Resources" : cleanForUI((this?.selectedResourceDef as ResourceDef)!.resource_name)}></tabbed-context-tables>`
+          : html`<tabbed-context-tables .contexts=${this._currentAppletContexts}></tabbed-context-tables>`
         }
       </main>
     `;

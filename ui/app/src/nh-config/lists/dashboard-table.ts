@@ -20,7 +20,6 @@ import { AssessmentTableRecord, AssessmentTableType, assessmentTableId } from '.
 import { generateHashHTML, generateHeaderHTML } from '../../elements/components/helpers/functions';
 import { MatrixStore } from '../../matrix-store';
 
-@customElement('dashboard-table')
 export class DashboardTable extends NHComponentShoelace {
   @consume({ context: matrixContext, subscribe: true })
   @property({ attribute: false })
@@ -67,6 +66,7 @@ export class DashboardTable extends NHComponentShoelace {
       showHeader: true,
       records: [] as AssessmentTableRecord[]
     });
+    console.log('fieldDefs :>> ',fieldDefs);
   }
 
   updated(changedProps) {

@@ -101,6 +101,9 @@ export default class NHButtonGroup extends NHComponent {
         border-radius: calc(1px * var(--nh-radii-md));
         padding: calc(1px * var(--nh-spacing-sm));
       }
+      :host(.nested) .container {
+        padding: 0;
+      }
       .container.light {
         background-color: var(--nh-theme-bg-detail);
       }

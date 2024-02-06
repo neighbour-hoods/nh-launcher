@@ -67,6 +67,7 @@ export default class NHGlobalConfig extends NHComponent {
   protected async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     // applet entry hash, applet, and federated groups' dnahashes
     const applets : [EntryHash, Applet, DnaHash[]][] = get(await this._matrixStore.fetchAllApplets(this.weGroupId));
+    if(!applets?.length || applets?.length == 0) return
     this.currentApplet = applets[0][1]; // Set context of the default applet - being the first, (up until a e.g. menu is used to set it)
     console.log('this.currentApplet :>> ', this.currentApplet);
   }

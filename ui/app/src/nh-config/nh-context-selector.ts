@@ -1,11 +1,13 @@
+import { EntryHash, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
 import { html, css } from 'lit';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import { property, state } from 'lit/decorators.js';
-import { SensemakerStore, sensemakerStoreContext } from '@neighbourhoods/client';
+import { AppletConfig, ComputeContextInput, SensemakerStore, sensemakerStoreContext } from '@neighbourhoods/client';
 import { consume } from '@lit/context';
 import { NHButton, NHButtonGroup, NHComponent } from '@neighbourhoods/design-system-components';
 import { matrixContext } from '../context';
 import { MatrixStore } from '../matrix-store';
+import { get } from 'svelte/store';
 
 export default class NHContextSelector extends NHComponent {
   @consume({ context: matrixContext, subscribe: true })
@@ -16,27 +18,30 @@ export default class NHContextSelector extends NHComponent {
   @property({attribute: false})
   sensemakerStore!: SensemakerStore;
 
-  // TODO: this is not a store to subscribe from any more. This will be obtained from the app renderer e.g.
-
-  @state() selectedContext: string = "";
+  @state() selectedContextEhB64: string = "";
+  @state() config!: AppletConfig;
   
   @property() resourceAssessments = new StoreSubscriber(this, () => this.sensemakerStore.resourceAssessments());
     
-  async updated(_changedProperties: any) {
-      if(_changedProperties.has("selectedContext") && _changedProperties.get("selectedContext") !== 'undefined') {
-        // if(!this.selectedContext 
-        //   || this.selectedContext === 'none'
-        //   || typeof this.config?.value == 'undefined'
-        //   || typeof this.resourceAssessments?.value == 'undefined') return;
+  async updated(changedProperties: any) {
+    const maybe_config = await this.sensemakerStore.checkIfAppletConfigExists('applet@we-ddd12a84bb4dab6c57a3c18f4abee04e2f62d8da-Todos');
+    if(maybe_config) {
+      this.config = maybe_config
+    }
+    if(changedProperties.has("selectedContextEhB64")) {
+      if(!this.selectedContextEhB64 
+        || this.selectedContextEhB64 === 'none'
+        || typeof this.config == 'undefined'
+        || typeof this.resourceAssessments?.value == 'undefined') return;
 
-        // const resourceEhs : EntryHash[] = Object.keys(this.resourceAssessments.value).flat().map(b64eh => decodeHashFromBase64(b64eh));
-        // const input : ComputeContextInput = { resource_ehs: resourceEhs, context_eh: decodeHashFromBase64(this.selectedContext), can_publish_result: false};
-        // await this.sensemakerStore.computeContext(this.selectedContext, input);
+        const resourceEhs : EntryHash[] = Object.keys(this.resourceAssessments.value).flat().map(b64eh => decodeHashFromBase64(b64eh));
+        const input : ComputeContextInput = { resource_ehs: resourceEhs, context_eh: decodeHashFromBase64(this.selectedContextEhB64), can_publish_result: false};
+        await this.sensemakerStore.computeContext(this.selectedContextEhB64, input);
         
-        // const results = get(this.sensemakerStore.contextResults())
-        // const selectedContextName = Object.entries(this.config.value.cultural_contexts).filter(([contextName, contextHash]) => encodeHashToBase64(contextHash) == this.selectedContext)[0];
-        
-        // this.dispatchContextSelected(selectedContextName[0], results)
+        const results = get(this.sensemakerStore.contextResults())
+        const selectedContextEhB64Name = Object.entries(this.config.cultural_contexts).filter(([contextName, contextHash]) => encodeHashToBase64(contextHash) == this.selectedContextEhB64)[0];
+        debugger;
+        this.dispatchContextSelected(selectedContextEhB64Name[0], results)
       }
   }
   
