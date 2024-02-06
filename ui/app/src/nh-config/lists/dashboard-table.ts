@@ -57,7 +57,7 @@ export class DashboardTable extends NHComponentShoelace {
   
   async connectedCallback() {
     super.connectedCallback();
-
+    
     let fieldDefs = this.generateFieldDefs(this.resourceName, this.contextFieldDefs);
     this.tableStore = new TableStore({
       tableId: assessmentTableId,

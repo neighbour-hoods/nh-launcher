@@ -45,12 +45,14 @@ export default class NHDashBoardOverview extends NHComponent {
 
   sensemakerStore!: SensemakerStore;
 
+  @state() currentAppletInstanceId : string = '';
+
   _currentAppletConfig = new StoreSubscriber(
     this,
     () =>  derived(this.appletInstanceInfos.store, async (applets) => {
       if(!this.currentApplet) return {}
       const currentAppletInstanceInfo = applets?.find((applet: AppletInstanceInfo) => compareUint8Arrays(applet.applet.devhubHappReleaseHash, this.currentApplet.devhubHappReleaseHash));
-      
+      this.currentAppletInstanceId = currentAppletInstanceInfo?.appInfo.installed_app_id as string;
       const maybe_config = await this.sensemakerStore.checkIfAppletConfigExists(currentAppletInstanceInfo!.appInfo.installed_app_id);
       return maybe_config || {}
     }),
@@ -62,6 +64,7 @@ export default class NHDashBoardOverview extends NHComponent {
   protected async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     if(this._currentAppletConfig?.value) {
       const currentConfig = await this._currentAppletConfig.value as  AppletConfig;
+      if(typeof currentConfig?.cultural_contexts !== 'object') return
       this._currentAppletContexts = Object.entries(currentConfig!.cultural_contexts);
     }
   }
@@ -82,7 +85,7 @@ export default class NHDashBoardOverview extends NHComponent {
 
         ${this.loadingState == LoadingState.NoAppletSensemakerData
           ? html`<nh-dashboard-skeleton></nh-dashboard-skeleton>`
-          : html`<tabbed-context-tables .contexts=${this._currentAppletContexts}></tabbed-context-tables>`
+          : html`<tabbed-context-tables .selectedAppletInstanceId=${this.currentAppletInstanceId} .contexts=${this._currentAppletContexts}></tabbed-context-tables>`
         }
       </main>
     `;

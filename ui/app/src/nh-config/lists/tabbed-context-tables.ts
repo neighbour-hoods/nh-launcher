@@ -15,6 +15,7 @@ import { encodeHashToBase64 } from '@holochain/client';
 
 export default class TabbedContextTables extends NHComponent {
   @property() selectedContextEhB64: string = 'none';
+  @property() selectedAppletInstanceId: string = 'none';
   @property() contexts: any;
 
   @consume({ context: resourceDefContext, subscribe: true })
@@ -22,16 +23,17 @@ export default class TabbedContextTables extends NHComponent {
   selectedResourceDef!: object;
   
   renderContextButtons() {
-    console.log('this.contexts :>> ', this.contexts);
     if(!this.contexts) return null;
+    // TODO: skeleton/loading state
+    // panel="${snakeCase(context)}" not needed if we just dynamically display context results 
     return html`
       <div slot="buttons" class="tabs" style="width: 100%; display: flex; justify-content: space-between;">
-      <div>
-        ${this.contexts.map(
+        <div>
+          ${this.contexts.map(
             ([context, contextEh]) => html` 
               <nh-tab-button>
                 <sl-tab
-                  panel="${snakeCase(context)}" 
+                  panel="context"
                   class="dashboard-tab ${classMap({
                     active:
                       encodeHashToBase64(contextEh) ===
@@ -40,8 +42,9 @@ export default class TabbedContextTables extends NHComponent {
                   @click=${() => {
                     this.selectedContextEhB64 = encodeHashToBase64(contextEh);
                   }}
-                >${context}</sl-tab>
-              </nh-tab-button>`
+                >${cleanForUI(context)}</sl-tab>
+              </nh-tab-button>
+            `
           )}
         </div>
       </div>
@@ -52,16 +55,17 @@ export default class TabbedContextTables extends NHComponent {
     return html`
       <sl-tab-group
         class="dashboard-tab-group"
-        @context-selected=${function (e: CustomEvent) {
+        @context-selected=${function(e: CustomEvent) {
           [...(e.currentTarget as any).querySelectorAll('sl-tab-panel')].forEach(tab => {
-            tab.name === snakeCase(e.detail.contextName) &&
+            // tab.name === snakeCase(e.detail.contextName) &&
               tab.dispatchEvent(
-                new CustomEvent('context-display', {
+                new CustomEvent('display-context', {
                   detail: e.detail,
                   bubbles: false,
                   composed: true,
                 }),
               );
+              console.log('dispatched :>> ',);
           });
         }.bind(this)}
       >
@@ -69,22 +73,22 @@ export default class TabbedContextTables extends NHComponent {
           <nh-context-selector
             slot="secondary-action"
             id="select-context"
+            .selectedAppletInstanceId=${this.selectedAppletInstanceId}
             .selectedContextEhB64=${this.selectedContextEhB64}
           >
             <sl-tab
               slot="button-fixed"
               panel="resource"
-              class="dashboard-tab resource ${classMap({
+              class="dashboard-tab resource${classMap({
                 active: this.selectedContextEhB64 === 'none',
               })}"
-              @click=${() => {
-                this.selectedContextEhB64 = 'none';
-              }}
+              @click=${() => { this.selectedContextEhB64 = 'none' }}
             >
               ${(!this?.selectedResourceDef ? "All Resources" : cleanForUI((this?.selectedResourceDef as ResourceDef)!.resource_name))}
             </sl-tab>
+            
             ${this.renderContextButtons()}
-            </div>
+            
             <div slot="buttons">
               <nh-button-group
                 class="dashboard-action-buttons nested"
@@ -104,18 +108,37 @@ export default class TabbedContextTables extends NHComponent {
           </nh-context-selector>
         </nh-page-header-card>
 
-        <sl-tab-panel active class="dashboard-tab-panel" name="resource">
-          ${this.selectedContextEhB64 !== 'none'
-          ? ''
-          : html`<dashboard-filter-map
-              .resourceName=${this.selectedResourceDef?.resource_name}
-              .resourceDefEh=${this.selectedResourceDef?.resource_def_eh}
-              .tableType=${AssessmentTableType.Resource}
-              .selectedContextEhB64=${this.selectedContextEhB64}
-            >
-            </dashboard-filter-map>`}
-        </sl-tab-panel>
-
+        ${this.selectedContextEhB64 == 'none'
+          ? html`
+              <sl-tab-panel active class="dashboard-tab-panel" name="resource">
+                <dashboard-filter-map
+                    .resourceName=${this.selectedResourceDef?.resource_name}
+                    .resourceDefEh=${this.selectedResourceDef?.resource_def_eh}
+                    .tableType=${AssessmentTableType.Resource}
+                    .selectedContextEhB64=${this.selectedContextEhB64}
+                  ></dashboard-filter-map>
+              </sl-tab-panel>
+            `
+          : html`<sl-tab-panel 
+                    class="dashboard-tab-panel"
+                    name="context"
+                    @display-context=${(e: CustomEvent) => {
+                        const flatResults = typeof e.detail.results == "object" ? e.detail.results[this.selectedContextEhB64].flat() : [];
+                        const dashboardFilterComponent = (e.currentTarget as any).children[0];
+                        dashboardFilterComponent.contextEhs = flatResults;
+                        console.log('flatResults :>> ', flatResults);
+                      }}
+                  >
+                    <dashboard-filter-map
+                      .resourceName=${this.selectedResourceDef?.resource_name}
+                      .resourceDefEh=${this.selectedResourceDef?.resource_def_eh}
+                      .tableType=${AssessmentTableType.Context}
+                      .selectedContext=${this.selectedContextEhB64}
+                    ></dashboard-filter-map>
+                </sl-tab-panel>
+`
+        }
+        
         <nh-alert
           .open=${!!this.selectedResourceDef}
           .title=${"You did not select any resources"}
