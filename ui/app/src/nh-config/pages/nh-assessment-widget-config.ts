@@ -299,7 +299,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
         </div>
         <nh-alert 
           id="danger-toast"
-          .title=${"You do no have any applets yet."}
+          .title=${"You do not have any applets yet."}
           .description=${"Return to your Neighbourhood home page by clicking its icon on the left sidebar, or the back arrow from this page. Then just install an applet to enable configuring of widgets."}
           .closable=${false}
           .isToast=${true}

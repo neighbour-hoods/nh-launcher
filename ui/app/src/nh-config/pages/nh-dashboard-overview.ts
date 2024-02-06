@@ -28,20 +28,15 @@ export default class NHDashBoardOverview extends NHComponent {
   @state() loadingState: LoadingState = LoadingState.FirstRender;
 
   @consume({ context: matrixContext, subscribe: true })
-  @property({ attribute: false })
-  _matrixStore!: MatrixStore;
+  @property({ attribute: false }) _matrixStore!: MatrixStore;
   @consume({ context: weGroupContext, subscribe: true })
-  @property({ attribute: false })
-  _weGroupId!: Uint8Array;
+  @property({ attribute: false }) _weGroupId!: Uint8Array;
   @consume({ context: resourceDefContext, subscribe: true })
-  @property({ attribute: false })
-  selectedResourceDef!: object;
+  @property({ attribute: false }) selectedResourceDef!: object;
   @consume({ context: appletContext, subscribe: true })
-  @property({ attribute: false })
-  currentApplet!: Applet;
+  @property({ attribute: false }) currentApplet!: Applet;
   @consume({ context: appletInstanceInfosContext, subscribe: true })
-  @property({ attribute: false })
-  appletInstanceInfos!: StoreSubscriber<AppletInstanceInfo[] | undefined>;
+  @property({ attribute: false }) appletInstanceInfos!: StoreSubscriber<AppletInstanceInfo[] | undefined>;
 
   sensemakerStore!: SensemakerStore;
 
@@ -85,14 +80,16 @@ export default class NHDashBoardOverview extends NHComponent {
 
         ${this.loadingState == LoadingState.NoAppletSensemakerData
           ? html`<nh-dashboard-skeleton></nh-dashboard-skeleton>`
-          : html`<tabbed-context-tables .selectedAppletInstanceId=${this.currentAppletInstanceId} .contexts=${this._currentAppletContexts}></tabbed-context-tables>`
+          : html` <tabbed-context-tables
+                    .selectedAppletInstanceId=${this.currentAppletInstanceId}
+                    .contexts=${this._currentAppletContexts}
+                  ></tabbed-context-tables>`
         }
       </main>
     `;
   }
 
   static elementDefinitions = {
-    'nh-alert': NHAlert,
     'nh-button': NHButton,
     'nh-page-header-card': NHPageHeaderCard,
     'nh-dashboard-skeleton': NHDashboardSkeleton,

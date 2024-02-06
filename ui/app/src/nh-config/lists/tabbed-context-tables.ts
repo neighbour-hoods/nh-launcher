@@ -2,9 +2,9 @@ import { consume } from '@lit/context';
 import { b64images } from '@neighbourhoods/design-system-styles';
 import { classMap } from 'lit/directives/class-map.js';
 import { cleanForUI, snakeCase } from '../../elements/components/helpers/functions';
-import { CSSResult, css, html } from 'lit';
+import { CSSResult, PropertyValueMap, css, html } from 'lit';
 import { NHAlert, NHButton, NHButtonGroup, NHComponent, NHPageHeaderCard, NHTooltip } from '@neighbourhoods/design-system-components';
-import { property, state } from 'lit/decorators.js';
+import { property, query, state } from 'lit/decorators.js';
 import { SlTab, SlTabGroup, SlTabPanel } from '@scoped-elements/shoelace';
 import NHContextSelector from '../nh-context-selector';
 import { AssessmentTableType } from '../types';
@@ -19,8 +19,9 @@ export default class TabbedContextTables extends NHComponent {
   @property() contexts: any;
 
   @consume({ context: resourceDefContext, subscribe: true })
-  @property({ attribute: false })
-  selectedResourceDef!: object;
+  @property({ attribute: false }) selectedResourceDef!: object;
+  
+  @query('#danger-toast-1') private _dangerAlert;
   
   renderContextButtons() {
     if(!this.contexts) return null;
@@ -51,6 +52,60 @@ export default class TabbedContextTables extends NHComponent {
       `
   }
 
+  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    if(!this?.contexts || this.contexts.length == 0) {
+      try {
+        
+        this._dangerAlert.openToast();
+      } catch (error) {
+        console.log('error :>> ', error);
+      }
+    }  
+  }
+
+  renderActionButtons() {
+    return html`
+      <div slot="buttons">
+        <nh-button-group
+          class="dashboard-action-buttons nested"
+          .direction=${'horizontal'}
+          .fixedFirstItem=${false}
+          .addItemButton=${false}
+        >
+          <div slot="buttons">
+            <nh-button
+              .iconImageB64=${b64images.icons.refresh}
+              .variant=${'neutral'}
+              .size=${'icon'}
+            ></nh-button>
+          </div>
+        </nh-button-group>
+      </div>
+    `
+  }
+
+  renderTabPanel(type: AssessmentTableType) {
+    return html`
+      <sl-tab-panel
+        class="dashboard-tab-panel"
+        name=${type}
+        @display-context=${(e: CustomEvent) => {
+          const flatResults = typeof e.detail.results == "object" ? e.detail.results[this.selectedContextEhB64].flat() : [];
+          const dashboardFilterComponent = (e.currentTarget as any).children[0];
+          dashboardFilterComponent.contextEhs = flatResults;
+          console.log('flatResults :>> ', flatResults);
+        }}
+      >
+        <dashboard-filter-map
+          .tableType=${type}
+          .resourceName=${this.selectedResourceDef?.resource_name}
+          .resourceDefEh=${this.selectedResourceDef?.resource_def_eh}
+          .selectedContextEhB64=${this.selectedContextEhB64}
+        ></dashboard-filter-map>
+      </sl-tab-panel>
+    `
+  }
+
   render() {
     return html`
       <sl-tab-group
@@ -77,9 +132,7 @@ export default class TabbedContextTables extends NHComponent {
             <sl-tab
               slot="button-fixed"
               panel="resource"
-              class="dashboard-tab resource${classMap({
-                active: this.selectedContextEhB64 === 'none',
-              })}"
+              class="dashboard-tab resource${classMap({ active: this.selectedContextEhB64 === 'none' })}"
               @click=${() => { this.selectedContextEhB64 = 'none' }}
             >
               ${(!this?.selectedResourceDef ? "All Resources" : cleanForUI((this?.selectedResourceDef as ResourceDef)!.resource_name))}
@@ -87,62 +140,22 @@ export default class TabbedContextTables extends NHComponent {
             
             ${this.renderContextButtons()}
             
-            <div slot="buttons">
-              <nh-button-group
-                class="dashboard-action-buttons nested"
-                .direction=${'horizontal'}
-                .fixedFirstItem=${false}
-                .addItemButton=${false}
-              >
-                <div slot="buttons">
-                  <nh-button
-                    .iconImageB64=${b64images.icons.refresh}
-                    .variant=${'neutral'}
-                    .size=${'icon'}
-                  ></nh-button>
-                </div>
-              </nh-button-group>
-            </div>
+            ${this.renderActionButtons()}
           </nh-context-selector>
         </nh-page-header-card>
 
-        ${this.selectedContextEhB64 == 'none'
-          ? html`
-              <sl-tab-panel active class="dashboard-tab-panel" name="resource">
-                <dashboard-filter-map
-                  .tableType=${AssessmentTableType.Resource}
-                  .resourceName=${this.selectedResourceDef?.resource_name}
-                  .resourceDefEh=${this.selectedResourceDef?.resource_def_eh}
-                  .selectedContextEhB64=${this.selectedContextEhB64}
-                ></dashboard-filter-map>
-              </sl-tab-panel>
-            `
-          : html`<sl-tab-panel class="dashboard-tab-panel" name="context"
-                    @display-context=${(e: CustomEvent) => {
-                        const flatResults = typeof e.detail.results == "object" ? e.detail.results[this.selectedContextEhB64].flat() : [];
-                        const dashboardFilterComponent = (e.currentTarget as any).children[0];
-                        dashboardFilterComponent.contextEhs = flatResults;
-                        console.log('flatResults :>> ', flatResults);
-                      }}
-                  >
-                    <dashboard-filter-map
-                      .tableType=${AssessmentTableType.Context}
-                      .resourceName=${this.selectedResourceDef?.resource_name}
-                      .resourceDefEh=${this.selectedResourceDef?.resource_def_eh}
-                      .selectedContext=${this.selectedContextEhB64}
-                    ></dashboard-filter-map>
-                </sl-tab-panel>
-`
-        }
-        
-        <nh-alert
-          .open=${!!this.selectedResourceDef}
-          .title=${"You did not select any resources"}
-          .description=${"Select one on the menu on the left side of the page to view your assessments."}
-          .type=${"danger"}
-        >
-        </nh-alert>
+        ${this.renderTabPanel(this.selectedContextEhB64 == 'none' ? AssessmentTableType.Resource : AssessmentTableType.Context)} 
       </sl-tab-group>
+
+      <nh-alert 
+        id="danger-toast-1"
+        .title=${"You do not have any applets yet."}
+        .description=${"Return to your Neighbourhood home page by clicking its icon on the left sidebar, or the back arrow from this page. Then just install an applet to enable configuring of widgets."}
+        .closable=${false}
+        .isToast=${true}
+        .open=${false}
+        .type=${"danger"}>
+      </nh-alert>
     `;
   }
 

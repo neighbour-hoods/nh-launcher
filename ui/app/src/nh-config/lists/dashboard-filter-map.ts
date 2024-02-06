@@ -39,13 +39,13 @@ export class DashboardFilterMap extends LitElement {
     () => [this._sensemakerStore],
   );
 
+  @property({ type: AssessmentTableType }) tableType;
   @property({ type: String }) resourceName;
   @property({ type: String }) resourceDefEh;
-  @property({ type: AssessmentTableType }) tableType;
   @property({ type: Object }) selectedAppletResourceDefs;
   @property({ type: String }) selectedContext;
   @property() contextEhs!: EntryHash[];
-  @property() contextEhsB64!: string[];
+  @state() contextEhsB64!: string[];
   @state() selectedDimensions!: DimensionDict;
   @state() private _dimensionEntries!: Dimension[];
   @state() private _objectiveDimensionNames: string[] = [];
