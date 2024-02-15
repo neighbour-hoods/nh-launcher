@@ -35,8 +35,8 @@ export default class NHAssessmentContainer extends NHComponentShoelace {
           }
 
         }}></div>
-        <div class="assessment-control">
-          <slot name="assessment-control" class="${this.selected ? 'selected': ''}">N O   C O</slot>
+        <div class="assessment-control ${this.selected ? 'selected': ''}">
+          <slot name="assessment-control">N O   C O</slot>
         </div>
         <div class="assessment-output">
           <slot name="assessment-output">0</slot>
@@ -61,37 +61,25 @@ export default class NHAssessmentContainer extends NHComponentShoelace {
       }
 
       .assessment-container {
-        height: 34px;
-        min-width: 34px;
-        overflow: hidden;
-        margin: 4px;
-        cursor: pointer;
-        transition: background-color var(--animation-shortest);
-      }
-
-      slot[name="assessment-control"] {
         background: var(--nh-theme-bg-detail);
         border-radius: calc(1px * var(--nh-radii-md) - 5px);
+        transition: background-color var(--animation-shortest);
+        cursor: pointer;
+        margin: 4px;
+      }
+
+      ::slotted([slot="assessment-control"]) {
         height: 34px;
         min-width: 34px;
-        max-height: 34px;
-        overflow: hidden;
         display: flex;
         flex-direction: row;
         flex-wrap: nowrap;
+        overflow: hidden;
       }
 
-      slot[name="assessment-control"].selected {
+      .assessment-control.selected {
         background: var(--nh-theme-accent-muted);
-      }
-
-      .assessment-container.edit-mode .assessment-control {
-        position: relative;
-        top: -40px;
-      }
-      .assessment-container.edit-mode .assessment-output {
-        /* slot[name="assessment-control"] + border width */
-        margin-top: -36px;
+        border-radius: calc(1px * var(--nh-radii-md) - 5px);
       }
 
       .click-blocker {
@@ -100,7 +88,7 @@ export default class NHAssessmentContainer extends NHComponentShoelace {
 
       .assessment-container.edit-mode .click-blocker {
         display: block;
-        position: relative;
+        position: absolute;
         width: -webkit-fill-available;
         height: 40px;
         z-index: 999999999;

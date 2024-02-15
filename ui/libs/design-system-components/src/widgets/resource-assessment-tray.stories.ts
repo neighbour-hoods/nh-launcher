@@ -31,7 +31,10 @@ class TestRoot extends NHComponent {
         ${this.controls?.map(({value, icons, selected, edit} : any) => html`
         <assessment-container .selected=${selected} .editMode=${edit}>
           <span slot="assessment-output">${value}</span>
-          ${icons.map(icon => html`<span slot="assessment-control"><nh-icon>${icon}</nh-icon></span>`)}
+          <span slot="assessment-control">
+            <!-- Normally, this would be a control. Here it is mocked poorly. -->
+            ${icons.map(icon => html`<nh-icon>${icon}</nh-icon>`)}
+          </span>
         </assessment-container>`)}
       </div>
     </resource-assessment-tray>`;

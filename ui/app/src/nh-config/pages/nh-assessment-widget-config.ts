@@ -161,7 +161,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     if(typeof this.selectedWidgetKey != 'undefined' && this?._workingWidgetControlRendererCache.has(this.selectedWidgetKey) && this?.placeHolderWidget) {
       return repeat([this.selectedWidgetKey], () => +(new Date), (_, _idx) =>this?.placeHolderWidget())
     }
-    return this.loading ? html`<sl-spinner class="icon-spinner"></sl-spinner>` : null
+    return html`<span slot="assessment-control"></span>`
   }
 
   render(): TemplateResult {
@@ -199,12 +199,10 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                         return html`
                         <assessment-container .editMode=${true}>
                           <span slot="assessment-output">0</span>
-                          <span slot="assessment-control">
-                            <input-assessment-renderer
-                              .component=${componentToBind}
-                              .nhDelegate=${fakeDelegate}
-                            ></input-assessment-renderer>
-                          </span>
+                          <input-assessment-renderer slot="assessment-control"
+                            .component=${componentToBind}
+                            .nhDelegate=${fakeDelegate}
+                          ></input-assessment-renderer>
                         </assessment-container>
                         `;
                       })
@@ -213,9 +211,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 ${this.loading || this.editingConfig || !this._fetchedConfig || !this.appletRenderers
                   ? html`<assessment-container .editMode=${true}>
                     <span slot="assessment-output">0</span>
-                    <span slot="assessment-control">
-                        ${this.renderWidgetControlPlaceholder()}
-                    </span>
+                    ${this.renderWidgetControlPlaceholder()}
                   </assessment-container>`
                   : null}
               </div>
@@ -430,7 +426,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                             const fakeDelegate = new FakeInputAssessmentWidgetDelegate();
                             const renderer: AssessmentWidgetRenderer = this.appletRenderers.assessmentWidgets![widget.widgetKey]
                             renderBlock = () => html`
-                            <input-assessment-renderer
+                            <input-assessment-renderer slot="assessment-control"
                               .component=${renderer.component}
                               .nhDelegate=${fakeDelegate}
                             ></input-assessment-renderer>`

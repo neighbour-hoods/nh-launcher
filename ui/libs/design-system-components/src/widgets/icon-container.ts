@@ -159,7 +159,7 @@ export default class NHIconContainer extends NHComponentShoelace {
         cursor: pointer;
         transition: background-color var(--animation-shortest);
         position: relative;
-        display: flex
+        display: flex;
       }
 
       .assessment-animation {
