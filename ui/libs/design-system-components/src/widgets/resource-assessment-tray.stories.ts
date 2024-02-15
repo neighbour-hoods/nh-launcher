@@ -3,26 +3,36 @@ import { html } from "lit";
 import type { Meta, StoryObj } from "@storybook/web-components";
 import { NHComponent } from "../ancestors/base";
 import NHAssessmentContainer from "./assessment-container";
-import { b64images } from "@neighbourhoods/design-system-styles";
+import NHIconContainer from "./icon-container";
+import { property } from "lit/decorators.js";
 
 class TestRoot extends NHComponent {
+  @property()
+  editable: boolean = false;
+
+  @property()
+  editing: boolean = false;
+
+  @property()
+  controls: [] = []
+
   static elementDefinitions = {
     "assessment-container": NHAssessmentContainer,
     "resource-assessment-tray": ResourceAssessmentTray,
+    "nh-icon": NHIconContainer
   };
 
   render() {
     return html`<resource-assessment-tray
       .editable=${this.editable}
       .editing=${this.editing}
-      .assessmentWidgetTrayConfig=${this?.assessmentWidgetTrayConfig || []}
       >
       <div slot="widgets">
-        ${this?.icons?.map(({value, icon} : any) => html`
-        <assessment-container
-          .assessmentValue=${value}
-          .iconImg=${icon}
-        ></assessment-container>`)}
+        ${this.controls?.map(({value, icons, selected, edit} : any) => html`
+        <assessment-container .selected=${selected} .editMode=${edit}>
+          <span slot="assessment-output">${value}</span>
+          ${icons.map(icon => html`<span slot="assessment-control"><nh-icon>${icon}</nh-icon></span>`)}
+        </assessment-container>`)}
       </div>
     </resource-assessment-tray>`;
   }
@@ -35,9 +45,9 @@ const meta: Meta<any> = {
   component: "assessment-tray--test-root",
   argTypes: {},
   parameters: {
-    backgrounds: { default: "detail" },
+    backgrounds: { default: "surface" },
   },
-  render: (args) => html`<assessment-tray--test-root .editable=${args.editable} .assessmentWidgetTrayConfig=${args.assessmentWidgetTrayConfig} .editing=${args.editing} .icons=${args.icons} />`,
+  render: (args) => html`<assessment-tray--test-root .editable=${args.editable} .editing=${args.editing} .controls=${args.controls} />`,
 };
 
 export default meta;
@@ -48,106 +58,48 @@ type Story = StoryObj<any>;
 export const Empty: Story = {
   args: {
     editing: false,
-    icons: [
-      { value: 0, icon: "" },
-    ]
-  },
-};
-
-export const Empty5: Story = {
-  args: {
-    editing: false,
-    icons: [
-      { value: 0, icon: "" },
-      { value: 0, icon: "" },
-      { value: 0, icon: "" },
-      { value: 0, icon: "" },
-      { value: 0, icon: "" },
-    ]
-  },
-};
-export const Full5: Story = {
-  args: {
-    editing: false,
-    icons: [
-      { value: 2, icon: b64images.icons.fire },
-      { value: 1, icon: b64images.icons.chili },
-      { value: 5, icon: b64images.icons.icecube },
-      { value: -2, icon: b64images.icons.pear },
-      { value: 4322, icon: b64images.icons.snowflake },
-    ]
-  },
-};
-
-export const WithConfig: Story = {
-  args: {
-    editing: false,
-    editable: true,
-    assessmentWidgetTrayConfig: [
-      {
-        inputAssessmentWidget: {
-          dimensionEh: new Uint8Array([1,2,3]),
-          appletEh: new Uint8Array([4,5,6]),
-          componentName: 'thumb'
-        }
-      },
-      {
-        inputAssessmentWidget: {
-          dimensionEh: new Uint8Array([1,2,3]),
-          appletEh: new Uint8Array([4,5,6]),
-          componentName: 'Heart'
-        }
-      },
-    ]
-  },
-};
-export const WithConfigEditing: Story = {
-  args: {
-    editing: true,
-    editable: true,
-    assessmentWidgetTrayConfig: [
-      {
-        inputAssessmentWidget: {
-          dimensionEh: new Uint8Array([1,2,3]),
-          appletEh: new Uint8Array([4,5,6]),
-          componentName: 'thumb'
-        }
-      },
-      {
-        inputAssessmentWidget: {
-          dimensionEh: new Uint8Array([1,2,3]),
-          appletEh: new Uint8Array([4,5,6]),
-          componentName: 'Heart'
-        }
+    controls: [
+      { value: 0,
+        icons: [
+          ''
+        ]
       },
     ]
   },
 };
 
-export const EmptyConfig: Story = {
+export const Full2: Story = {
   args: {
     editing: false,
-    editable: true,
-    icons: [
-      { value: 0, icon: "" },
-      { value: 0, icon: "" },
-      { value: 0, icon: "" },
-      { value: 0, icon: "" },
-      { value: 0, icon: "" },
+    controls: [
+      {
+        value: 2,
+        icons: ['🤔','🤫','🫢','🤭','🫣']
+      },
+      {
+        value: 1,
+        icons: ['🫠','🫨','😬','😵','🥴']
+      },
     ]
   },
 };
 
-export const EditingEmptyConfig: Story = {
+export const Edit2Selected1: Story = {
   args: {
-    editing: true,
-    editable: true,
-    icons: [
-      { value: 0, icon: "" },
-      { value: 0, icon: "" },
-      { value: 0, icon: "" },
-      { value: 0, icon: "" },
-      { value: 0, icon: "" },
+    editing: false,
+    controls: [
+      {
+        value: 2,
+        icons: ['🤔','🤫','🫢','🤭','🫣'],
+        selected: false,
+        edit: true
+      },
+      {
+        value: 1,
+        icons: ['🫠','🫨','😬','😵','🥴'],
+        selected: true,
+        edit: true
+      },
     ]
   },
 };

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/web-components";
 
 import { b64images } from '@neighbourhoods/design-system-styles';
 
-import { Empty } from "./widgets/assessment-container.stories";
+import { Icon } from "./widgets/assessment-container.stories";
 import NHButton from './button'
 import NHCard from './card'
 
@@ -42,10 +42,9 @@ class TestRoot extends NHComponent implements CardProps {
     </p>
     ${this.hasWidget && !this.hasPrimaryAction
       ? html`<div slot="footer">
-          ${(Empty as any).render({
-            name: "Pear",
-            iconAlt: "a pear",
-            iconImg: b64images.icons.pear,
+          ${(Icon as any).render({
+            selected: false,
+            outputDisplay: '120'
           })}
         </div>`
       : null}
