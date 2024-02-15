@@ -73,7 +73,7 @@ export default class NHAssessmentContainer extends NHComponentShoelace {
         background: var(--nh-theme-bg-detail);
         border-radius: calc(1px * var(--nh-radii-md) - 5px);
         height: 34px;
-        width: 34px;
+        min-width: 34px;
         max-height: 34px;
         overflow: hidden;
         display: flex;
