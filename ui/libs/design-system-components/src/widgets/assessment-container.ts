@@ -66,6 +66,7 @@ export default class NHAssessmentContainer extends NHComponentShoelace {
         transition: background-color var(--animation-shortest);
         cursor: pointer;
         margin: 4px;
+        height: 34px;
       }
 
       ::slotted([slot="assessment-control"]) {
@@ -86,14 +87,6 @@ export default class NHAssessmentContainer extends NHComponentShoelace {
         display: none;
       }
 
-      .assessment-container.edit-mode .click-blocker {
-        display: block;
-        position: absolute;
-        width: -webkit-fill-available;
-        height: 40px;
-        z-index: 999999999;
-      }
-
       .assessment-output {
         background-color: var(--nh-theme-accent-muted);
         color: var(--nh-theme-fg-default);
@@ -109,7 +102,22 @@ export default class NHAssessmentContainer extends NHComponentShoelace {
       }
 
       .assessment-container:hover > .assessment-output {
+        display: inline-block;
+      }
+
+      .assessment-container.edit-mode .click-blocker {
         display: block;
+        position: relative;
+        width: 100%;
+        height: 34px;
+        z-index: 999999999;
+      }
+
+      .assessment-container.edit-mode .assessment-control,
+      .assessment-container.edit-mode .assessment-output
+       {
+        position: relative;
+        top: -34px;
       }
     `,
   ];

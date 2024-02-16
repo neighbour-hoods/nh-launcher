@@ -107,19 +107,19 @@ export default class NHIconContainer extends NHComponentShoelace {
   }
 
   fireSelectStarted = () => {
-    const event = new CustomEvent('select-started', {bubbles: true, composed: true, cancelable: true});
+    const event = new CustomEvent('select-start', {bubbles: true, composed: true, cancelable: true});
     this.dispatchEvent(event);
   }
 
   fireSelectCancelled = () => {
-    const event = new CustomEvent('select-cancelled', {bubbles: true, composed: true, cancelable: true});
+    const event = new CustomEvent('select-cancel', {bubbles: true, composed: true, cancelable: true});
     this.dispatchEvent(event);
   }
 
   fireSelected = () => {
     this.frozen = true;
     const detail = {selected: true};
-    const event = new CustomEvent('selected', {detail, bubbles: true, composed: true, cancelable: true});
+    const event = new CustomEvent('select', {detail, bubbles: true, composed: true, cancelable: true});
     this.dispatchEvent(event);
   }
 
@@ -175,7 +175,7 @@ export default class NHIconContainer extends NHComponentShoelace {
 
       .assessment-icon {
         width: 32px;
-        font-size: 26px;
+        font-size: 24px;
         text-align: center;
         vertical-align: middle;
         margin: 0;
