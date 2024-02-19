@@ -6,14 +6,9 @@ import { AppletConfig, ComputeContextInput, SensemakerStore, sensemakerStoreCont
 import { consume } from '@lit/context';
 import { NHButton, NHButtonGroup, NHComponent } from '@neighbourhoods/design-system-components';
 import { matrixContext } from '../context';
-import { MatrixStore } from '../matrix-store';
 import { get } from 'svelte/store';
 
 export default class NHContextSelector extends NHComponent {
-  @consume({ context: matrixContext, subscribe: true })
-  @property({attribute: false})
-  matrixStore!: MatrixStore;
-  
   @consume({ context: sensemakerStoreContext, subscribe: true })
   @property({attribute: false})
   sensemakerStore!: SensemakerStore;
