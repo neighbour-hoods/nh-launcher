@@ -91,10 +91,17 @@ export function createOutputAssessmentWidgetDelegate(
      * TODO: finish implementation
      */
     async getLatestAssessment(): Promise<Assessment | undefined> {
-      const assessments = await sensemakerStore.getAssessmentsForResources({
+      const assessments : Record<string, Assessment[]> = await sensemakerStore.getAssessmentsForResources({
         resource_ehs: [resourceEh],
         dimension_ehs: [dimensionEh],
-      })
+      });
+      const sorted = typeof assessments !== 'undefined'
+        ? Object.values(assessments)[0].sort((a: Assessment, b: Assessment) => {
+            return b.timestamp - a.timestamp;
+          })
+        : [];
+      console.log('output assessments sorted :>> ', sorted);
+      assessment = sorted[0]
       return assessment
     },
 
@@ -137,6 +144,7 @@ export function createInputAssessmentWidgetDelegate(
         resource_ehs: [resourceEh],
         dimension_ehs: [dimensionEh],
       })
+      console.log('assessments :>> ', assessments);
       return assessment
     },
 
