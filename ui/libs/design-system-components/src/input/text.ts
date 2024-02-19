@@ -10,7 +10,7 @@ export default class NHTextInput extends NHComponent {
   @property()
   label?: string = "Your field";
   @property()
-  size: "small" | "medium" | "large" = "medium";
+  size: "small" | "medium" | "large" | "auto" = "medium";
   @property()
   placeholder?: string = "Select your option:";
   @property()
@@ -43,22 +43,21 @@ export default class NHTextInput extends NHComponent {
       [this.size]: this.size,
       'disabled': !!this.disabled
     })}">
-      <div class="row">
+        ${this.label ? html`<div class="row">
           <label
             for=${this.name}
           >${this.label}</label>
 
-        ${ this.required
-          ? html`<label
-            class="reqd"
-            for=${this.name}
-            name=${this.name}
-            data-name=${this.name}
-          >⁎</label>`
-          : null
-        }
-
-        </div>
+          ${this.required
+            ? html`<label
+              class="reqd"
+              for=${this.name}
+              name=${this.name}
+              data-name=${this.name}
+            >⁎</label>`
+            : null
+          }
+        </div>` : null}
           <input
             autocomplete="off"
             aria-autocomplete="none"
@@ -97,7 +96,7 @@ export default class NHTextInput extends NHComponent {
       .field.medium input, .field.small input {
         --scale: 1px;
       }
-      
+
       .field.large input {
         --scale: 1.5px;
         padding: calc(1px * var(--nh-spacing-sm)) calc(1px * var(--nh-spacing-lg));
@@ -106,6 +105,12 @@ export default class NHTextInput extends NHComponent {
       .field input {
         min-width: 16rem;
         height: calc(var(--scale) * var(--nh-spacing-3xl));
+      }
+
+      .field.auto input {
+        min-width: initial;
+        width: 100%;
+        box-sizing: border-box;
       }
 
       .field.small input {
@@ -135,6 +140,17 @@ export default class NHTextInput extends NHComponent {
       .row {
         justify-content: space-between;
         align-items: center;
+      }
+
+      .field.auto {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      
+      .field.auto, .field.auto input {
+        justify-content: center;
+        height: 100%;
+        margin-top: 0;
       }
 
       /* Typo */

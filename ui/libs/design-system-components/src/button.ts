@@ -209,6 +209,7 @@ export default class NHButton extends NHComponent {
         line-height: var(--nh-line-heights-headlines-default);
         font-weight: var(--nh-font-weights-headlines-bold);
         font-size: calc(1px * var(--nh-font-size-md));
+        padding: 10px;
       }
       button.lg {
         line-height: var(--nh-line-heights-body-default);

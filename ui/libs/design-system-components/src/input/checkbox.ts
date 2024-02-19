@@ -10,7 +10,7 @@ export default class NHCheckbox extends NHComponent {
   @property()
   label?: string = "Your field";
   @property()
-  size: "small" |"medium" | "large" = "medium";
+  size: "small" |"medium" | "large" | "auto" = "medium";
   @property()
   required: boolean = false;
   @property()
@@ -79,7 +79,7 @@ export default class NHCheckbox extends NHComponent {
         display: flex;
       }
 
-      .field {
+      .field:not(.auto) {
         margin-top: calc(1px * var(--nh-spacing-md));
         flex-direction: column;
       }
