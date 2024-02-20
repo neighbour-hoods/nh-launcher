@@ -66,19 +66,20 @@ export class DashboardFilterMap extends LitElement {
   }
 
   async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
-    console.log('this.sele :>> ', this.resourceDefEh);
     await this.fetchSelectedDimensionEntries();
     this.partitionDimensionEntries();
     await this.fetchMethods();
-    this.fieldDefs = this.generateContextFieldDefs();
-    this.filterMapRawAssessmentsToTableRecords();
   }
 
   async updated(changedProps) {
-    // if ((changedProps.has('selectedAppletResourceDefs') || changedProps.has('resourceDefEh')) && this.resourceDefEh) {
-    //   this.filterMapRawAssessmentsToTableRecords();
-    //   this.requestUpdate('selectedDimensions')
-    // }
+    if (
+      changedProps.has('resourceDefEh') &&
+      this.resourceDefEh !== 'none'
+    ) {
+      debugger;
+      this.fieldDefs = this.generateContextFieldDefs();
+      this.filterMapRawAssessmentsToTableRecords();
+    }
     if (
       changedProps.has('tableType') &&
       typeof changedProps.get('tableType') !== 'undefined'
@@ -119,13 +120,12 @@ export class DashboardFilterMap extends LitElement {
     // By objective/subjective dimension names
     let filteredByDimension;
 
-    if (this.tableType === AssessmentTableType.Resource) {
+    if (this.tableType === AssessmentTableType.Context) {
       filteredByDimension = this.filterByDimensionNames(
         filteredByResourceDef,
         this._objectiveDimensionNames,
       );
     } else {
-      // else we are dealing with a Context table, filter accordingly
       filteredByDimension = this.filterByDimensionNames(
         filteredByResourceDef,
         this._subjectiveDimensionNames,
@@ -179,13 +179,10 @@ export class DashboardFilterMap extends LitElement {
 
   filterByDimensionNames(resourceAssessments: Assessment[], filteringDimensions: string[]): Assessment[] {
     return resourceAssessments.filter((assessment: Assessment) => {
-      for (let dimension of filteringDimensions) {
+      return filteringDimensions.some(dimension => {
         const foundEntry = this._dimensionEntries.find(eR => eR.entry.name == dimension);
-        console.log('foundEntry :>> ', foundEntry);
-        console.log('selected dimension eh :>> ', encodeHashToBase64(assessment.dimension_eh));
-        console.log('found entry eh :>> ', encodeHashToBase64(foundEntry!.entryHash));
         return foundEntry && compareUint8Arrays(foundEntry.entryHash, assessment.dimension_eh)
-      }
+      })
     });
   }
 
@@ -193,30 +190,23 @@ export class DashboardFilterMap extends LitElement {
   mapAssessmentToAssessmentTableRecord(assessment: Assessment): AssessmentTableRecord {
     // Base record with basic fields
 
-    // get the view from the matrix store TODO: replace with resource renderer
-    const resourceView = this._matrixStore.getResourceView(this.weGroupId, assessment.resource_def_eh);
     const baseRecord = {
       neighbour: encodeHashToBase64(assessment.author),
       resource: {
-        eh: [assessment.resource_eh, resourceView],
+        eh: [assessment.resource_eh],
         value: [Object.values(assessment.value)[0], assessment],
       },
     } as AssessmentTableRecord;
 
     if (!this._dimensionEntries) return baseRecord;
-    // Iterate over dimensions dictionary and add each dimension as a field to the base record with an empty default value
-    for (let dimensionName of Object.keys(this._dimensionEntries.map(eR => eR.entry))) {
-      baseRecord[dimensionName] = '';
-    }
-    // If dimension_eh in assessment matches a dimensionUint8 in the dictionary
-    // populate the corresponding dimension field in the base record with the assessment value
-    for (let [dimensionName, dimensionUint8] of Object.entries(this._dimensionEntries.map(eR => eR.entry))) {
-      debugger;
-      if (compareUint8Arrays(assessment.dimension_eh, dimensionUint8)) {
-        baseRecord[dimensionName] = [Object.values(assessment.value)[0], assessment];
+
+    for (let dimensionEntry of this._dimensionEntries) {
+      if(compareUint8Arrays(assessment.dimension_eh, dimensionEntry.entryHash)) {
+        baseRecord[dimensionEntry.entry.name] = [Object.values(assessment.value)[0], assessment];
+      } else {
+        baseRecord[dimensionEntry.entry.name] = '';
       }
     }
-
     return baseRecord;
   }
 
@@ -226,9 +216,9 @@ export class DashboardFilterMap extends LitElement {
       ({name}: {name: string}) =>
         this.tableType === AssessmentTableType.Resource
           ? this._subjectiveDimensionNames.includes(name)
-          : this._objectiveDimensionNames.includes(name) &&
-            this.filteredTableRecords.every(a => a[name] !== ''),
+          : this._objectiveDimensionNames.includes(name)
     );
+    
     switch (this.tableType) {
       case AssessmentTableType.Resource:
         const fieldEntriesResource = contextFieldEntries.map(

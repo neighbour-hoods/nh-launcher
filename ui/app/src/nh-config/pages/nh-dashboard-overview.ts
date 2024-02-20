@@ -32,7 +32,7 @@ export default class NHDashBoardOverview extends NHComponent {
   @consume({ context: weGroupContext, subscribe: true })
   @property({ attribute: false }) _weGroupId!: Uint8Array;
   @consume({ context: resourceDefContext, subscribe: true })
-  @property({ attribute: false }) selectedResourceDef!: object;
+  @property({ attribute: false }) selectedResourceDef!: object | undefined;
   @consume({ context: appletContext, subscribe: true })
   @property({ attribute: false }) currentApplet!: Applet;
   @consume({ context: appletInstanceInfosContext, subscribe: true })
