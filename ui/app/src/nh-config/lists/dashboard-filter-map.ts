@@ -220,7 +220,7 @@ export class DashboardFilterMap extends LitElement {
             [name]: new FieldDefinition<AssessmentTableRecord>({
               heading: generateHeaderHTML('Assessment', cleanResourceNameForUI(name)),
               decorator: (value: any) => {
-                return value
+                return value[0]
                 // TODO: Get assessment value from OutputAssessmentWidget
               },
             }),
@@ -233,7 +233,7 @@ export class DashboardFilterMap extends LitElement {
             [name]: new FieldDefinition<AssessmentTableRecord>({
               heading: generateHeaderHTML('Dimension', cleanResourceNameForUI(name)),
               decorator: (value: any) => {
-                return value
+                return value[0]
                 // TODO: Get assessment value from OutputAssessmentWidget
               },
             }),
@@ -245,8 +245,6 @@ export class DashboardFilterMap extends LitElement {
   }
 
   render() {
-    console.log('this.filteredTableRecords :>> ', this.filteredTableRecords);
-    console.log('this.fieldDefs :>> ', this.fieldDefs);
     return html`
       <dashboard-table
         .resourceName=${this.resourceName}

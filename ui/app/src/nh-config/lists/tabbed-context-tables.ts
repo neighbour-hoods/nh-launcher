@@ -102,7 +102,7 @@ export default class TabbedContextTables extends NHComponent {
       >
         <dashboard-filter-map
           .tableType=${type}
-          .resourceName=${this.selectedResourceDef?.resource_name || "none"}
+          .resourceName=${this.selectedResourceDef?.resource_name ? cleanForUI(this.selectedResourceDef.resource_name) : "All Resources"}
           .resourceDefEh=${this.selectedResourceDef?.resource_def_eh || "none"}
           .selectedContextEhB64=${this.selectedContextEhB64}
         ></dashboard-filter-map>

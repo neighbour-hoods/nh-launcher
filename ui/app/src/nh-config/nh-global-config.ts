@@ -68,6 +68,7 @@ export default class NHGlobalConfig extends NHComponent {
     const applets : [EntryHash, Applet, DnaHash[]][] = get(await this._matrixStore.fetchAllApplets(this.weGroupId));
     if(!applets?.length || applets?.length == 0) return
     this.currentApplet = applets[0][1]; // Set context of the default applet - being the first, (up until a e.g. menu is used to set it)
+    this!._menu!.selectedMenuItemId = "Neighbourhood" + "-0-1"
   }
 
   protected async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
