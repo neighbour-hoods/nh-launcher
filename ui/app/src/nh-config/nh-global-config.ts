@@ -130,7 +130,7 @@ export default class NHGlobalConfig extends NHComponent {
                   subSectionMembers: this._resourceDefEntries.map(rd =>  cleanForUI(rd.resource_name)),
                   callback: () => { 
                       this.selectedResourceDef = this._resourceDefEntries[0];
-                      if(this?._menu) this!._menu!.selectedMenuItemId = "Neighbourhood" + "-1-0"; // pick the first resource as a default
+                      if(this?._menu) this!._menu!.selectedMenuItemId = "Neighbourhood" + "-0-0"; // pick the first resource as a default
                       this._page = ConfigPage.DashboardOverview
                     }
                 },
