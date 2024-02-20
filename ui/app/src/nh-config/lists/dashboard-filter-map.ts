@@ -7,7 +7,7 @@ import {
 } from '@neighbourhoods/client';
 import { LitElement, css, html } from 'lit';
 import { property, state } from 'lit/decorators.js';
-import { EntryHash, DnaHash, encodeHashToBase64, EntryHashB64 } from '@holochain/client';
+import { EntryHash, DnaHash, encodeHashToBase64, EntryHashB64, decodeHashFromBase64 } from '@holochain/client';
 import { consume } from '@lit/context';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import { DashboardTable } from './dashboard-table';
@@ -18,6 +18,7 @@ import { matrixContext, weGroupContext } from '../../context';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import { cleanResourceNameForUI, generateHeaderHTML } from '../../elements/components/helpers/functions';
 import { derived } from 'svelte/store';
+import { compareUint8Arrays } from '@neighbourhoods/app-loader';
 
 export class DashboardFilterMap extends LitElement {
   @consume({ context: sensemakerStoreContext, subscribe: true })
@@ -89,16 +90,18 @@ export class DashboardFilterMap extends LitElement {
   }
 
   filterMapRawAssessmentsToTableRecords() {
-    const resourceAssessments = this._rawAssessments.value;
-    if(typeof resourceAssessments !== 'object' || !(
-      Object.values(resourceAssessments) &&
-      Object.values(resourceAssessments)?.length !== undefined &&
+    // Keyed by resource, (not resource-def)
+    const assessmentsDict : Record<EntryHashB64, Assessment[]> = this._rawAssessments.value;
+    if(typeof assessmentsDict !== 'object' || !(
+      Object.values(assessmentsDict) &&
+      Object.values(assessmentsDict)?.length !== undefined &&
       this.tableType
       )
     ) return
-
+    console.log('assessmentsDict :>> ', assessmentsDict);
+debugger;
     try {
-      this.filteredTableRecords = this.flatFiltered(Object.values(resourceAssessments) as Assessment[][]).map(
+      this.filteredTableRecords = this.flatFiltered(Object.values(assessmentsDict) as Assessment[][]).map(
         this.mapAssessmentToAssessmentTableRecord.bind(this),
       );
     } catch (error) {
@@ -111,9 +114,11 @@ export class DashboardFilterMap extends LitElement {
     // By ResourceDefEH
     let filteredByResourceDef = (
       this.resourceDefEh == 'none'
-        ? Object.values(assessments)
-        : this.filterByResourceDefEh(assessments, this.resourceDefEh)
-    ).flat() as Assessment[];
+        ? Object.values(assessments).flat()
+        : this.filterByResourceDefEh(assessments.flat(), this.resourceDefEh)
+    ) as Assessment[];
+    debugger;
+    console.log('filteredByResourceDef :>> ', filteredByResourceDef);
 
     filteredByResourceDef = this.selectedAppletResourceDefs ? this.filterByAppletResourceDefEhs(filteredByResourceDef, this.selectedAppletResourceDefs)  as Assessment[] : filteredByResourceDef;
     // By objective/subjective dimension names
@@ -159,14 +164,10 @@ export class DashboardFilterMap extends LitElement {
     return tripleFiltered || filteredByMethodType;
   }
 
-  filterByResourceDefEh(resourceAssessments: Assessment[][], filteringHash: string) {
-    return Object.values(
-      resourceAssessments.filter((assessments: Assessment[]) => {
-        return assessments.every(
-          assessment => encodeHashToBase64(assessment.resource_def_eh) === filteringHash,
-        );
-      }),
-    );
+  filterByResourceDefEh(resourceAssessments: Assessment[], filteringHash: EntryHash) {
+    return resourceAssessments.filter((assessment: Assessment) => {
+      return compareUint8Arrays(assessment.resource_def_eh, filteringHash)
+    })
   }
 
   filterByAppletResourceDefEhs(resourceAssessments: Assessment[], selectedAppletResourceDefEhs: EntryHash[]) {
