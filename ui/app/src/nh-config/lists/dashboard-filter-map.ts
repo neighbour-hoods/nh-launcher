@@ -5,7 +5,7 @@ import {
   SensemakerStore,
   sensemakerStoreContext,
 } from '@neighbourhoods/client';
-import { LitElement, css, html } from 'lit';
+import { LitElement, PropertyValueMap, css, html } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import { EntryHash, DnaHash, encodeHashToBase64, EntryHashB64, decodeHashFromBase64 } from '@holochain/client';
 import { consume } from '@lit/context';
@@ -46,7 +46,7 @@ export class DashboardFilterMap extends LitElement {
   @property({ type: Object }) selectedAppletResourceDefs;
   @property({ type: String }) selectedContext;
   @state() contextEhsB64!: EntryHashB64[];
-  @state() selectedDimensions!: DimensionDict;
+  // @state() selectedDimensions!: DimensionDict;
   @state() private _dimensionEntries!: Dimension[];
   @state() private _objectiveDimensionNames: string[] = [];
   @state() private _subjectiveDimensionNames: string[] = [];
@@ -63,6 +63,13 @@ export class DashboardFilterMap extends LitElement {
     this.filterMapRawAssessmentsToTableRecords();
   }
 
+  async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    await this.fetchSelectedDimensionEntries();
+    this.partitionDimensionEntries();
+    this.fieldDefs = this.generateContextFieldDefs();
+    console.log('this._dimensionEntries :>> ', this._dimensionEntries);
+  }
+
   async updated(changedProps) {
     if ((changedProps.has('selectedAppletResourceDefs') || changedProps.has('resourceDefEh')) && this.resourceDefEh) {
       this.filterMapRawAssessmentsToTableRecords();
@@ -76,9 +83,6 @@ export class DashboardFilterMap extends LitElement {
       this.filterMapRawAssessmentsToTableRecords();
     }
     if (changedProps.has('selectedDimensions')) {
-      await this.fetchSelectedDimensionEntries();
-      this.fieldDefs = this.generateContextFieldDefs();
-      this.partitionDimensionEntries();
     }
     if (
       changedProps.has('_subjectiveDimensionNames') &&
@@ -98,8 +102,7 @@ export class DashboardFilterMap extends LitElement {
       this.tableType
       )
     ) return
-    console.log('assessmentsDict :>> ', assessmentsDict);
-debugger;
+    
     try {
       this.filteredTableRecords = this.flatFiltered(Object.values(assessmentsDict) as Assessment[][]).map(
         this.mapAssessmentToAssessmentTableRecord.bind(this),
@@ -117,8 +120,6 @@ debugger;
         ? Object.values(assessments).flat()
         : this.filterByResourceDefEh(assessments.flat(), this.resourceDefEh)
     ) as Assessment[];
-    debugger;
-    console.log('filteredByResourceDef :>> ', filteredByResourceDef);
 
     filteredByResourceDef = this.selectedAppletResourceDefs ? this.filterByAppletResourceDefEhs(filteredByResourceDef, this.selectedAppletResourceDefs)  as Assessment[] : filteredByResourceDef;
     // By objective/subjective dimension names
@@ -142,7 +143,7 @@ debugger;
     if (
       this.tableType === AssessmentTableType.Context &&
       !!this._contextEntry?.thresholds &&
-      !!this.selectedDimensions
+      !!this._dimensionEntries
     ) {
       tripleFiltered = this.filterByDimensionEh(
         filteredByMethodType,
@@ -210,14 +211,14 @@ debugger;
       },
     } as AssessmentTableRecord;
 
-    if (!this.selectedDimensions) return baseRecord;
+    if (!this._dimensionEntries) return baseRecord;
     // Iterate over dimensions dictionary and add each dimension as a field to the base record with an empty default value
-    for (let dimensionName of Object.keys(this.selectedDimensions)) {
+    for (let dimensionName of Object.keys(this._dimensionEntries)) {
       baseRecord[dimensionName] = '';
     }
     // If dimension_eh in assessment matches a dimensionUint8 in the dictionary
     // populate the corresponding dimension field in the base record with the assessment value
-    for (let [dimensionName, dimensionUint8] of Object.entries(this.selectedDimensions)) {
+    for (let [dimensionName, dimensionUint8] of Object.entries(this._dimensionEntries)) {
       if (encodeHashToBase64(assessment.dimension_eh) === encodeHashToBase64(dimensionUint8)) {
         baseRecord[dimensionName] = [Object.values(assessment.value)[0], assessment];
       }
@@ -227,7 +228,7 @@ debugger;
   }
 
   generateContextFieldDefs(): { [x: string]: FieldDefinition<AssessmentTableRecord> } {
-    const contextFieldEntries = Object.entries(this.selectedDimensions).filter(
+    const contextFieldEntries = Object.entries(this._dimensionEntries).filter(
       ([dimensionName, _]: [string, Uint8Array]) =>
         this.tableType === AssessmentTableType.Resource
           ? this._subjectiveDimensionNames.includes(dimensionName)
@@ -266,9 +267,7 @@ debugger;
   }
 
   render() {
-    console.log('this.resourceName :>> ', this.resourceName);
     console.log('this.filteredTableRecords :>> ', this.filteredTableRecords);
-    console.log('this.tableType :>> ', this.tableType);
     console.log('this.fieldDefs :>> ', this.fieldDefs);
     return html`
       <dashboard-table
@@ -308,8 +307,6 @@ debugger;
   }
 
   async fetchSelectedDimensionEntries() {
-    if (!this.selectedDimensions) return;
-
     try {
       const entryRecords = await this._sensemakerStore.getDimensions();
       this._dimensionEntries = entryRecords.map(eR => eR.entry) as Dimension[];
