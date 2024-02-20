@@ -19,9 +19,10 @@ export default class TabbedContextTables extends NHComponent {
   @property() contexts: any;
 
   @consume({ context: resourceDefContext, subscribe: true })
-  @property({ attribute: false }) selectedResourceDef!: object;
+  @property({ attribute: false }) selectedResourceDef!: object | undefined;
   
   @query('#danger-toast-1') private _dangerAlert;
+  @query('dashboard-filter-map') private _table;
   
   renderContextButtons() {
     if(!this.contexts) return null;
@@ -52,15 +53,17 @@ export default class TabbedContextTables extends NHComponent {
       `
   }
 
-  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+  protected updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     if(!this?.contexts || this.contexts.length == 0) {
       try {
-        
-        this._dangerAlert.openToast();
+        // this._dangerAlert.openToast();
       } catch (error) {
         console.log('error :>> ', error);
       }
-    }  
+    } else {
+      this._table.loaded = true;
+      this._table.requestUpdate();
+    }
   }
 
   renderActionButtons() {
@@ -89,10 +92,12 @@ export default class TabbedContextTables extends NHComponent {
       <sl-tab-panel
         class="dashboard-tab-panel"
         name=${type}
+        .active=${type == "resource"}
         @display-context=${(e: CustomEvent) => {
           const flatResults = typeof e.detail.results == "object" ? e.detail.results[this.selectedContextEhB64].flat() : [];
           const dashboardFilterComponent = (e.currentTarget as any).children[0];
-          dashboardFilterComponent.contextEhsB64 = flatResults.map(eh => encodeHashToBase64(eh));
+          console.log('contextEhs :>> ', flatResults.map(eh => encodeHashToBase64(eh)));
+          // dashboardFilterComponent.contextEhsB64 = flatResults.map(eh => encodeHashToBase64(eh));
         }}
       >
         <dashboard-filter-map

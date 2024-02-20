@@ -45,9 +45,10 @@ export class DashboardFilterMap extends LitElement {
   @property({ type: String }) resourceName;
   @property({ type: String }) resourceDefEh;
   
-  @property({ type: String }) selectedContext;
-  @state() contextEhsB64!: EntryHashB64[];
+  @property() selectedContext;
+  @property() selectedContextEhB64!: EntryHashB64;
   
+  @state() private loaded!: boolean;
   @state() private _dimensionEntries!: EntryRecord<Dimension>[];
   @state() private _methodEntries!: Method[];
   @state() private _objectiveDimensionNames: string[] = [];
@@ -67,22 +68,15 @@ export class DashboardFilterMap extends LitElement {
 
   async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     await this.fetchSelectedDimensionEntries();
-    this.partitionDimensionEntries();
     await this.fetchMethods();
+    this.partitionDimensionEntries();
+    this.loaded = true;
   }
 
   async updated(changedProps) {
     if (
-      changedProps.has('resourceDefEh') &&
-      this.resourceDefEh !== 'none'
-    ) {
-      debugger;
-      this.fieldDefs = this.generateContextFieldDefs();
-      this.filterMapRawAssessmentsToTableRecords();
-    }
-    if (
-      changedProps.has('tableType') &&
-      typeof changedProps.get('tableType') !== 'undefined'
+      changedProps.has('loaded') && typeof changedProps.get('loaded') == 'undefined' // all fetching complete by this point, continue to filter/map assessments
+      || changedProps.has('tableType') && typeof changedProps.get('tableType') !== 'undefined'
     ) {
       this.fieldDefs = this.generateContextFieldDefs();
       this.filterMapRawAssessmentsToTableRecords();
