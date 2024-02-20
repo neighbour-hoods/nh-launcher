@@ -18,7 +18,16 @@ import {
   SensemakerStore,
   UnsubscribeFn
 } from "@neighbourhoods/client";
-import { EntryRecord } from "@holochain-open-dev/utils";
+
+function getLatest(assessments: Record<string, Assessment[]>) {
+  const sorted = typeof assessments !== 'undefined'
+    ? Object.values(assessments)[0].sort((a: Assessment, b: Assessment) => {
+        return b.timestamp - a.timestamp;
+      })
+    : [];
+    
+    return sorted[0]
+}
 
 export class SubscriberManager extends Array<CallbackFn> {
   public subscribe(cb: CallbackFn): UnsubscribeFn {
@@ -88,21 +97,13 @@ export function createOutputAssessmentWidgetDelegate(
     /**
      * Get the latest computed assessment for the resource
      *
-     * TODO: finish implementation
      */
     async getLatestAssessment(): Promise<Assessment | undefined> {
       const assessments : Record<string, Assessment[]> = await sensemakerStore.getAssessmentsForResources({
         resource_ehs: [resourceEh],
         dimension_ehs: [dimensionEh],
       });
-      const sorted = typeof assessments !== 'undefined'
-        ? Object.values(assessments)[0].sort((a: Assessment, b: Assessment) => {
-            return b.timestamp - a.timestamp;
-          })
-        : [];
-      console.log('output assessments sorted :>> ', sorted);
-      assessment = sorted[0]
-      return assessment
+      return getLatest(assessments)
     },
 
     /**
@@ -137,15 +138,13 @@ export function createInputAssessmentWidgetDelegate(
     /**
      * Used to render the currently selected value for the user
      *
-     * TODO: finish implementation
      */
     async getLatestAssessmentForUser(): Promise<Assessment | undefined> {
-      const assessments = await sensemakerStore.getAssessmentsForResources({
+      const assessments : Record<string, Assessment[]> = await sensemakerStore.getAssessmentsForResources({
         resource_ehs: [resourceEh],
         dimension_ehs: [dimensionEh],
-      })
-      console.log('assessments :>> ', assessments);
-      return assessment
+      });
+      return getLatest(assessments)
     },
 
     /**

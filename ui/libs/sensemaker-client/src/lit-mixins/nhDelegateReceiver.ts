@@ -49,7 +49,6 @@ export class OutputAssessmentControl extends DelegateReceiverClass<OutputAssessm
     this.assessment = await this.nhDelegate.getLatestAssessment()
     this.nhDelegate.subscribe((assessment) => {
       this.assessment = assessment
-      console.log('this.assessment output :>> ', this.assessment);
     })
   }
 }
