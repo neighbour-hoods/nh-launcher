@@ -93,13 +93,12 @@ export default class TabbedContextTables extends NHComponent {
           const flatResults = typeof e.detail.results == "object" ? e.detail.results[this.selectedContextEhB64].flat() : [];
           const dashboardFilterComponent = (e.currentTarget as any).children[0];
           dashboardFilterComponent.contextEhsB64 = flatResults.map(eh => encodeHashToBase64(eh));
-          console.log('dashboardFilterComponent.contextEhsB64 :>> ', dashboardFilterComponent.contextEhsB64);
         }}
       >
         <dashboard-filter-map
           .tableType=${type}
-          .resourceName=${this.selectedResourceDef?.resource_name}
-          .resourceDefEh=${this.selectedResourceDef?.resource_def_eh}
+          .resourceName=${this.selectedResourceDef?.resource_name || "none"}
+          .resourceDefEh=${this.selectedResourceDef?.resource_def_eh || "none"}
           .selectedContextEhB64=${this.selectedContextEhB64}
         ></dashboard-filter-map>
       </sl-tab-panel>

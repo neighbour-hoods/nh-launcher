@@ -43,7 +43,7 @@ export default class NHGlobalConfig extends NHComponent {
   
   @provide({ context: resourceDefContext })
   @property()
-  selectedResourceDef!: object;
+  selectedResourceDef!: object | undefined;
 
   _sensemakerStore = new StoreSubscriber(this, () =>
     this._matrixStore?.sensemakerStore(this.weGroupId),
@@ -63,7 +63,7 @@ export default class NHGlobalConfig extends NHComponent {
   
   @query('nh-menu') _menu?: NHMenu;
 
-  protected async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+  protected async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     // applet entry hash, applet, and federated groups' dnahashes
     const applets : [EntryHash, Applet, DnaHash[]][] = get(await this._matrixStore.fetchAllApplets(this.weGroupId));
     if(!applets?.length || applets?.length == 0) return
@@ -112,7 +112,10 @@ export default class NHGlobalConfig extends NHComponent {
             this._page = this.choosePageFromSubMenuItemId(mainMenuItemName.toLowerCase());
             // TODO: fix submenu implementation and choose a different static name for menu item 0 other than Neighbourhood
 
-            if (!(['Sensemaker', "Neighbourhood"].includes(mainMenuItemName))) return; // Only current active main menu item is Sensemaker, but you can change this later
+            if (!(['Sensemaker', "Neighbourhood"].includes(mainMenuItemName))) {
+              this.selectedResourceDef = undefined;
+              return;
+            }; // Only current active main menu item is Sensemaker, but you can change this later
             
             // THIS RELIES ON THE SAME ORDERING/INDEXING OCCURRING IN `this._resourceDefEntries` AS IN THE RENDERED SUBMENUS for ['Sensemaker', "Neighbourhood"], and may need to be changed
             this.selectedResourceDef = this._resourceDefEntries[subMenuItemIndex]

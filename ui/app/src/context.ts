@@ -9,5 +9,5 @@ export const weGroupContext = createContext<DnaHash>("hc_zome_we/we_group_id_con
 
 // Used for the dashboard pages
 export const appletContext = createContext<Applet>("current/applet");
-export const resourceDefContext = createContext<object>("current/resource_def")
+export const resourceDefContext = createContext<object|undefined>("current/resource_def")
 export const appletInstanceInfosContext = createContext<StoreSubscriber<AppletInstanceInfo[] | undefined>>("current/applet_instances")

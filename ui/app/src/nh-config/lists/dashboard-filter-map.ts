@@ -2,6 +2,7 @@ import {
   Assessment,
   CulturalContext,
   Dimension,
+  Method,
   SensemakerStore,
   sensemakerStoreContext,
 } from '@neighbourhoods/client';
@@ -43,11 +44,12 @@ export class DashboardFilterMap extends LitElement {
   @property({ type: AssessmentTableType }) tableType;
   @property({ type: String }) resourceName;
   @property({ type: String }) resourceDefEh;
-  @property({ type: Object }) selectedAppletResourceDefs;
+  
   @property({ type: String }) selectedContext;
   @state() contextEhsB64!: EntryHashB64[];
-  // @state() selectedDimensions!: DimensionDict;
-  @state() private _dimensionEntries!: Dimension[];
+  
+  @state() private _dimensionEntries!: EntryRecord<Dimension>[];
+  @state() private _methodEntries!: Method[];
   @state() private _objectiveDimensionNames: string[] = [];
   @state() private _subjectiveDimensionNames: string[] = [];
   @state() private _contextEntry!: CulturalContext;
@@ -63,30 +65,23 @@ export class DashboardFilterMap extends LitElement {
     this.filterMapRawAssessmentsToTableRecords();
   }
 
-  async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+  async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
+    console.log('this.sele :>> ', this.resourceDefEh);
     await this.fetchSelectedDimensionEntries();
     this.partitionDimensionEntries();
+    await this.fetchMethods();
     this.fieldDefs = this.generateContextFieldDefs();
-    console.log('this._dimensionEntries :>> ', this._dimensionEntries);
+    this.filterMapRawAssessmentsToTableRecords();
   }
 
   async updated(changedProps) {
-    if ((changedProps.has('selectedAppletResourceDefs') || changedProps.has('resourceDefEh')) && this.resourceDefEh) {
-      this.filterMapRawAssessmentsToTableRecords();
-      this.requestUpdate('selectedDimensions')
-    }
-    if (changedProps.has('selectedContext')) {
-      await this.fetchCurrentContextEntry();
-      this.filterMapRawAssessmentsToTableRecords();
-    }
-    if (changedProps.has('contextEhsB64') && this.tableType == AssessmentTableType.Context) {
-      this.filterMapRawAssessmentsToTableRecords();
-    }
-    if (changedProps.has('selectedDimensions')) {
-    }
+    // if ((changedProps.has('selectedAppletResourceDefs') || changedProps.has('resourceDefEh')) && this.resourceDefEh) {
+    //   this.filterMapRawAssessmentsToTableRecords();
+    //   this.requestUpdate('selectedDimensions')
+    // }
     if (
-      changedProps.has('_subjectiveDimensionNames') &&
-      typeof changedProps.get('_objectiveDimensionNames') !== 'undefined'
+      changedProps.has('tableType') &&
+      typeof changedProps.get('tableType') !== 'undefined'
     ) {
       this.fieldDefs = this.generateContextFieldDefs();
       this.filterMapRawAssessmentsToTableRecords();
@@ -116,23 +111,22 @@ export class DashboardFilterMap extends LitElement {
   flatFiltered(assessments: Assessment[][]): Assessment[] {
     // By ResourceDefEH
     let filteredByResourceDef = (
-      this.resourceDefEh == 'none'
+      !this.resourceDefEh || this.resourceDefEh == 'none'
         ? Object.values(assessments).flat()
         : this.filterByResourceDefEh(assessments.flat(), this.resourceDefEh)
     ) as Assessment[];
 
-    filteredByResourceDef = this.selectedAppletResourceDefs ? this.filterByAppletResourceDefEhs(filteredByResourceDef, this.selectedAppletResourceDefs)  as Assessment[] : filteredByResourceDef;
     // By objective/subjective dimension names
-    let filteredByMethodType;
+    let filteredByDimension;
 
     if (this.tableType === AssessmentTableType.Resource) {
-      filteredByMethodType = this.filterByMethodNames(
+      filteredByDimension = this.filterByDimensionNames(
         filteredByResourceDef,
         this._objectiveDimensionNames,
       );
     } else {
       // else we are dealing with a Context table, filter accordingly
-      filteredByMethodType = this.filterByMethodNames(
+      filteredByDimension = this.filterByDimensionNames(
         filteredByResourceDef,
         this._subjectiveDimensionNames,
       );
@@ -145,24 +139,24 @@ export class DashboardFilterMap extends LitElement {
       !!this._contextEntry?.thresholds &&
       !!this._dimensionEntries
     ) {
-      tripleFiltered = this.filterByDimensionEh(
-        filteredByMethodType,
-        encodeHashToBase64(this._contextEntry.thresholds[0].dimension_eh),
-      );
-      // TODO: cache each context's results and extract this all to a method
-      tripleFiltered = tripleFiltered.filter(assessment => {
-        if(!this.contextEhsB64?.length) return false;
-        const matchingContextEntryDefHash = this.contextEhsB64.find((eHB64) => encodeHashToBase64(assessment.resource_eh) === eHB64)
-        if(matchingContextEntryDefHash) {
-          // Filter out the oldest objective dimension values (so we have the latest average)
-          const results = tripleFiltered.filter(assessment => encodeHashToBase64(assessment.resource_eh) === matchingContextEntryDefHash)
-          const latestAssessmentFromResults = results.sort((a, b) => b.timestamp > a.timestamp).slice(-1)
-          return latestAssessmentFromResults[0] == assessment
-        }
-      })
+      // tripleFiltered = this.filterByDimensionEh(
+      //   filteredByDimension,
+      //   encodeHashToBase64(this._contextEntry.thresholds[0].dimension_eh),
+      // );
+      // // TODO: cache each context's results and extract this all to a method
+      // tripleFiltered = tripleFiltered.filter(assessment => {
+      //   if(!this.contextEhsB64?.length) return false;
+      //   const matchingContextEntryDefHash = this.contextEhsB64.find((eHB64) => encodeHashToBase64(assessment.resource_eh) === eHB64)
+      //   if(matchingContextEntryDefHash) {
+      //     // Filter out the oldest objective dimension values (so we have the latest average)
+      //     const results = tripleFiltered.filter(assessment => encodeHashToBase64(assessment.resource_eh) === matchingContextEntryDefHash)
+      //     const latestAssessmentFromResults = results.sort((a, b) => b.timestamp > a.timestamp).slice(-1)
+      //     return latestAssessmentFromResults[0] == assessment
+      //   }
+      // })
     }
 // console.log('tripleFiltered || filteredByMethodType :>> ', tripleFiltered || filteredByMethodType);
-    return tripleFiltered || filteredByMethodType;
+    return tripleFiltered || filteredByDimension;
   }
 
   filterByResourceDefEh(resourceAssessments: Assessment[], filteringHash: EntryHash) {
@@ -183,17 +177,15 @@ export class DashboardFilterMap extends LitElement {
     });
   }
 
-  filterByMethodNames(resourceAssessments: Assessment[], filteringMethods: string[]): Assessment[] {
+  filterByDimensionNames(resourceAssessments: Assessment[], filteringDimensions: string[]): Assessment[] {
     return resourceAssessments.filter((assessment: Assessment) => {
-      for (let method of filteringMethods) {
-        if(!this.selectedDimensions[method]) return true;
-        if (
-          encodeHashToBase64(this.selectedDimensions[method]) ==
-          encodeHashToBase64(assessment.dimension_eh)
-        )
-          return false;
+      for (let dimension of filteringDimensions) {
+        const foundEntry = this._dimensionEntries.find(eR => eR.entry.name == dimension);
+        console.log('foundEntry :>> ', foundEntry);
+        console.log('selected dimension eh :>> ', encodeHashToBase64(assessment.dimension_eh));
+        console.log('found entry eh :>> ', encodeHashToBase64(foundEntry!.entryHash));
+        return foundEntry && compareUint8Arrays(foundEntry.entryHash, assessment.dimension_eh)
       }
-      return true;
     });
   }
 
@@ -213,13 +205,14 @@ export class DashboardFilterMap extends LitElement {
 
     if (!this._dimensionEntries) return baseRecord;
     // Iterate over dimensions dictionary and add each dimension as a field to the base record with an empty default value
-    for (let dimensionName of Object.keys(this._dimensionEntries)) {
+    for (let dimensionName of Object.keys(this._dimensionEntries.map(eR => eR.entry))) {
       baseRecord[dimensionName] = '';
     }
     // If dimension_eh in assessment matches a dimensionUint8 in the dictionary
     // populate the corresponding dimension field in the base record with the assessment value
-    for (let [dimensionName, dimensionUint8] of Object.entries(this._dimensionEntries)) {
-      if (encodeHashToBase64(assessment.dimension_eh) === encodeHashToBase64(dimensionUint8)) {
+    for (let [dimensionName, dimensionUint8] of Object.entries(this._dimensionEntries.map(eR => eR.entry))) {
+      debugger;
+      if (compareUint8Arrays(assessment.dimension_eh, dimensionUint8)) {
         baseRecord[dimensionName] = [Object.values(assessment.value)[0], assessment];
       }
     }
@@ -228,19 +221,20 @@ export class DashboardFilterMap extends LitElement {
   }
 
   generateContextFieldDefs(): { [x: string]: FieldDefinition<AssessmentTableRecord> } {
-    const contextFieldEntries = Object.entries(this._dimensionEntries).filter(
-      ([dimensionName, _]: [string, Uint8Array]) =>
+    const dimensions = this._dimensionEntries.map(eR => eR.entry);
+    const contextFieldEntries = Object.values(dimensions).filter(
+      ({name}: {name: string}) =>
         this.tableType === AssessmentTableType.Resource
-          ? this._subjectiveDimensionNames.includes(dimensionName)
-          : this._objectiveDimensionNames.includes(dimensionName) &&
-            this.filteredTableRecords.every(a => a[dimensionName] !== ''),
+          ? this._subjectiveDimensionNames.includes(name)
+          : this._objectiveDimensionNames.includes(name) &&
+            this.filteredTableRecords.every(a => a[name] !== ''),
     );
     switch (this.tableType) {
       case AssessmentTableType.Resource:
         const fieldEntriesResource = contextFieldEntries.map(
-          ([dimensionName, _]: [string, Uint8Array]) => ({
-            [dimensionName]: new FieldDefinition<AssessmentTableRecord>({
-              heading: generateHeaderHTML('Assessment', cleanResourceNameForUI(dimensionName)),
+          ({name}: {name: string}) => ({
+            [name]: new FieldDefinition<AssessmentTableRecord>({
+              heading: generateHeaderHTML('Assessment', cleanResourceNameForUI(name)),
               decorator: (value: any) => {
                 return value
                 // TODO: Get assessment value from OutputAssessmentWidget
@@ -251,9 +245,9 @@ export class DashboardFilterMap extends LitElement {
         return fieldEntriesResource.reduce((fields, field) => ({ ...fields, ...field }), {});
       case AssessmentTableType.Context:
         const fieldEntriesContext = contextFieldEntries.map(
-          ([dimensionName, _]: [string, Uint8Array]) => ({
-            [dimensionName]: new FieldDefinition<AssessmentTableRecord>({
-              heading: generateHeaderHTML('Dimension', cleanResourceNameForUI(dimensionName)),
+          ({name}: {name: string}) => ({
+            [name]: new FieldDefinition<AssessmentTableRecord>({
+              heading: generateHeaderHTML('Dimension', cleanResourceNameForUI(name)),
               decorator: (value: any) => {
                 return value
                 // TODO: Get assessment value from OutputAssessmentWidget
@@ -281,8 +275,7 @@ export class DashboardFilterMap extends LitElement {
   
   static elementDefinitions = { 'dashboard-table': DashboardTable }
 
-  static get styles() {
-    return [
+  static styles = [
       css`
         .widget-wrapper {
           display: flex;
@@ -292,8 +285,7 @@ export class DashboardFilterMap extends LitElement {
           flex: 1;
         }
       `,
-    ];
-  }
+  ];
 
   async fetchCurrentContextEntry() {
     if (this.selectedContext == 'none') return;
@@ -309,16 +301,25 @@ export class DashboardFilterMap extends LitElement {
   async fetchSelectedDimensionEntries() {
     try {
       const entryRecords = await this._sensemakerStore.getDimensions();
-      this._dimensionEntries = entryRecords.map(eR => eR.entry) as Dimension[];
+      this._dimensionEntries = entryRecords;
     } catch (error) {
       console.log('Error fetching dimension details: ', error);
+    }
+  }
+
+  async fetchMethods() {
+    try {
+      const entryRecords = await this._sensemakerStore.getMethods();
+      this._methodEntries = entryRecords.map(eR => eR.entry) as Method[];
+    } catch (error) {
+      console.log('Error fetching method details: ', error);
     }
   }
 
   partitionDimensionEntries() {
     if (!this._dimensionEntries) return;
 
-    let [subjective, objective] = this._dimensionEntries.reduce(
+    let [subjective, objective] = this._dimensionEntries.map(eR => eR.entry).reduce(
       (partitioned, dimension) => {
         partitioned[dimension.computed ? 1 : 0].push(dimension.name);
         return partitioned;
