@@ -20,7 +20,6 @@ import { MatrixStore } from '../../matrix-store';
 import { matrixContext, weGroupContext } from '../../context';
 import { EntryRecord } from '@holochain-open-dev/utils';
 
-@customElement('dashboard-filter-map')
 export class DashboardFilterMap extends LitElement {
   @consume({ context: sensemakerStoreContext, subscribe: true })
   @property({attribute: false})
