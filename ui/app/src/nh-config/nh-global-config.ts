@@ -42,7 +42,7 @@ export default class NHGlobalConfig extends NHComponent {
       const currentApplet = appletInstanceInfos!.find(applet => compareUint8Arrays(decodeHashFromBase64(this.currentAppletInstanceEh), applet.applet.devhubGuiReleaseHash))
       return currentApplet
     }),
-    () => [this.currentAppletInstanceEh, this.weGroupId],
+    () => [this.loaded],
   );
   
   @provide({ context: resourceDefContext })
@@ -52,6 +52,8 @@ export default class NHGlobalConfig extends NHComponent {
   _sensemakerStore = new StoreSubscriber(this, () =>
     this._matrixStore?.sensemakerStore(this.weGroupId),
   );
+
+  @state() loaded : boolean = false;
 
   private _resourceDefEntries: Array<ResourceDef> = [];
   
@@ -74,7 +76,12 @@ export default class NHGlobalConfig extends NHComponent {
     this.currentAppletInstanceEh = encodeHashToBase64(applets[0][1].devhubGuiReleaseHash); // Set context of the default applet - being the first, (up until a e.g. menu is used to set it)
     this!._menu!.selectedMenuItemId = "Neighbourhood" + "-0-1"
 
-    await this.fetchCurrentAppletInstanceRenderers();
+    try {
+      (await this.fetchCurrentAppletInstanceRenderers());
+      this.loaded = true
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   protected async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
