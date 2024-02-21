@@ -8,6 +8,6 @@ export const matrixContext = createContext<MatrixStore>("hc_zome_we/matrix_conte
 export const weGroupContext = createContext<DnaHash>("hc_zome_we/we_group_id_context")
 
 // Used for the dashboard pages
-export const appletContext = createContext<Applet>("current/applet");
+export const appletContext = createContext<string>("current/applet");
 export const resourceDefContext = createContext<object|undefined>("current/resource_def")
-export const appletInstanceInfosContext = createContext<StoreSubscriber<AppletInstanceInfo[] | undefined>>("current/applet_instances")
+export const appletInstanceInfosContext = createContext<StoreSubscriber<AppletInstanceInfo | undefined>>("current/applet_instances")

@@ -5,7 +5,7 @@ import { StoreSubscriber } from 'lit-svelte-stores';
 import { MatrixStore } from '../matrix-store';
 import { ConfigPage } from './types';
 import { appletContext, appletInstanceInfosContext, matrixContext, resourceDefContext, weGroupContext } from '../context';
-import { DnaHash, EntryHash } from '@holochain/client';
+import { DnaHash, EntryHash, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
 
 import DimensionsConfig from './pages/nh-dimensions-config';
 import AssessmentWidgetConfig from './pages/nh-assessment-widget-config';
@@ -17,8 +17,9 @@ import { provideWeGroupInfo } from '../matrix-helpers';
 import { removeResourceNameDuplicates } from '../utils';
 import { ResourceDef } from '@neighbourhoods/client';
 import { cleanForUI } from '../elements/components/helpers/functions';
-import { Applet } from '../types';
-import { get } from 'svelte/store';
+import { Applet, AppletInstanceInfo } from '../types';
+import { derived, get } from 'svelte/store';
+import { compareUint8Arrays } from '@neighbourhoods/app-loader';
 
 export default class NHGlobalConfig extends NHComponent {
   @consume({ context: matrixContext, subscribe: true })
@@ -29,16 +30,19 @@ export default class NHGlobalConfig extends NHComponent {
   @property({ attribute: false })
   weGroupId!: DnaHash;
   
-  @provide({ context: appletContext })
-  @property({attribute: false})
-  currentApplet!: Applet;
+  @provide({ context: appletContext }) @property({attribute: false})
+  currentAppletInstanceEh!: string;
 
   @provide({ context: appletInstanceInfosContext })
   @property({attribute: false})
-  _appletInstanceInfosForGroup = new StoreSubscriber(
+  _currentAppletInstance = new StoreSubscriber(
     this,
-    () => this._matrixStore.getAppletInstanceInfosForGroup(this.weGroupId),
-    () => [this._matrixStore, this.weGroupId],
+    () =>  derived(this._matrixStore.getAppletInstanceInfosForGroup(this.weGroupId), (appletInstanceInfos: AppletInstanceInfo[] | undefined) => {
+      if(!this.currentAppletInstanceEh) return
+      const currentApplet = appletInstanceInfos!.find(applet => compareUint8Arrays(decodeHashFromBase64(this.currentAppletInstanceEh), applet.applet.devhubGuiReleaseHash))
+      return currentApplet
+    }),
+    () => [this.currentAppletInstanceEh, this.weGroupId],
   );
   
   @provide({ context: resourceDefContext })
@@ -67,8 +71,10 @@ export default class NHGlobalConfig extends NHComponent {
     // applet entry hash, applet, and federated groups' dnahashes
     const applets : [EntryHash, Applet, DnaHash[]][] = get(await this._matrixStore.fetchAllApplets(this.weGroupId));
     if(!applets?.length || applets?.length == 0) return
-    this.currentApplet = applets[0][1]; // Set context of the default applet - being the first, (up until a e.g. menu is used to set it)
+    this.currentAppletInstanceEh = encodeHashToBase64(applets[0][1].devhubGuiReleaseHash); // Set context of the default applet - being the first, (up until a e.g. menu is used to set it)
     this!._menu!.selectedMenuItemId = "Neighbourhood" + "-0-1"
+
+    await this.fetchCurrentAppletInstanceRenderers();
   }
 
   protected async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
@@ -104,6 +110,18 @@ export default class NHGlobalConfig extends NHComponent {
         return ConfigPage.DashboardOverview
     }
   }
+
+  async fetchCurrentAppletInstanceRenderers() {
+    if(!this._currentAppletInstance.value) return;
+    try {
+      await this._matrixStore.fetchAppletInstanceRenderers(
+        this._currentAppletInstance.value.appletId,
+      );
+    } catch (error) {
+      console.log('Error fetching applet instance renderers ', error);
+    }
+  }
+
   render() : TemplateResult {
     return html`
       <main>

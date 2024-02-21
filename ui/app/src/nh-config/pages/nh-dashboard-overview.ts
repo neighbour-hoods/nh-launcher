@@ -34,9 +34,9 @@ export default class NHDashBoardOverview extends NHComponent {
   @consume({ context: resourceDefContext, subscribe: true })
   @property({ attribute: false }) selectedResourceDef!: object | undefined;
   @consume({ context: appletContext, subscribe: true })
-  @property({ attribute: false }) currentApplet!: Applet;
+  @property({ attribute: false }) currentApplet!: string;
   @consume({ context: appletInstanceInfosContext, subscribe: true })
-  @property({ attribute: false }) appletInstanceInfos!: StoreSubscriber<AppletInstanceInfo[] | undefined>;
+  @property({ attribute: false }) _currentAppletInstance!: StoreSubscriber<AppletInstanceInfo | undefined>;
 
   sensemakerStore!: SensemakerStore;
 
@@ -44,19 +44,18 @@ export default class NHDashBoardOverview extends NHComponent {
 
   _currentAppletConfig = new StoreSubscriber(
     this,
-    () =>  derived(this.appletInstanceInfos.store, async (applets) => {
-      if(!this.currentApplet) return {}
-      const currentAppletInstanceInfo = applets?.find((applet: AppletInstanceInfo) => compareUint8Arrays(applet.applet.devhubHappReleaseHash, this.currentApplet.devhubHappReleaseHash));
-      this.currentAppletInstanceId = currentAppletInstanceInfo?.appInfo.installed_app_id as string;
-      const maybe_config = await this.sensemakerStore.checkIfAppletConfigExists(currentAppletInstanceInfo!.appInfo.installed_app_id);
+    () =>  derived(this._currentAppletInstance.store, async (applet: AppletInstanceInfo | undefined) => {
+      if(!this.currentApplet || !applet) return {}
+      // this.currentAppletInstanceId = currentAppletInstanceInfo?.appInfo.installed_app_id as string;
+      const maybe_config = await this.sensemakerStore.checkIfAppletConfigExists(applet!.appInfo.installed_app_id);
       return maybe_config || {}
     }),
-    () => [this.appletInstanceInfos, this.currentApplet],
+    () => [this._currentAppletInstance, this.currentApplet],
   );
 
   @state() _currentAppletContexts : any[] = [];
 
-  protected async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+  protected async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     if(this._currentAppletConfig?.value) {
       const currentConfig = await this._currentAppletConfig.value as  AppletConfig;
       if(typeof currentConfig?.cultural_contexts !== 'object') return

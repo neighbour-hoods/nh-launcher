@@ -152,7 +152,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
     } else if (this._dashboardMode === DashboardMode.DashboardOverview) {
       return html`
         <we-group-context .weGroupId=${this._selectedWeGroupId}>
-          <sensemaker-dashboard id="sensemaker-dashboard"> </sensemaker-dashboard>
+          <nh-global-config id="sensemaker-dashboard"> </nh-global-config>
         </we-group-context>
       `;
     } else if (this._dashboardMode === DashboardMode.AppletGroupInstanceRendering) {
@@ -564,7 +564,6 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
       'with-profile': WithProfile,
       'nh-button': NHButton,
       'nh-profile-card': NHProfileCard,
-      'sensemaker-dashboard': SensemakerDashboard,
       'nh-global-config': NHGlobalConfig,
       'applet-instance-renderer': AppletInstanceRenderer,
       'applet-not-installed': AppletNotInstalled,

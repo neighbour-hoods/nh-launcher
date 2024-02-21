@@ -738,7 +738,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
         this._appletInstanceInfo!.appletId,
       );
     } catch (error) {
-      console.log('Error fetching appleticon-spinner renderers ', error);
+      console.log('Error fetching applet instance renderers ', error);
     }
   }
 
