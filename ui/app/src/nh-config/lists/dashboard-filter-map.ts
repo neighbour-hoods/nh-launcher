@@ -1,8 +1,13 @@
+import { InputAssessmentRenderer } from './../../../../libs/app-loader/src/block-renderer/index';
 import {
   Assessment,
+  AssessmentWidgetRenderer,
+  AssessmentWidgetRenderers,
   CulturalContext,
   Dimension,
   Method,
+  NHDelegateReceiverConstructor,
+  OutputAssessmentWidgetDelegate,
   SensemakerStore,
   sensemakerStoreContext,
 } from '@neighbourhoods/client';
@@ -17,11 +22,31 @@ import { AssessmentTableRecord, AssessmentTableType } from '../types';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import { cleanResourceNameForUI, generateHeaderHTML } from '../../elements/components/helpers/functions';
 import { derived } from 'svelte/store';
-import { compareUint8Arrays } from '@neighbourhoods/app-loader';
+import { compareUint8Arrays, OutputAssessmentRenderer, createOutputAssessmentWidgetDelegate } from '../../../../libs/app-loader';
+import { appletInstanceInfosContext } from '../../context';
+import { AppletInstanceInfo } from '../../types';
+
+type DecoratorProps = {
+  renderers: AssessmentWidgetRenderers,
+  delegate: OutputAssessmentWidgetDelegate
+}
 
 export class DashboardFilterMap extends LitElement {
   @consume({ context: sensemakerStoreContext, subscribe: true })
   @property({attribute: false}) _sensemakerStore!: SensemakerStore;
+
+  @consume({ context: appletInstanceInfosContext })
+  @property({attribute: false}) _currentAppletInstance;
+
+  @state() _currentAppletInstanceRenderers = new StoreSubscriber(
+    this,
+    () =>  derived(this._currentAppletInstance.store, (applet: AppletInstanceInfo | any) => {
+      console.log('applet :>> ', applet);
+      
+      return {...applet}
+    }),
+    () => [this._currentAppletInstance.value],
+  );
 
   @property() _rawAssessments = new StoreSubscriber(
     this,
@@ -164,10 +189,26 @@ export class DashboardFilterMap extends LitElement {
     });
   }
 
+  getOutputControlForAssessment(assessment: Assessment) {
+    try {
+      if(!(this._currentAppletInstanceRenderers?.value) || !(this._currentAppletInstanceRenderers.value?.renderers)) return {
+        renderers: null,
+        delegate: null,
+      }
+      const delegate = createOutputAssessmentWidgetDelegate(this._sensemakerStore, assessment.dimension_eh, assessment.resource_eh, assessment)
+      const renderers = this._currentAppletInstanceRenderers.value;
+      return { 
+        renderers: renderers?.renderers?.assessmentWidgets,
+        delegate,
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  };
+
   // Mapping
   mapAssessmentToAssessmentTableRecord(assessment: Assessment): AssessmentTableRecord {
     // Base record with basic fields
-
     const baseRecord = {
       neighbour: encodeHashToBase64(assessment.author),
       resource: {
@@ -176,13 +217,20 @@ export class DashboardFilterMap extends LitElement {
       },
     } as AssessmentTableRecord;
 
-    if (!this._dimensionEntries) return baseRecord;
+    if (!this._dimensionEntries || !this._currentAppletInstance.value) return baseRecord;
+    const { renderers, delegate } = this.getOutputControlForAssessment(assessment) as any;
+
+console.log('component, delegate :>> ', renderers, delegate);
+delegate?.getLatestAssessment().then(a => console.log('a :>> ', a));
 
     for (let dimensionEntry of this._dimensionEntries) {
       if(compareUint8Arrays(assessment.dimension_eh, dimensionEntry.entryHash)) {
-        baseRecord[dimensionEntry.entry.name] = [Object.values(assessment.value)[0], assessment];
+        baseRecord[dimensionEntry.entry.name] = {
+          delegate,
+          renderers
+        }
       } else {
-        baseRecord[dimensionEntry.entry.name] = '';
+        baseRecord[dimensionEntry.entry.name] = {};
       }
     }
     return baseRecord;
@@ -203,10 +251,15 @@ export class DashboardFilterMap extends LitElement {
           ({name}: {name: string}) => ({
             [name]: new FieldDefinition<AssessmentTableRecord>({
               heading: generateHeaderHTML('Assessment', cleanResourceNameForUI(name)),
-              decorator: (value: any) => {
-                return value[0]
-                // TODO: Get assessment value from OutputAssessmentWidget
-              },
+              decorator: (value : DecoratorProps) => !!value && value?.renderers && value?.delegate &&
+              typeof console.log('in' , {...value.renderers.heatOutput}, value.delegate) == 'undefined'
+                ? (() => html`
+                  <output-assessment-renderer
+                    .component=${(() => (value.renderers.heatOutput))()}
+                    .nhDelegate=${(() => (value.delegate))()}
+                  ></output-assessment-renderer>
+                `)()
+                : null
             }),
           }),
         );
@@ -229,6 +282,7 @@ export class DashboardFilterMap extends LitElement {
   }
 
   render() {
+    console.log('this.filteredTableRecords :>> ', this.filteredTableRecords);
     return html`
       <dashboard-table
         .resourceName=${this.resourceName}
@@ -239,7 +293,10 @@ export class DashboardFilterMap extends LitElement {
     `;
   }
   
-  static elementDefinitions = { 'dashboard-table': DashboardTable }
+  static elementDefinitions = { 
+    'dashboard-table': DashboardTable,
+    'output-assessment-renderer': InputAssessmentRenderer,
+  }
 
   static styles = [
       css`
