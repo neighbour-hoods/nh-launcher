@@ -8,14 +8,12 @@ import {
 } from '@neighbourhoods/client';
 import { LitElement, PropertyValueMap, css, html } from 'lit';
 import { property, state } from 'lit/decorators.js';
-import { EntryHash, DnaHash, encodeHashToBase64, EntryHashB64, decodeHashFromBase64 } from '@holochain/client';
+import { EntryHash, encodeHashToBase64, EntryHashB64 } from '@holochain/client';
 import { consume } from '@lit/context';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import { DashboardTable } from './dashboard-table';
 import { FieldDefinition } from '@adaburrows/table-web-component';
-import { AssessmentTableRecord, AssessmentTableType, DimensionDict } from '../types';
-import { MatrixStore } from '../../matrix-store';
-import { matrixContext, weGroupContext } from '../../context';
+import { AssessmentTableRecord, AssessmentTableType } from '../types';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import { cleanResourceNameForUI, generateHeaderHTML } from '../../elements/components/helpers/functions';
 import { derived } from 'svelte/store';
@@ -25,14 +23,7 @@ export class DashboardFilterMap extends LitElement {
   @consume({ context: sensemakerStoreContext, subscribe: true })
   @property({attribute: false}) _sensemakerStore!: SensemakerStore;
 
-  @consume({ context: matrixContext, subscribe: true })
-  @property({attribute: false}) _matrixStore!: MatrixStore;
-
-  @consume({ context: weGroupContext, subscribe: true })
-  @property({attribute: false}) weGroupId!: DnaHash;
-
-  @property()
-  _rawAssessments = new StoreSubscriber(
+  @property() _rawAssessments = new StoreSubscriber(
     this,
     () =>  derived(this._sensemakerStore.resourceAssessments(), (assessments) => {
       // Might want to mutate this in some way before returning
@@ -58,13 +49,6 @@ export class DashboardFilterMap extends LitElement {
   // To be fed as props to the dashboard table component
   @property() fieldDefs;
   @property() filteredTableRecords: AssessmentTableRecord[] = [];
-
-  async connectedCallback() {
-    super.connectedCallback();
-    
-    if(!this._rawAssessments?.value) return
-    this.filterMapRawAssessmentsToTableRecords();
-  }
 
   async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     await this.fetchSelectedDimensionEntries();
