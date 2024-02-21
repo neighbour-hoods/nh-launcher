@@ -87,11 +87,12 @@ export function createResourceBlockDelegate(
 export function createOutputAssessmentWidgetDelegate(
   sensemakerStore: SensemakerStore,
   dimensionEh: DimensionEh,
-  resourceEh: ResourceEh
+  resourceEh: ResourceEh,
+  initialAssessment?: Assessment
 ): OutputAssessmentWidgetDelegate {
   const subscribers = new SubscriberManager()
 
-  let assessment: Assessment | undefined
+  let assessment: Assessment | undefined = initialAssessment;
 
   const delegate: OutputAssessmentWidgetDelegate = {
     /**
@@ -103,7 +104,7 @@ export function createOutputAssessmentWidgetDelegate(
         resource_ehs: [resourceEh],
         dimension_ehs: [dimensionEh],
       });
-      return getLatest(assessments)
+      return assessment || getLatest(assessments)
     },
 
     /**
