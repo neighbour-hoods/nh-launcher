@@ -19,6 +19,7 @@ import {
   UnsubscribeFn
 } from "@neighbourhoods/client";
 
+// TODO: refactor this sorting to the Sensemaker store.
 function getLatest(assessments: Record<string, Assessment[]>) {
   const sorted = typeof assessments !== 'undefined'
     ? Object.values(assessments)[0].sort((a: Assessment, b: Assessment) => {
@@ -129,11 +130,12 @@ export function createInputAssessmentWidgetDelegate(
   sensemakerStore: SensemakerStore,
   dimensionEh: DimensionEh,
   resourceDefEh: ResourceDefEh,
-  resourceEh: ResourceEh
+  resourceEh: ResourceEh,
+  initialAssessment?: Assessment
 ): InputAssessmentWidgetDelegate {
   const subscribers = new SubscriberManager()
 
-  let assessment: Assessment | undefined
+  let assessment: Assessment | undefined = initialAssessment;
 
   const delegate: InputAssessmentWidgetDelegate = {
     /**
@@ -145,7 +147,7 @@ export function createInputAssessmentWidgetDelegate(
         resource_ehs: [resourceEh],
         dimension_ehs: [dimensionEh],
       });
-      return getLatest(assessments)
+      return assessment || getLatest(assessments)
     },
 
     /**
