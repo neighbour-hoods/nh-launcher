@@ -1,17 +1,14 @@
-import { InputAssessmentRenderer } from './../../../../libs/app-loader/src/block-renderer/index';
 import {
   Assessment,
-  AssessmentWidgetRenderer,
   AssessmentWidgetRenderers,
   CulturalContext,
   Dimension,
   Method,
-  NHDelegateReceiverConstructor,
   OutputAssessmentWidgetDelegate,
   SensemakerStore,
   sensemakerStoreContext,
 } from '@neighbourhoods/client';
-import { LitElement, PropertyValueMap, css, html } from 'lit';
+import { PropertyValueMap, css, html } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import { EntryHash, encodeHashToBase64, EntryHashB64 } from '@holochain/client';
 import { consume } from '@lit/context';
@@ -22,16 +19,17 @@ import { AssessmentTableRecord, AssessmentTableType } from '../types';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import { cleanResourceNameForUI, generateHeaderHTML } from '../../elements/components/helpers/functions';
 import { derived } from 'svelte/store';
-import { compareUint8Arrays, OutputAssessmentRenderer, createOutputAssessmentWidgetDelegate } from '../../../../libs/app-loader';
+import { compareUint8Arrays, OutputAssessmentRenderer, createOutputAssessmentWidgetDelegate, createInputAssessmentWidgetDelegate, InputAssessmentRenderer } from '../../../../libs/app-loader';
 import { appletInstanceInfosContext } from '../../context';
 import { AppletInstanceInfo } from '../../types';
+import { NHComponent } from '../../../../libs/design-system-components/dist';
 
 type DecoratorProps = {
   renderers: AssessmentWidgetRenderers,
   delegate: OutputAssessmentWidgetDelegate
 }
 
-export class DashboardFilterMap extends LitElement {
+export class DashboardFilterMap extends NHComponent {
   @consume({ context: sensemakerStoreContext, subscribe: true })
   @property({attribute: false}) _sensemakerStore!: SensemakerStore;
 
@@ -42,7 +40,7 @@ export class DashboardFilterMap extends LitElement {
     this,
     () =>  derived(this._currentAppletInstance.store, (applet: AppletInstanceInfo | any) => {
       console.log('applet :>> ', applet);
-      
+      // this.loadedUpstream = true;
       return {...applet}
     }),
     () => [this._currentAppletInstance.value],
@@ -195,7 +193,7 @@ export class DashboardFilterMap extends LitElement {
         renderers: null,
         delegate: null,
       }
-      const delegate = createOutputAssessmentWidgetDelegate(this._sensemakerStore, assessment.dimension_eh, assessment.resource_eh, assessment)
+      const delegate = createInputAssessmentWidgetDelegate(this._sensemakerStore, assessment.dimension_eh, assessment.resource_def_eh, assessment.resource_eh, assessment)
       const renderers = this._currentAppletInstanceRenderers.value;
       return { 
         renderers: renderers?.renderers?.assessmentWidgets,
@@ -212,16 +210,14 @@ export class DashboardFilterMap extends LitElement {
     const baseRecord = {
       neighbour: encodeHashToBase64(assessment.author),
       resource: {
-        eh: [assessment.resource_eh],
-        value: [Object.values(assessment.value)[0], assessment],
+        eh: encodeHashToBase64(assessment.resource_eh),
       },
     } as AssessmentTableRecord;
 
     if (!this._dimensionEntries || !this._currentAppletInstance.value) return baseRecord;
-    const { renderers, delegate } = this.getOutputControlForAssessment(assessment) as any;
 
-console.log('component, delegate :>> ', renderers, delegate);
-delegate?.getLatestAssessment().then(a => console.log('a :>> ', a));
+    const { renderers, delegate } = this.getOutputControlForAssessment(assessment) as any;
+    if(!renderers || !delegate) return baseRecord
 
     for (let dimensionEntry of this._dimensionEntries) {
       if(compareUint8Arrays(assessment.dimension_eh, dimensionEntry.entryHash)) {
@@ -251,15 +247,17 @@ delegate?.getLatestAssessment().then(a => console.log('a :>> ', a));
           ({name}: {name: string}) => ({
             [name]: new FieldDefinition<AssessmentTableRecord>({
               heading: generateHeaderHTML('Assessment', cleanResourceNameForUI(name)),
-              decorator: (value : DecoratorProps) => !!value && value?.renderers && value?.delegate &&
-              typeof console.log('in' , {...value.renderers.heatOutput}, value.delegate) == 'undefined'
-                ? (() => html`
-                  <output-assessment-renderer
-                    .component=${(() => (value.renderers.heatOutput))()}
-                    .nhDelegate=${(() => (value.delegate))()}
-                  ></output-assessment-renderer>
-                `)()
-                : null
+              decorator: (value : DecoratorProps) => {
+                console.log('value :>> ', value);
+                return !!value && value?.renderers && value?.delegate
+                    ? html`
+                      <input-assessment-renderer
+                        .component=${value.renderers.heatAssessment.component}
+                        .nhDelegate=${value.delegate}
+                      ></input-assessment-renderer>
+                    `
+                    : null
+                  }
             }),
           }),
         );
@@ -282,7 +280,6 @@ delegate?.getLatestAssessment().then(a => console.log('a :>> ', a));
   }
 
   render() {
-    console.log('this.filteredTableRecords :>> ', this.filteredTableRecords);
     return html`
       <dashboard-table
         .resourceName=${this.resourceName}
@@ -295,7 +292,7 @@ delegate?.getLatestAssessment().then(a => console.log('a :>> ', a));
   
   static elementDefinitions = { 
     'dashboard-table': DashboardTable,
-    'output-assessment-renderer': InputAssessmentRenderer,
+    'input-assessment-renderer': InputAssessmentRenderer,
   }
 
   static styles = [
