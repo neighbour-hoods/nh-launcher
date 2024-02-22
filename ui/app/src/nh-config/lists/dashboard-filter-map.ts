@@ -39,8 +39,6 @@ export class DashboardFilterMap extends NHComponent {
   @state() _currentAppletInstanceRenderers = new StoreSubscriber(
     this,
     () =>  derived(this._currentAppletInstance.store, (applet: AppletInstanceInfo | any) => {
-      console.log('applet :>> ', applet);
-      // this.loadedUpstream = true;
       return {...applet}
     }),
     () => [this._currentAppletInstance.value],
@@ -248,7 +246,6 @@ export class DashboardFilterMap extends NHComponent {
             [name]: new FieldDefinition<AssessmentTableRecord>({
               heading: generateHeaderHTML('Assessment', cleanResourceNameForUI(name)),
               decorator: (value : DecoratorProps) => {
-                console.log('value :>> ', value);
                 return !!value && value?.renderers && value?.delegate
                     ? html`
                       <input-assessment-renderer
