@@ -1,5 +1,5 @@
 import { html, css, TemplateResult } from 'lit';
-import { property, customElement, state } from 'lit/decorators.js';
+import { property, state } from 'lit/decorators.js';
 import { ref } from "lit/directives/ref.js";
 
 import {
@@ -9,35 +9,37 @@ import {
   Table,
 } from '@adaburrows/table-web-component';
 
-import { SlAlert, SlSkeleton } from '@scoped-elements/shoelace';
-import { NHComponentShoelace } from '@neighbourhoods/design-system-components';
-// import { WithProfile } from './profile/with-profile';
-import { consume } from '@lit/context';
-import { AgentPubKeyB64, DnaHash, encodeHashToBase64 } from '@holochain/client';
-import { matrixContext, weGroupContext } from '../../context';
+import { SlAlert, SlSkeleton, SlSpinner } from '@scoped-elements/shoelace';
+import { NHComponent } from '@neighbourhoods/design-system-components';
+import { AgentPubKeyB64, encodeHashToBase64 } from '@holochain/client';
 import { AssessmentTableRecord, AssessmentTableType, assessmentTableId } from '../types';
-// import { WeGroupContext } from '../../elements/we-group-context';
 import { generateHashHTML, generateHeaderHTML } from '../../elements/components/helpers/functions';
-import { MatrixStore } from '../../matrix-store';
+import { InputAssessmentRenderer, OutputAssessmentRenderer } from '../../../../libs/app-loader';
 
-export class DashboardTable extends NHComponentShoelace {
-  @consume({ context: matrixContext, subscribe: true })
-  @property({ attribute: false })
-  _matrixStore!: MatrixStore;
+export const tableId = 'assessmentsForResource';
 
-  // @consume({ context: weGroupContext, subscribe: true })
-  // @property({ attribute: false })
-  // weGroupId!: DnaHash;
+class BlockRendererTable extends Table {
+  static elementDefinitions = {
+    'output-assessment-renderer': OutputAssessmentRenderer,
+    'input-assessment-renderer': InputAssessmentRenderer,
+  }
+}
 
-  @property() assessments: AssessmentTableRecord[] = [];
-
+export class DashboardTable extends NHComponent {
   @property() tableStore!: TableStore<AssessmentTableRecord>;
+  @property({ type: Array })
+  assessments: AssessmentTableRecord[] = [];
 
-  @property() resourceName!: string;
-  @state() columns: number = 0;
-  @state() loading: boolean = true;
-  @property() contextFieldDefs!: { [x: string]: FieldDefinition<AssessmentTableRecord> };
-  @property() tableType!: AssessmentTableType;
+  @property()
+  resourceName!: string;
+  @state()
+  columns: number = 0;
+  @state()
+  loading: boolean = true;
+  @property()
+  contextFieldDefs!: { [x: string]: FieldDefinition<AssessmentTableRecord> };
+  @property()
+  tableType!: AssessmentTableType;
 
   updateTable() {
     this.tableStore.fieldDefs = this.generateFieldDefs(this.resourceName, this.contextFieldDefs);
@@ -57,10 +59,10 @@ export class DashboardTable extends NHComponentShoelace {
   
   async connectedCallback() {
     super.connectedCallback();
-    
+
     let fieldDefs = this.generateFieldDefs(this.resourceName, this.contextFieldDefs);
     this.tableStore = new TableStore({
-      tableId: assessmentTableId,
+      tableId,
       fieldDefs,
       colGroups: [{ span: 2, class: 'fixedcols' }],
       showHeader: true,
@@ -77,17 +79,6 @@ export class DashboardTable extends NHComponentShoelace {
 
   refMemo = {}
 
-  getRef(resource: any) {
-    if (typeof resource.eh[1] !== 'function') return
-
-    const hashKey = encodeHashToBase64(resource.eh[0])  + resource.value[1].timestamp;
-    // if (this.refMemo[hashKey]) return this.refMemo[hashKey]
-    //TODO rework this to fix bug when implemented.
-    const callback = function(e) { if(!e) return; return resource.eh[1](e, resource.eh[0]) }.bind(this);
-    const myref = ref(callback); 
-    this.refMemo[hashKey] = { callback, ref: myref }
-    return myref
-  }
 
   generateFieldDefs(
     resourceName: string,
@@ -97,20 +88,16 @@ export class DashboardTable extends NHComponentShoelace {
       resource: new FieldDefinition<AssessmentTableRecord>({
         heading: generateHeaderHTML('Resource', resourceName),
         decorator: (resource: any) => {
-          return html`<div
-          style="width: 100%; display: grid;place-content: start center; height: 100%; justify-items: center;"
-          ${this.getRef(resource)}
-        >
-        </div>`},
+          return html`<div style="width: 100%; display: grid;place-content: start center; height: 100%; justify-items: center;">
+            ${generateHashHTML(resource.eh)}
+          </div>`},
       }),
       neighbour: new FieldDefinition<AssessmentTableRecord>({
         heading: generateHeaderHTML('Neighbour', 'Member'),
         decorator: (agentPublicKeyB64: AgentPubKeyB64) => {
-          return html` <div
-          style="width: 100%; display: flex; flex-direction: column; align-items: start; height: 100%; justify-items: center;"
-          >
+          return html` <div style="width: 100%; display: flex; flex-direction: column; align-items: start; height: 100%; justify-items: center;" >
             ${generateHashHTML(agentPublicKeyB64)}
-        </div>`}},
+          </div>`}},
       ),
     };
     return {
@@ -124,22 +111,18 @@ export class DashboardTable extends NHComponentShoelace {
       ? html`<wc-table .tableStore=${this.tableStore}></wc-table>`
       : html`<div class="skeleton-main-container" data-columns=${this.columns}>
       ${Array.from(Array(this.columns)).map(
-
         () => html`<sl-skeleton effect="pulse" class="skeleton-part-header"></sl-skeleton>`,
       )}
       ${Array.from(Array(this.columns * 5)).map(
-
         () => html`<sl-skeleton effect="pulse" class="skeleton-part"></sl-skeleton>`,
       )}
     </div>`;
   }
 
   static elementDefinitions = {
-    'wc-table': Table,
+    'wc-table': BlockRendererTable,
     'sl-alert': SlAlert,
-    // 'we-group-context': WeGroupContext,
     'sl-skeleton': SlSkeleton,
-    // 'with-profile': WithProfile,
   };
 
   static styles = css`
