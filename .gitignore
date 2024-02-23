@@ -13,6 +13,7 @@ web_assets.zip
 DevHub/
 .running
 **/tsconfig.tsbuildinfo
+storybook-static
 
 # Custom holochain binaries
 holochain-v0.0.155-x86_64-unknown-linux-gnu
