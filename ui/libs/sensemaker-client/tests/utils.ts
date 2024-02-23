@@ -7,6 +7,7 @@ import {
   CellInfo,
   ProvisionedCell,
   CellType,
+  fakeEntryHash,
 } from "@holochain/client";
 import {
   Conductor,
@@ -81,7 +82,7 @@ export const installAgent = async (
                         : encodeHashToBase64(agent_key),
                     },
                     applet_configs: with_config
-                      ? [sampleAppletConfig(resource_base_type!)]
+                      ? [await sampleAppletConfig(resource_base_type!)]
                       : [],
                   },
                 },
@@ -139,9 +140,21 @@ export const installAgent = async (
   };
 };
 
-export const sampleAppletConfig = (resource_base_def: AppEntryDef) => {
+export const sampleAppletConfig = async (resource_base_def: AppEntryDef) => {
+
+  const applet_eh = await fakeEntryHash()
+
+  const angryPost = {
+    resource_name: "angryPost",
+    applet_eh,
+    base_types: [resource_base_def],
+    role_name: "test_provider_dna",
+    zome_name: "test_provider",
+  }
+
   let config: AppletConfigInput = {
     name: "sample applet config",
+    applet_eh,
     ranges: [
       { name: "10-scale", kind: { Integer: { min: 0, max: 10 } } },
       { name: "10-scale", kind: { Integer: { min: 0, max: 1000000 } } },
@@ -162,12 +175,7 @@ export const sampleAppletConfig = (resource_base_def: AppEntryDef) => {
       },
     ],
     resource_defs: [
-      {
-        resource_name: "angryPost",
-        base_types: [resource_base_def],
-        role_name: "test_provider_dna",
-        zome_name: "test_provider",
-      },
+      angryPost,
     ],
     methods: [
       {
@@ -197,12 +205,7 @@ export const sampleAppletConfig = (resource_base_def: AppEntryDef) => {
     cultural_contexts: [
       {
         name: "more than 5 total likeness, biggest to smallest",
-        resource_def: {
-          resource_name: "angryPost",
-          base_types: [resource_base_def],
-          role_name: "test_provider_dna",
-          zome_name: "test_provider",
-        },
+        resource_def: angryPost,
         thresholds: [
           {
             dimension: {
@@ -235,12 +238,7 @@ export const sampleAppletConfig = (resource_base_def: AppEntryDef) => {
       },
       {
         name: "more than 5 total likeness, smallest to biggest",
-        resource_def: {
-          resource_name: "angryPost",
-          base_types: [resource_base_def],
-          role_name: "test_provider_dna",
-          zome_name: "test_provider",
-        },
+        resource_def: angryPost,
         thresholds: [
           {
             dimension: {

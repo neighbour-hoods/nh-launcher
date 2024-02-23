@@ -1,4 +1,4 @@
-import { EntryHash, Record } from "@holochain/client";
+import { EntryHash, Record, fakeEntryHash } from "@holochain/client";
 import { pause, runScenario } from "@holochain/tryorama";
 import { setUpAliceandBob } from "../../utils";
 import { ResourceDef, Method, Dimension } from "#client";
@@ -100,6 +100,8 @@ export default () => {
         const rangeEntryRecord = new EntryRecord<Range>(rangeRecord);
         const rangeHash = rangeEntryRecord.entryHash;
 
+        const applet_eh = await fakeEntryHash()
+
         // Create dimensions for resource_defs
         const createDimension = {
           name: "likeness",
@@ -156,17 +158,17 @@ export default () => {
 
         const createResourceDef: ResourceDef = {
           "resource_name": "angryPost",
+          "applet_eh": applet_eh,
           //@ts-ignore
           "base_types": [readPostOutput.signed_action.hashed.content.entry_type.App],
-          "dimension_ehs": [createDimensionEntryHash],
           "role_name": "test_provider_dna",
           "zome_name": "provider",
         }
         const createResourceDef2: ResourceDef = {
           "resource_name": "happyPost",
+          "applet_eh": applet_eh,
           //@ts-ignore
           "base_types": [readPostOutput.signed_action.hashed.content.entry_type.App],
-          "dimension_ehs": [createDimensionEntryHash2],
           "role_name": "test_provider_dna",
           "zome_name": "provider",
         }

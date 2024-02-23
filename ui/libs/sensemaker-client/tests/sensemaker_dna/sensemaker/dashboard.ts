@@ -117,7 +117,7 @@ export default () => {
         );
 
         let app_entry_def: AppEntryDef = { entry_index: 0, zome_index: 0, visibility: { Public: null } };
-        const appletConfigInput = sampleAppletConfig(app_entry_def)
+        const appletConfigInput = await sampleAppletConfig(app_entry_def)
         const createAppletConfigInput: AppletConfigInput = appletConfigInput;
         const appletConfig: AppletConfig = await callZomeAlice(
           "sensemaker",

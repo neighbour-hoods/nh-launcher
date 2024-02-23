@@ -1,4 +1,4 @@
-import { DnaSource, Record, ActionHash, EntryHash } from "@holochain/client";
+import { DnaSource, Record, ActionHash, EntryHash, fakeEntryHash } from "@holochain/client";
 import { pause, runScenario, cleanAllConductors, createConductor, addAllAgentsToAllConductors } from "@holochain/tryorama";
 import { decode } from '@msgpack/msgpack';
 import pkg from 'tape-promise/tape';
@@ -42,6 +42,8 @@ export default () => test("test CA progenitor pattern", async (t) => {
 
         await scenario.shareAllAgents();
         await pause(pauseDuration)
+
+        const applet_eh = await fakeEntryHash()
 
         // create an entry type in the provider DNA
         const createPost = {
@@ -109,9 +111,9 @@ export default () => test("test CA progenitor pattern", async (t) => {
 
         const createResourceDef: ResourceDef = {
             "resource_name": "angryPost",
+            "applet_eh": applet_eh,
             //@ts-ignore
             "base_types": [readPostOutput.signed_action.hashed.content.entry_type.App],
-            "dimension_ehs": [createDimensionEntryHash],
             "role_name": "test_provider_dna",
             "zome_name": "provider",
         }

@@ -5,6 +5,7 @@ import {
   EntryHash,
   EntryHashB64,
   encodeHashToBase64,
+  fakeEntryHash,
 } from "@holochain/client";
 import {
   pause,
@@ -89,6 +90,8 @@ export default () => {
         const pauseDuration = 1000;
         await scenario.shareAllAgents();
         await pause(pauseDuration);
+
+        const applet_eh = await fakeEntryHash()
 
         // create an entry type in the provider DNA
         const createPost = {
@@ -201,12 +204,12 @@ export default () => {
 
         const createResourceDef: ResourceDef = {
           resource_name: "angryPost",
+          applet_eh,
           //@ts-ignore
           base_types: [
             //@ts-ignore
             readPostOutput.signed_action.hashed.content.entry_type.App,
           ],
-          dimension_ehs: [createDimensionEntryHash],
           role_name: "test_provider_dna",
           zome_name: "provider",
         };
@@ -550,6 +553,8 @@ export default () => {
         await scenario.shareAllAgents();
         await pause(pauseDuration);
 
+        const applet_eh = await fakeEntryHash()
+
         // create an entry type in the provider DNA
         const createPost = {
           title: "post 1",
@@ -648,12 +653,12 @@ export default () => {
 
         const createResourceDef: ResourceDef = {
           resource_name: "angryPost",
+          applet_eh,
           //@ts-ignore
           base_types: [
             //@ts-ignore
             readPostOutput.signed_action.hashed.content.entry_type.App,
           ],
-          dimension_ehs: [createDimensionEntryHash],
           role_name: "test_provider_dna",
           zome_name: "provider",
         };
@@ -1191,6 +1196,8 @@ export default () => {
         await scenario.shareAllAgents();
         await pause(pauseDuration);
 
+        const applet_eh = await fakeEntryHash()
+
         // create an entry type in the provider DNA
         const createPost = {
           title: "Intro",
@@ -1257,12 +1264,12 @@ export default () => {
 
         const createResourceDef: ResourceDef = {
           resource_name: "angryPost",
+          applet_eh,
           //@ts-ignore
           base_types: [
             //@ts-ignore
             { entry_index: 0, zome_index: 0, visibility: { Public: null } },
           ],
-          dimension_ehs: [createDimensionEntryHash, createDimensionEntryHash2],
           role_name: "test_provider_dna",
           zome_name: "provider",
         };
@@ -1448,6 +1455,8 @@ export default () => {
         await scenario.shareAllAgents();
         await pause(pauseDuration);
 
+        const applet_eh = await fakeEntryHash()
+
         // create an entry type in the provider DNA
         const createPost = {
           title: "Intro",
@@ -1514,12 +1523,12 @@ export default () => {
 
         const createResourceDef: ResourceDef = {
           resource_name: "angryPost",
+          applet_eh,
           //@ts-ignore
           base_types: [
             //@ts-ignore
             { entry_index: 0, zome_index: 0, visibility: { Public: null } },
           ],
-          dimension_ehs: [createDimensionEntryHash, createDimensionEntryHash2],
           role_name: "test_provider_dna",
           zome_name: "provider",
         };

@@ -1,4 +1,4 @@
-import { Action, AppEntryDef, Create, EntryHash, Record } from "@holochain/client";
+import { Action, AppEntryDef, Create, EntryHash, Record, fakeEntryHash } from "@holochain/client";
 import { cleanAllConductors, pause, runScenario } from "@holochain/tryorama";
 import {
   AppletConfig,
@@ -55,6 +55,8 @@ export default () =>
             try {
                 await scenario.shareAllAgents();
                 await pause(500);
+
+                const applet_eh = await fakeEntryHash()
 
                 const integerRange: Range = {
                     "name": "1-scale",
@@ -137,6 +139,7 @@ export default () =>
                 // const resourceDef: ResourceDef = {
                 const resourceDef: ResourceDef = {
                     resource_name: "task_item",
+                    applet_eh,
                     base_types: [app_entry_def],
                     role_name: "test_provider_dna",
                     zome_name: "test_provider",
@@ -146,6 +149,7 @@ export default () =>
                 // const configResourceDef: ConfigResourceDef = {
                 const configResourceDef: ConfigResourceDef = {
                     resource_name: resourceDef.resource_name,
+                    applet_eh,
                     base_types: resourceDef.base_types,
                     role_name: resourceDef.role_name,
                     zome_name: resourceDef.zome_name,
@@ -225,6 +229,7 @@ export default () =>
                 // create a config type
                 const appletConfig: AppletConfig = {
                     name: "todo",
+                    applet_eh,
                     ranges: {
                         "1-scale": rangeHash,
                         "1-scale-total": rangeHash2
@@ -241,6 +246,7 @@ export default () =>
 
                 const appletConfigInput: AppletConfigInput = {
                     name: appletConfig.name,
+                    applet_eh,
                     ranges: [integerRange, integerRange2],
                     dimensions: [configDimension, configObjectiveDimension],
                     resource_defs: [configResourceDef],
