@@ -25,11 +25,11 @@ export default class NHGlobalConfig extends NHComponent {
   @consume({ context: matrixContext, subscribe: true })
   @property({ attribute: false })
   _matrixStore!: MatrixStore;
-  
+
   @consume({ context: weGroupContext, subscribe: true })
   @property({ attribute: false })
   weGroupId!: DnaHash;
-  
+
   @provide({ context: appletContext }) @property({attribute: false})
   currentAppletInstanceEh!: string;
 
@@ -44,7 +44,7 @@ export default class NHGlobalConfig extends NHComponent {
     }),
     () => [this.loaded],
   );
-  
+
   @provide({ context: resourceDefContext })
   @property()
   selectedResourceDef!: object | undefined;
@@ -56,7 +56,7 @@ export default class NHGlobalConfig extends NHComponent {
   @state() loaded : boolean = false;
 
   private _resourceDefEntries: Array<ResourceDef> = [];
-  
+
   _neighbourhoodInfo = new StoreSubscriber(
     this,
     () => provideWeGroupInfo(this._matrixStore, this.weGroupId),
@@ -66,7 +66,7 @@ export default class NHGlobalConfig extends NHComponent {
   _nhName!: string;
 
   @state() _page?: ConfigPage = ConfigPage.DashboardOverview;
-  
+
   @query('nh-menu') _menu?: NHMenu;
 
   protected async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
@@ -92,7 +92,7 @@ export default class NHGlobalConfig extends NHComponent {
     if(changedProperties.has('weGroupId')) {
       if(!this._sensemakerStore.value) return
       const result = await this._sensemakerStore.value.getResourceDefs()
-      this._resourceDefEntries = removeResourceNameDuplicates(result.map((entryRec) => ({...entryRec.entry, resource_def_eh: entryRec.entryHash}))); // This de-duplicates resources with the same name from other applets (including uninstalled) 
+      this._resourceDefEntries = removeResourceNameDuplicates(result.map((entryRec) => ({...entryRec.entry, resource_def_eh: entryRec.entryHash}))); // This de-duplicates resources with the same name from other applets (including uninstalled)
     }
   }
 
@@ -105,7 +105,7 @@ export default class NHGlobalConfig extends NHComponent {
       case ConfigPage.Widgets:
         return html`<assessment-widget-config .resourceDef=${this.selectedResourceDef}></assessment-widget-config>`;
       default:
-        return html`Default Page`;
+        return html`<p>Coming Soon</p>`;
     }
   }
 
@@ -142,7 +142,7 @@ export default class NHGlobalConfig extends NHComponent {
               this.selectedResourceDef = undefined;
               return;
             }; // Only current active main menu item is Sensemaker, but you can change this later
-            
+
             // THIS RELIES ON THE SAME ORDERING/INDEXING OCCURRING IN `this._resourceDefEntries` AS IN THE RENDERED SUBMENUS for ['Sensemaker', "Neighbourhood"], and may need to be changed
             this.selectedResourceDef = this._resourceDefEntries[subMenuItemIndex]
           }
@@ -154,16 +154,11 @@ export default class NHGlobalConfig extends NHComponent {
                 {
                   label: 'Overview',
                   subSectionMembers: this._resourceDefEntries.map(rd =>  cleanForUI(rd.resource_name)),
-                  callback: () => { 
+                  callback: () => {
                       this.selectedResourceDef = this._resourceDefEntries[0];
                       if(this?._menu) this!._menu!.selectedMenuItemId = "Neighbourhood" + "-0-0"; // pick the first resource as a default
                       this._page = ConfigPage.DashboardOverview
                     }
-                },
-                {
-                  label: 'Roles',
-                  subSectionMembers: [],
-                  callback: () => (this._page = undefined),
                 },
               ],
             },
@@ -206,9 +201,14 @@ export default class NHGlobalConfig extends NHComponent {
                   subSectionMembers: [],
                   callback: () => (this._page = undefined),
                 },
+                {
+                  label: 'Roles',
+                  subSectionMembers: [],
+                  callback: () => (this._page = undefined),
+                },
               ],
             }]))()
-          } 
+          }
           .selectedMenuItemId=${'Neighbourhood' + '-0-0' // This is the default selected item
         }
         >
@@ -263,7 +263,7 @@ export default class NHGlobalConfig extends NHComponent {
         display: flex;
         align-items: start;
       }
-      
+
       slot[name='page'] {
         grid-column: 2 / -2;
         display: flex;
