@@ -109,6 +109,7 @@ pub fn create_entries_from_applet_config(
 
     let applet_config = AppletConfig {
         name: config.name,
+        applet_eh: config.applet_eh,
         ranges,
         dimensions,
         resource_defs: resource_defs.clone(),

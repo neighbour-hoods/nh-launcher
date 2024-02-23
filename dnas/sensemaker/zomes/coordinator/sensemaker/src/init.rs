@@ -13,7 +13,7 @@ pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
         (),
     )?;
 
-    // set up capability grants to allow for remote signals    
+    // set up capability grants to allow for remote signals
     let mut functions = BTreeSet::new();
     functions.insert((zome_info()?.name, FunctionName("recv_remote_signal".into())));
     let cap_grant_entry: CapGrantEntry = CapGrantEntry::new(

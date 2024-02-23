@@ -11,6 +11,8 @@ use crate::{
 #[derive(Clone)]
 pub struct AppletConfig {
     pub name: String,
+    // This is the AppletID EntryHash from the AppletInstanceInfo[]
+    pub applet_eh: EntryHash,
     pub ranges: BTreeMap<String, EntryHash>,
     pub dimensions: BTreeMap<String, EntryHash>,
     // the base_type field in ResourceDef needs to be bridged call
@@ -22,6 +24,8 @@ pub struct AppletConfig {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct AppletConfigInput {
     pub name: String,
+    // This is the AppletID EntryHash from the AppletInstanceInfo[]
+    pub applet_eh: EntryHash,
     pub ranges: Vec<Range>,
     pub dimensions: Vec<ConfigDimension>,
     // the base_type field in ResourceDef needs to be bridged call
@@ -90,6 +94,8 @@ impl ConfigDimension {
 #[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 pub struct ConfigResourceDef {
     pub resource_name: String,
+    // This is the AppletID EntryHash from the AppletInstanceInfo[]
+    pub applet_eh: EntryHash,
     pub base_types: Vec<AppEntryDef>,
     pub role_name: String,
     pub zome_name: String,

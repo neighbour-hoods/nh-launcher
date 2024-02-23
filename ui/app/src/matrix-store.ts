@@ -41,6 +41,7 @@ import {
 import {
   AppBlockDelegate,
   AppletRenderers,
+  AppletConfigInput,
   AssessmentWidgetRegistrationInput,
   DimensionEh,
   InputAssessmentWidgetDelegate,
@@ -295,6 +296,21 @@ export class MatrixStore {
     }
   }
 
+  public async initializeAppWebsocket(appInstanceInfo: AppletInstanceInfo) {
+    // Check if the applets app agent websocket has been instantiated yet
+    if (!appInstanceInfo.appAgentWebsocket) {
+      //instantiate the websocket
+      appInstanceInfo.appAgentWebsocket = await getAppAgentWebsocket(appInstanceInfo.appInfo.installed_app_id);
+
+      // authorize signing credentials for all cells in the applet happ
+      for (const roleName in appInstanceInfo.appInfo.cell_info) {
+        for (const cellInfo of appInstanceInfo.appInfo.cell_info[roleName]) {
+          await this.adminWebsocket.authorizeSigningCredentials(getCellId(cellInfo)!);
+        }
+      }
+    }
+  }
+
   /**
    * Fetches the AppletRenderers for an applet instance
    *
@@ -320,29 +336,14 @@ export class MatrixStore {
     // Get Neighbourhood id
     // XXX: This seems like a very round-about way of getting the weGroupId, especially since
     // we get the same data we get from the matrix one step later.
+    // It seems like we should have a way to tell what group is selected. Perhaps this will
+    // be taken care of when we improve state management.
     const weGroupId = dnaHash(this.getWeGroupInfoForAppletInstance(appletInstanceId).cell_id);
     const appInstanceInfo = get(this._matrix).get(weGroupId)[1].find(
       info => compareUint8Arrays(info.appletId, appletInstanceId)
     )!;
-
-    // XXX: This doesn't need to happen here, it should happen when the delegate is fetched
-    // Check if the applets app agent websocket has been instantiated yet
-    let appletAppAgentWebsocket: AppAgentClient;
-    if (!appInstanceInfo.appAgentWebsocket) {
-      //instantiate the websocket
-      appletAppAgentWebsocket = await getAppAgentWebsocket(appInstanceInfo.appInfo.installed_app_id);
-      appInstanceInfo.appAgentWebsocket = appletAppAgentWebsocket;
-
-      // authorize signing credentials for all cells in the applet happ
-      for (const roleName in appInstanceInfo.appInfo.cell_info) {
-        for (const cellInfo of appInstanceInfo.appInfo.cell_info[roleName]) {
-          await this.adminWebsocket.authorizeSigningCredentials(getCellId(cellInfo)!);
-        }
-      }
-    }
-    else {
-      appletAppAgentWebsocket = appInstanceInfo.appAgentWebsocket;
-    }
+    // Initialize the app websocket if it is not already built.
+    await this.initializeAppWebsocket(appInstanceInfo)
 
     // Build the Renderers Object
     const renderers: NeighbourhoodAppletRenderers = {
@@ -1048,6 +1049,7 @@ export class MatrixStore {
 
         await this.registerAppletWithSensemaker(
           weGroupId,
+          appletInstanceId,
           installedAppId,
           applet.devhubHappReleaseHash
         );
@@ -1168,6 +1170,7 @@ export class MatrixStore {
 
       await this.registerAppletWithSensemaker(
         weGroupId,
+        appletInstanceId,
         installedAppId,
         applet.devhubHappReleaseHash
       );
@@ -1630,16 +1633,21 @@ export class MatrixStore {
     return appletInstanceId
   }
 
-  async registerAppletWithSensemaker(weGroupId: DnaHash, installedAppId: string, devhubHappReleaseHash: DnaHash) {
-    const applet = await this.queryAppletGui(devhubHappReleaseHash);
+  async registerAppletWithSensemaker(weGroupId: DnaHash, appletEh: EntryHash, installedAppId: string, devhubHappReleaseHash: DnaHash) {
+    const applet = await this.queryAppletGui(devhubHappReleaseHash)
 
-    const appletConfig = applet.appletConfig;
-    appletConfig.name = installedAppId;
+    // Get and munge applet config to ensure it has the proper applet_eh entries.
+    const appletConfig = applet.appletConfig as AppletConfigInput;
+    appletConfig.name = installedAppId
+    appletConfig.applet_eh = appletEh
+    appletConfig.resource_defs.forEach((resourceDef) => {
+      resourceDef.applet_eh = appletEh
+    })
 
     const sensemakerStore = get(this.sensemakerStore(weGroupId));
     if (sensemakerStore) {
-      const registrationActions: Array<()=>Promise<AssessmentWidgetRegistrationInput>> = []
       try {
+        const registrationActions: Array<()=>Promise<AssessmentWidgetRegistrationInput>> = []
         const registeredConfig = await sensemakerStore.registerApplet(appletConfig);
         // console.log('registeredConfig', registeredConfig)
         // console.log('registering widgets to SM store')
@@ -1655,10 +1663,10 @@ export class MatrixStore {
           }
           registrationActions.push(() => sensemakerStore.registerWidget(registration))
         }
+        serializeAsyncActions(registrationActions);
       } catch (e) {
         console.error(e)
       }
-      serializeAsyncActions(registrationActions);
     }
   }
 
@@ -1666,13 +1674,14 @@ export class MatrixStore {
     const [weGroupData, appletInstanceInfos] = get(this._matrix).get(weGroupId);
     // initalize assessment data
     await weGroupData.sensemakerStore.getAssessmentsForResources({});
-    // loop through each applet in the group
-    serializeAsyncActions<NeighbourhoodAppletRenderers>(appletInstanceInfos.map((appletInstanceInfo) => { return () => this.fetchAppletInstanceRenderers(appletInstanceInfo.appletId)} ))
-    serializeAsyncActions<void>(appletInstanceInfos.map((appletInstanceInfo) => { return () => this.registerAppletWithSensemaker(
-      weGroupId,
-      appletInstanceInfo.appInfo.installed_app_id,
-      appletInstanceInfo.applet.devhubHappReleaseHash
-    )} ))
+    // load all renderers from all applets in all all groups
+    serializeAsyncActions<NeighbourhoodAppletRenderers>(
+      appletInstanceInfos.map(
+        (appletInstanceInfo) => {
+          return () => this.fetchAppletInstanceRenderers(appletInstanceInfo.appletId)
+        }
+      )
+    )
   }
 
   getResourceView(weGroupId: DnaHash, resourceDefEh: EntryHash) {

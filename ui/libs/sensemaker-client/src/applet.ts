@@ -17,18 +17,11 @@ export type NeighbourhoodInfo = {
 }
 
 /**
- * Combination of We app info and Neighbourhood info.
- */
-export type AppletInfo = {
-  neighbourhoodInfo: NeighbourhoodInfo,
-  appInfo: AppInfo,
-}
-
-/**
  * Applet config as it exists in the SensemakerStore
  */
 export interface AppletConfig {
   name: string,
+  applet_eh: EntryHash,
   ranges: {
     [rangeName: string]: EntryHash,
   },
@@ -51,6 +44,7 @@ export interface AppletConfig {
  */
 export interface AppletConfigInput {
   name: string;
+  applet_eh: EntryHash;
   resource_defs: Array<ConfigResourceDef>;
   // This is going to be changed when we figure out how contexts are configured by the CA
   cultural_contexts: Array<ConfigCulturalContext>;
