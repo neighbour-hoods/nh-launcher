@@ -5,7 +5,6 @@ import { property, state } from 'lit/decorators.js';
 import { AppletConfig, ComputeContextInput, SensemakerStore, sensemakerStoreContext } from '@neighbourhoods/client';
 import { consume } from '@lit/context';
 import { NHButton, NHButtonGroup, NHComponent } from '@neighbourhoods/design-system-components';
-import { matrixContext } from '../context';
 import { get } from 'svelte/store';
 
 export default class NHContextSelector extends NHComponent {
@@ -20,7 +19,10 @@ export default class NHContextSelector extends NHComponent {
   @property() resourceAssessments = new StoreSubscriber(this, () => this.sensemakerStore.resourceAssessments());
     
   protected async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
+    if(!this.selectedAppletInstanceId || this.selectedAppletInstanceId == '') return
     const maybe_config = await this.sensemakerStore.checkIfAppletConfigExists(this.selectedAppletInstanceId);
+    console.log('this.selectedAppletInstanceId :>> ', this.selectedAppletInstanceId);
+    console.log('maybe_config :>> ', maybe_config);
     if(maybe_config) this.config = maybe_config
   }
 
