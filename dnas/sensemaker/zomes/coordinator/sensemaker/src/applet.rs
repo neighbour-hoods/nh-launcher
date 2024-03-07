@@ -16,7 +16,9 @@ pub fn register_applet(
     applet_config_input: AppletConfigInput
 ) -> ExternResult<AppletConfig> {
     // check the format of the applet config
-    applet_config_input.clone().check_format()?;
+    if let Err(err) = applet_config_input.clone().check_format() {
+        debug!("Config format incorrect: {:?}", err)
+    }
     // check that it doesn't already exist
     let maybe_applet_config = check_if_applet_config_exists(applet_config_input.name.clone())?;
     if let Some(applet_config) = maybe_applet_config {
