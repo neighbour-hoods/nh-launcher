@@ -40,6 +40,13 @@ class TestRoot extends NHComponent implements CardProps {
       auctor vitae viverra et, consequat vulputate felis. Integer congue leo
       quis urna vestibulum varius. Duis vehicula ligula id leo.`}
     </p>
+    ${this.hasContextMenu
+      ? html`<div class="action-buttons" slot="context-menu" style="display: flex; gap: 2px; flex-direction: column;">
+          <nh-button .variant=${'warn'} .size=${'icon-sm'} .iconImageB64=${b64images.icons.refresh} @click=${() => { console.log('Clicked!') }}></nh-button>
+          <nh-button .variant=${'danger'} .size=${'icon-sm'} .iconImageB64=${b64images.icons.backCaret} @click=${() => { console.log('Clicked!') }}></nh-button>
+        </div> 
+        `
+      : null}
     ${this.hasWidget && !this.hasPrimaryAction
       ? html`<div slot="footer">
           ${(Icon as any).render({

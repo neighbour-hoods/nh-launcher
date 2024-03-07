@@ -63,7 +63,6 @@ export abstract class NHBaseForm extends NHComponentShoelace {
 
   protected async handleSubmit(e?: Event) {
     e?.preventDefault && e.preventDefault();
-    
     const isValid = await this.validateForm();
     this.formWasSubmitted = true;
     if (this.isFormUntouched()) { 
@@ -115,7 +114,7 @@ export abstract class NHBaseForm extends NHComponentShoelace {
   }
 
   protected resetInputs(): void {
-    ((this as LitElement).renderRoot.querySelectorAll('nh-text-input, nh-radio-group, nh-select') as any)?.forEach((input: any) => {
+    ((this as LitElement).renderRoot.querySelectorAll('nh-text-input, nh-radio-group, nh-select, nh-textarea') as any)?.forEach((input: any) => {
       input?.reset();
     })
   }
@@ -133,14 +132,14 @@ export abstract class NHBaseForm extends NHComponentShoelace {
   }
 
   highlightUntouchedFields() {
-    ((this as LitElement).renderRoot.querySelectorAll('nh-text-input, nh-radio-group, nh-select') as any)?.forEach((input: SlInput) => {
+    ((this as LitElement).renderRoot.querySelectorAll('nh-text-input, nh-radio-group, nh-select, nh-textarea') as any)?.forEach((input: SlInput) => {
       if(this.touched[input?.name || input!.dataset.name || ''] === false) input.classList.add('untouched');
       // Fields not in the model will fail escape early from the above
     })
   }
 
   enableAllFields() {
-    ((this as LitElement).renderRoot.querySelectorAll('sl-input, nh-radio-group, nh-select') as any)?.forEach((input: SlInput) => {
+    ((this as LitElement).renderRoot.querySelectorAll('sl-input, nh-radio-group, nh-select, nh-textarea') as any)?.forEach((input: SlInput) => {
       if(input.disabled = true) input.disabled = false;
     })
   }

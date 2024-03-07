@@ -76,14 +76,25 @@ export default class NHButtonGroup extends NHComponent {
       :host {
         grid-column: 1 / -1;
       }
+      
       .container.vertical {
         max-width: 50vw;
         flex-wrap: wrap;
         justify-content: center;
       }
-      .container.horizontal {
-        justify-content: start;
+
+      .content,
+      :host(.justify-left) .content  {
+        justify-content: flex-start;
       }
+      
+      :host(.justify-right) .content {
+        justify-content: flex-end;
+      }
+      :host(.justify-center) .content {
+        justify-content: center;
+      }
+
       .container,
       .content {
         display: flex;
@@ -117,14 +128,17 @@ export default class NHButtonGroup extends NHComponent {
         gap: calc(1px * var(--nh-spacing-sm));
         align-items: center;
       }
-      .content.vertical {
-        flex-direction: column;
-      }
 
       /* Actions */
 
-      ::slotted([slot="actions"]) {
+      ::slotted([slot="buttons"]) {
+        display: flex;
+        gap: .5rem;
       }
+      .content.vertical ::slotted([slot="buttons"]) {
+        flex-direction: column;
+      }
+
       ::slotted([slot="exta-item"]) {
       }
     `,

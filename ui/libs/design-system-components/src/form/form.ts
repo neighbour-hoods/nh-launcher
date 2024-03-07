@@ -7,13 +7,13 @@ import NHSelect, { OptionConfig } from '../input/select';
 import NHButton from '../button';
 import NHTooltip from '../tooltip';
 import NHCard from '../card';
-import { NHTextInput, NHCheckbox } from '../input';
+import { NHTextInput, NHCheckbox, NHTextArea } from '../input';
 import NHRadioGroup from '../input/radiogroup';
 import NHAlert from '../alert';
 
 // Define the interface for the field configuration
 interface BaseFieldConfig {
-  type: 'text' | 'select' | 'checkbox' | 'radio-group';
+  type: 'text' | 'select' | 'checkbox' | 'radio-group'| 'textarea';
   name: string;
   id?: string;
   size?: 'small' | 'medium' | 'large';
@@ -111,7 +111,7 @@ export default class NHForm extends NHBaseForm {
   }
 
   protected updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    if (changedProperties.has('config') && this.config?.submitBtnRef && !this.config?.submitBtnRef?.dataset?.bound) {
+    if (changedProperties.has('config') && this.config.submitBtnLabel || (this.config?.submitBtnRef && !this.config?.submitBtnRef?.dataset?.bound)) {
       this.bindSubmitHandler()
     }
   }
@@ -126,21 +126,17 @@ export default class NHForm extends NHBaseForm {
       console.error('Could not unbind your submit button handler.');
       return;
     }
-    this.config.submitBtnRef.removeEventListener('click', this.ifSubmitBtnBoundSubmit)
-  }
-
-  private ifSubmitBtnBoundSubmit() {
-    if(!(this?.submitBtn?.dataset?.bound == 'true')) return
-    this.handleSubmit.bind(this)
+    this.config.submitBtnRef.removeEventListener('click', this.handleSubmit.bind(this))
   }
 
   private bindSubmitHandler() {
-    if(!this.config?.submitBtnRef) {
+    if(!this.submitButton) {
       console.error('Could not bind your submit button handler.');
       return 
     }
-    (this.config.submitBtnRef as NHButton).addEventListener('click', this.ifSubmitBtnBoundSubmit);
-    this.config.submitBtnRef.dataset.bound = 'true'
+    if(this.submitButton.dataset.bound == 'true') return;
+    (this.submitButton as NHButton).addEventListener('click', this.handleSubmit.bind(this));
+    this.submitButton.dataset.bound = 'true'
   }
 
   private get submitButton() {
@@ -177,8 +173,15 @@ export default class NHForm extends NHBaseForm {
     this.submitButton.requestUpdate("loading");
     try {
       await this.config?.submitOverload?.call(null, this._model);
+      this.reset();
+      this.dispatchEvent(
+        new CustomEvent('submit-successful', {
+          bubbles: true,
+          composed: true,
+        })
+      )
     } catch(err) {
-      this._formErrorMessage = err as string;
+      console.error(err)
       this._formErrorMessage = "We couldn't store your data. If this happens again, please log an issue with the Neighbourhoods team, including the message logged in the developer console.";
       this.handleFormError();
     }
@@ -198,6 +201,7 @@ export default class NHForm extends NHBaseForm {
       <form method="post" action="" autocomplete="off">
         ${this.renderFormLayout()}
       </form>
+
       <nh-button class="${classMap({
           ['button-provided']: !!this.config.submitBtnRef,
         })}"
@@ -205,9 +209,9 @@ export default class NHForm extends NHBaseForm {
         type="submit"
         .size=${'auto'}
         .variant=${'primary'}
-        @click=${() => this.ifSubmitBtnBoundSubmit()}
         .loading=${false}
       >${this.config?.submitBtnLabel || "Submit"}</nh-button>
+
       <nh-alert
         .open=${false}
         .closable=${true}
@@ -296,6 +300,22 @@ export default class NHForm extends NHBaseForm {
               @change=${(e: Event) => this.handleInputChange(e)}
             ></nh-text-input>
           </nh-tooltip>`;
+      case "textarea":
+        return html`
+          <nh-tooltip .visible=${this.shouldShowValidationErrorForField(fieldConfig.name)} .text=${this.getErrorMessage(fieldConfig.name)} .variant=${"danger"}>
+            <nh-textarea
+              slot="hoverable"
+              .errored=${this.shouldShowValidationErrorForField(fieldConfig.name)}
+              .size=${fieldConfig.size}
+              .required=${fieldConfig.required}
+              id=${fieldConfig.id}
+              .name=${fieldConfig.name}
+              .placeholder=${fieldConfig.placeholder}
+              .label=${fieldConfig.label}
+              .value=${(this as any)._model[fieldConfig.name as any]}
+              @change=${(e: Event) => this.handleInputChange(e)}
+            ></nh-textarea>
+          </nh-tooltip>`;
       case "select":
         return html`
           <nh-tooltip
@@ -376,6 +396,7 @@ export default class NHForm extends NHBaseForm {
     'nh-checkbox': NHCheckbox,
     'nh-select': NHSelect,
     'nh-text-input': NHTextInput,
+    'nh-textarea': NHTextArea,
     'nh-radio-group': NHRadioGroup,
     'nh-tooltip': NHTooltip,
     'nh-alert': NHAlert,

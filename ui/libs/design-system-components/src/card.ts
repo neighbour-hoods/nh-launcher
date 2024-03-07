@@ -1,8 +1,9 @@
 import { css, CSSResult, html, TemplateResult } from "lit";
-import {property } from "lit/decorators.js";
+import {property, query, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { NHComponentShoelace } from "./ancestors/base";
 import "./button-group";
+import NHButtonGroup from "./button-group";
 
 export default class NHCard extends NHComponentShoelace {
   @property()
@@ -22,6 +23,16 @@ export default class NHCard extends NHComponentShoelace {
   @property()
   footerAlign: "l" | "r" | "c" = "c";
 
+  @state() contextMenuVisible: boolean = false;
+
+  toggleContextMenu () {  
+    this.contextMenuVisible = !this.contextMenuVisible;
+    (this.renderRoot.querySelector(".context-menu") as HTMLElement).dataset.open = 'true';
+  }
+  
+  @query(".context-menu-dots")
+  _contextMenu : any;
+
   render() : TemplateResult {
     return html`
       <div
@@ -34,17 +45,23 @@ export default class NHCard extends NHComponentShoelace {
           'footer-center': this.footerAlign === 'c',
         })}"
       >
-        ${this.hasContextMenu
-          ? html`<nav class="dots-context-menu">
-              <div class="menu-dot"></div>
-              <div class="menu-dot"></div>
-              <div class="menu-dot"></div>
-            </nav>`
-          : html``}
+      ${this.hasContextMenu
+        ? html`<div class="context-menu" data-open=${this.contextMenuVisible}>
+                <div class="context-menu-dots" @click=${() => {this.toggleContextMenu()}} >
+                  <div class="menu-dot"></div>
+                  <div class="menu-dot"></div>
+                  <div class="menu-dot"></div>
+                </div>
+                <nh-button-group role="navigation" .direction=${"vertical "}>
+                  <slot slot="buttons" name="context-menu"></slot>
+                </nh-button-group>
+              </div>`
+        : null }
+
         <slot name="header">
-          ${this.title ? html`<h2 class="title">${this.title}</h2>` : html``}
-          ${this.heading ? html`<h1>${this.heading}</h1>` : html``}
-          ${this.subheading ? html`<h3>${this.subheading}</h3>` : html``}
+          ${this.title ? html`<h2 class="title">${this.title}</h2>` : null}
+          ${this.heading ? html`<h1>${this.heading}</h1>` : null}
+          ${this.subheading ? html`<h3>${this.subheading}</h3>` : null}
         </slot>
         <div
           class="content${classMap({
@@ -57,6 +74,12 @@ export default class NHCard extends NHComponentShoelace {
       </div>
     `;
   }
+
+
+  static elementDefinitions = {
+    'nh-button-group': NHButtonGroup,
+  }
+
 
   static styles: CSSResult[] = [
     css`
@@ -93,6 +116,10 @@ export default class NHCard extends NHComponentShoelace {
       box-sizing: border-box;
       padding: 15%;
     }
+    
+    .content {
+      margin-right: 1.5rem;
+    }
 
     .container.light {
       background-color: var(--nh-theme-bg-detail);
@@ -114,7 +141,70 @@ export default class NHCard extends NHComponentShoelace {
     :host(.transparent) .container {
       background-color: transparent;
     }
+
+    /* Context Menu */
+    div.context-menu {
+      overflow: inherit;
+      position: absolute;
+      right: -20px;
+      top: 0px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: transparent;
+      border: 1px solid transparent;
+    }
+    .context-menu nh-button-group {
+      transition: opacity 0.3s ease-in-out;
+      border: 1px solid transparent;
+      position: relative;
+      left: -30px;
+      top: 42px;
+      outline: 1px solid var(--nh-theme-accent-disabled);
     
+    }
+    .context-menu[data-open=true] nh-button-group {
+      border-radius: calc(1px * var(--nh-radii-md));
+    }
+    .context-menu[data-open=false] nh-button-group {
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .context-menu-dots {
+      cursor: pointer;
+      display: flex;
+      width: 32px;
+      height: 16px;
+      position: absolute;
+      right: 1.5rem;
+      top: 0.5rem;
+      justify-content: center;
+      align-items: center;
+      border-radius: calc(1px * var(--nh-radii-lg));
+      padding: 4px;
+    }
+
+    .context-menu[data-open=true] .context-menu-dots {
+      background: var(--nh-theme-accent-disabled);
+    }
+
+    .context-menu-dots:hover {
+      background: var(--nh-theme-bg-detail);
+    }
+
+    .menu-dot {
+      width: 5px;
+      height: 5px;
+      margin: 2px;
+      border-radius: 100%;
+      background: var(--nh-menu-subtitle);
+    }
+    
+    .context-menu-dots:hover .menu-dot {
+      background: var(--nh-theme-bg-canvas);
+    }
+
     /* Headings */
     
     h1,
@@ -132,6 +222,7 @@ export default class NHCard extends NHComponentShoelace {
       flex-basis: auto;
       margin-top: 0;
       margin-left: 3px;
+      margin-right: 1.5rem;
 
       font-size: calc(1px * var(--nh-font-size-sm));
       letter-spacing: calc(2 * var(--nh-letter-spacing-buttons)); 
