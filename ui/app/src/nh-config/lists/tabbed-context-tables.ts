@@ -126,7 +126,7 @@ export default class TabbedContextTables extends NHComponent {
           });
         }.bind(this)}
       >
-        <nh-page-header-card role="navigation" .heading=${''}>
+        <nh-page-header-card class="nested" role="navigation" .heading=${''}>
           <nh-context-selector
             slot="secondary-action"
             id="select-context"

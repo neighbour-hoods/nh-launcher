@@ -67,6 +67,7 @@ export default class NHAssessmentContainer extends NHComponentShoelace {
         cursor: pointer;
         margin: 4px;
         height: 34px;
+        min-width: 36px;
       }
 
       ::slotted([slot="assessment-control"]) {

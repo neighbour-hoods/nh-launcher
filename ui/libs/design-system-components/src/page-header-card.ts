@@ -76,6 +76,12 @@ export default class NHPageHeaderCard extends NHComponent {
       padding: 0;
       grid-template-area: "top";
     }
+
+    :host(.nested) .container {
+      margin: 4px 8px;
+      padding: 0;
+    }
+
     `,
   ];
 }

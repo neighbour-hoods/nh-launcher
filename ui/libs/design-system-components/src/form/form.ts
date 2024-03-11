@@ -418,9 +418,15 @@ export default class NHForm extends NHBaseForm {
           flex: 1;
           flex-wrap: wrap;
           align-items: flex-start;
+          
           padding: 0;
           margin: calc(1px * var(--nh-spacing-md)) 0 calc(1px * var(--nh-spacing-3xl)) 0;
           gap: 0 calc(1px * var(--nh-spacing-4xl));
+        }
+
+        :host(.responsive) form {
+          margin-bottom: 8rem;
+          gap: 4rem;
         }
 
         form > * {

@@ -38,7 +38,6 @@ export default class NHMenu extends NHComponentShoelace {
   ];
 
   renderTopLevel() : TemplateResult {
-    console.log('this.selectedMenuItemId :>> ', this.selectedMenuItemId);
     return html`
       ${this.menuSectionDetails.map(({ sectionName, sectionMembers }) => {
         return html`

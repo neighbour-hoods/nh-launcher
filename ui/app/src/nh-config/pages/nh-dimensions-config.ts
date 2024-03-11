@@ -70,7 +70,8 @@ export default class NHDimensionsConfig extends NHComponent {
 
   render() : TemplateResult {
     return html`
-      <main
+      <div
+        class="container"
         @dimension-created=${async (e: CustomEvent) => await this.onDimensionCreated(e)}
       >
         <nh-page-header-card .heading=${'Dimensions'}>
@@ -130,7 +131,7 @@ export default class NHDimensionsConfig extends NHComponent {
           .size=${'medium'}
           @form-submitted=${(e: CustomEvent) => { (e.currentTarget as NHDialog).hideDialog(); this._formType == 'method' ? this._dimensionForm.reset() : this._dimensionForm.form.reset() }}
         >
-          <div slot="inner-content" class="container">
+          <div slot="inner-content" class="dialog-container">
             <h2>
               ${'Add ' + (this._formType == 'input-dimension' ? 'Input' : 'Output') + ' Dimension'}
             </h2>
@@ -153,7 +154,7 @@ export default class NHDimensionsConfig extends NHComponent {
             >Add</nh-button
           >
         </nh-dialog>
-      </main>
+      </div>
     `;
   }
 
@@ -199,22 +200,12 @@ export default class NHDimensionsConfig extends NHComponent {
   static get styles() {
     return css`
       :host,
-      .container {
+      .dialog-container {
         display: flex;
         width: 100%;
       }
 
       .container {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      h2 {
-        margin: 0 auto;
-        width: 18rem;
-      }
-
-      main {
         --menu-width: 200px; /* TODO: lift this variable up do dedup in the parent component */
         width: 100%;
         display: grid;
@@ -225,6 +216,16 @@ export default class NHDimensionsConfig extends NHComponent {
         grid-template-rows: 4rem auto;
         padding: calc(1px * var(--nh-spacing-xl));
         gap: calc(1px * var(--nh-spacing-sm));
+      }
+
+      .dialog-container {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      h2 {
+        margin: 0 auto;
+        width: 18rem;
       }
 
       nh-page-header-card {

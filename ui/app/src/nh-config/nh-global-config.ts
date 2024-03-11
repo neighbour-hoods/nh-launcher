@@ -137,7 +137,7 @@ export default class NHGlobalConfig extends NHComponent {
 
   render() : TemplateResult {
     return html`
-      <main>
+      <div class="container">
         ${this._nhName 
           ? html`<nh-menu
           @sub-nav-item-selected=${(e: CustomEvent) => {
@@ -222,7 +222,7 @@ export default class NHGlobalConfig extends NHComponent {
           : null
         }
         <slot name="page"> ${this.renderPage()} </slot>
-      </main>
+      </div>
     `;
   }
 
@@ -235,18 +235,12 @@ export default class NHGlobalConfig extends NHComponent {
 
   static get styles() {
     return css`
-      :host,
-      .container {
+      :host {
         display: flex;
         width: 100%;
       }
 
-      .container {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      main {
+      div.container {
         --menu-width: 200px;
         width: 100%;
         display: grid;
@@ -254,7 +248,7 @@ export default class NHGlobalConfig extends NHComponent {
         place-content: start;
         color: var(--nh-theme-fg-default);
         grid-template-columns: calc(16px + var(--menu-width)) 3fr;
-        grid-template-rows: 4rem auto;
+        grid-template-rows: 3rem auto;
         gap: calc(1px * var(--nh-spacing-sm));
       }
 
@@ -264,6 +258,7 @@ export default class NHGlobalConfig extends NHComponent {
 
       nh-menu {
         display: flex;
+        grid-row: 1 / -1;
       }
 
       nav {
@@ -273,9 +268,10 @@ export default class NHGlobalConfig extends NHComponent {
       }
 
       slot[name='page'] {
-        grid-column: 2 / -2;
+        grid-area: 1 / 2 / -1 / -2;
         display: flex;
         align-items: start;
+        height: calc(-72px + 100vh);
       }
     `;
   }

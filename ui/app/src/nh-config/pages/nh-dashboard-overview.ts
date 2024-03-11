@@ -65,7 +65,7 @@ export default class NHDashBoardOverview extends NHComponent {
 
   render() {
     return html`
-      <main>
+      <div class="container">
         <nh-page-header-card .heading=${'Sensemaker Dashboard Overview'}>
           <nh-button
             slot="secondary-action"
@@ -84,7 +84,7 @@ export default class NHDashBoardOverview extends NHComponent {
                     .contexts=${this._currentAppletContexts}
                   ></tabbed-context-tables>`
         }
-      </main>
+      </div>
     `;
   }
 
@@ -140,23 +140,12 @@ export default class NHDashBoardOverview extends NHComponent {
 
   static get styles() {
     return css`
-      :host,
-      .container {
+      :host {
         display: flex;
         width: 100%;
       }
 
-      .container {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      h2 {
-        margin: 0 auto;
-        width: 18rem;
-      }
-
-      main {
+      div.container {
         --menu-width: 200px; /* TODO: lift this variable up do dedup in the parent component */
         width: 100%;
         display: grid;
@@ -164,9 +153,14 @@ export default class NHDashBoardOverview extends NHComponent {
         place-content: start;
         color: var(--nh-theme-fg-default);
         grid-template-columns: 2fr 1fr;
-        grid-template-rows: 4rem auto;
+        grid-template-rows: 3rem auto;
         padding: calc(1px * var(--nh-spacing-xl));
         gap: calc(1px * var(--nh-spacing-sm));
+      }
+
+      h2 {
+        margin: 0 auto;
+        width: 18rem;
       }
 
       nh-page-header-card {

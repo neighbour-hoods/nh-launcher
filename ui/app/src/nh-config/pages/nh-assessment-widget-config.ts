@@ -167,7 +167,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   render(): TemplateResult {
     let renderableWidgets = (this.configuredInputWidgets || this.getCombinedWorkingAndFetchedWidgets())?.map((widgetRegistrationEntry: AssessmentWidgetBlockConfig) => widgetRegistrationEntry.inputAssessmentWidget as AssessmentWidgetConfig)
     return html`
-      <div @assessment-widget-config-set=${async () => {await this.fetchRegisteredWidgets()}}>
+      <div class="container" @assessment-widget-config-set=${async () => {await this.fetchRegisteredWidgets()}}>
         <nh-page-header-card .heading=${'Assessment Widget Config'}>
           <nh-button
             slot="secondary-action"
@@ -179,10 +179,10 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
           </nh-button>
         </nh-page-header-card>
 
-        <div class="container">
+        <div class="description">
           <p>Add as many widgets as you need - the changes won't be saved until the Update Config button is pressed</p>
         </div>
-        <div class="container">
+        <div>
           <div class="widget-block-config">
             <assessment-widget-tray
               .editable=${true}
@@ -404,6 +404,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   private renderMainForm(): TemplateResult {
     return html`
       <nh-form
+        class="responsive"
         @change=${this.handleFormChange}
         .config=${{
           submitBtnRef: (() => this.submitBtn)(),
@@ -555,35 +556,27 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     ...super.styles as CSSResult[],
     css`
       /* Layout */
-      :host,
-      .container {
+      :host {
         width: 100%;
+        height: 100%;
       }
 
-      main {
+      div.container {
         width: 100%;
-        display: grid;
-        flex: 1;
-        place-content: start;
+        display: flex;
         color: var(--nh-theme-fg-default);
-        grid-template-columns: 1fr 5fr;
-        grid-template-rows: 4rem minmax(44rem, auto) 100%;
-        padding: calc(1px * var(--nh-spacing-xl));
         gap: calc(1px * var(--nh-spacing-sm));
+        flex-direction: column;  
+        padding: calc(1px * var(--nh-spacing-xl));
+        box-sizing: border-box;
       }
 
       nh-page-header-card {
         grid-column: 1 / -1;
       }
 
-      .container {
-        padding: calc(1px * var(--nh-spacing-lg)) 0;
-        grid-column: 1 / -1;
-        display: grid;
-        align-items: flex-start;
-        justify-items: center;
-        box-sizing: border-box;
-        position: relative;
+      .description {
+        text-align: center;
       }
 
       input-assessment-renderer {
@@ -665,7 +658,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
       }
 
       .icon-spinner {
-        font-size: 2.1rem;
+        font-size: 1.75rem;
         --speed: 10000ms;
         --track-width: 4px;
         --indicator-color: var(--nh-theme-accent-emphasis);
