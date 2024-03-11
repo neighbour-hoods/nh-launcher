@@ -1,11 +1,12 @@
+import { EntryHashB64 } from '@holochain/client';
 import { html, css, TemplateResult, PropertyValueMap } from 'lit';
 import { consume, provide } from '@lit/context';
 import { StoreSubscriber } from 'lit-svelte-stores';
 
 import { MatrixStore } from '../matrix-store';
 import { ConfigPage } from './types';
-import { appletContext, appletInstanceInfosContext, matrixContext, resourceDefContext, weGroupContext } from '../context';
-import { DnaHash, EntryHash, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
+import { currentAppletEhContext, appletInstanceInfosContext, matrixContext, resourceDefContext, weGroupContext } from '../context';
+import { DnaHash, EntryHash, EntryHashB64, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
 
 import DimensionsConfig from './pages/nh-dimensions-config';
 import AssessmentWidgetConfig from './pages/nh-assessment-widget-config';
@@ -15,9 +16,9 @@ import { NHComponent, NHMenu } from '@neighbourhoods/design-system-components';
 import { property, query, state } from 'lit/decorators.js';
 import { provideWeGroupInfo } from '../matrix-helpers';
 
-import { ResourceDef } from '@neighbourhoods/client';
+import { AppletConfig, NeighbourhoodAppletRenderers, ResourceDef, serializeAsyncActions } from '@neighbourhoods/client';
 import { cleanForUI } from '../elements/components/helpers/functions';
-import { Applet, AppletInstanceInfo } from '../types';
+import { Applet, AppletGui, AppletInstanceInfo } from '../types';
 import { derived, get } from 'svelte/store';
 import { compareUint8Arrays } from '@neighbourhoods/app-loader';
 
@@ -30,19 +31,31 @@ export default class NHGlobalConfig extends NHComponent {
   @property({ attribute: false })
   weGroupId!: DnaHash;
 
-  @provide({ context: appletContext }) @property({attribute: false})
-  currentAppletInstanceEh!: string;
+  @provide({ context: currentAppletEhContext }) @property({attribute: false})
+  currentAppletInstanceEh!: string | null;
+
+  @state() applets : [EntryHash, Applet, DnaHash[]][] = [];
+  @state() guis!: { EntryHashB64 : AppletGui };
 
   @provide({ context: appletInstanceInfosContext })
   @property({attribute: false})
-  _currentAppletInstance = new StoreSubscriber(
+  _currentAppletInstances = new StoreSubscriber(
     this,
     () =>  derived(this._matrixStore.getAppletInstanceInfosForGroup(this.weGroupId), (appletInstanceInfos: AppletInstanceInfo[] | undefined) => {
-      if(!this.currentAppletInstanceEh) return
-      const currentApplet = appletInstanceInfos!.find(applet => compareUint8Arrays(decodeHashFromBase64(this.currentAppletInstanceEh), applet.applet.devhubGuiReleaseHash))
-      return currentApplet
+      if(this._resourceDefEntries.length == 0) return
+      return this._resourceDefEntries.reduce((acc, resourceDef) => {
+        const appletEh = encodeHashToBase64(resourceDef.applet_eh) as EntryHashB64;
+        const linkedApplet : AppletInstanceInfo | undefined = appletInstanceInfos!.find(applet => compareUint8Arrays(resourceDef.applet_eh, applet.appletId))
+        if(!linkedApplet) return acc
+        
+        acc[appletEh] = {...linkedApplet};
+        if(!this.guis || !this.guis[encodeHashToBase64(resourceDef.applet_eh)]) return acc
+        
+        acc[appletEh].gui = this.guis[encodeHashToBase64(resourceDef.applet_eh)] as AppletGui;
+        return acc
+      }, {} as {EntryHashB64: AppletInstanceInfo & {gui: AppletGui}})
     }),
-    () => [this.loaded],
+    () => [this.currentAppletInstanceEh, this.loaded],
   );
 
   @provide({ context: resourceDefContext })
@@ -69,37 +82,56 @@ export default class NHGlobalConfig extends NHComponent {
   @query('nh-menu') _menu?: NHMenu;
 
   protected async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
-    // applet entry hash, applet, and federated groups' dnahashes
-    const applets : [EntryHash, Applet, DnaHash[]][] = get(await this._matrixStore.fetchAllApplets(this.weGroupId));
-    if(!applets?.length || applets?.length == 0) return
-    console.log('applets[0][0] :>> ', applets[0][0]);
-    console.log('applets[0][1].devhubGuiReleaseHash :>> ', applets[0][1].devhubGuiReleaseHash);
-    this.currentAppletInstanceEh = encodeHashToBase64(applets[0][1].devhubGuiReleaseHash); // Set context of the default applet - being the first, (up until a e.g. menu is used to set it)
-
-    try {
-      (await this.fetchCurrentAppletInstanceRenderers());
-      this.loaded = true
-    } catch (error) {
-      console.error(error)
-    }
+      // get all applet entry hash, applet, and federated groups' dnahashes
+      this.applets = get(await this._matrixStore.fetchAllApplets(this.weGroupId));
+      console.log('applet tuples fetched :>> ', this. applets);
   }
 
   protected async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
-    if (this._neighbourhoodInfo?.value && !this?._nhName) {
+    if (this._neighbourhoodInfo?.value && !this?._nhName) { // Update NH name state which triggers re-render of the menu
       this._nhName = this._neighbourhoodInfo?.value.name;
     }
-    if(changedProperties.has('weGroupId')) {
+
+    if(changedProperties.has('weGroupId')) { // Fetch all resourceDefEntries in the Neighbourhood
       if(!this._sensemakerStore.value) return
       const result = await this._sensemakerStore.value.getResourceDefs()
       this._resourceDefEntries = result.map((entryRec) => ({...entryRec.entry, resource_def_eh: entryRec.entryHash})); 
-      console.log('this._resourceDefEntries :>> ', this._resourceDefEntries);
+    }
+    if(changedProperties.has('applets') && typeof changedProperties.get('applets') !== 'undefined') { // Set current applet state whether or not Resource Def is selected from the menu
+      if(!this.applets?.length || this.applets?.length == 0) return
+      
+      if(this.selectedResourceDef) {
+        const linkedAppletDetails : [EntryHash, Applet, DnaHash[]] | undefined = this.applets!.find(appletDetails =>  compareUint8Arrays(appletDetails[0], (this.selectedResourceDef as ResourceDef).applet_eh))
+        if(!linkedAppletDetails) return;
+        this.currentAppletInstanceEh = encodeHashToBase64(linkedAppletDetails[0]);
+      } else {
+        this.currentAppletInstanceEh = null
+      }
+      console.log('this.currentAppletInstanceEh set :>> ', this.currentAppletInstanceEh);
+    }
+
+    if(changedProperties.has('currentAppletInstanceEh') && !!this._currentAppletInstances.value) { // By now the current ResourceDef with its linked Current AppletEh has been chosen (or set to null for All Resources)
+      try {
+        await this.fetchAllAppletInstanceRenderers();
+
+        // Add GUIs so that correct assessment controls can be loaded later
+        const guis = {} as { EntryHashB64 : AppletGui };
+        serializeAsyncActions<AppletGui>((Object.values(this._currentAppletInstances.value) as any).map(
+          (appletInstanceInfo: AppletInstanceInfo) => this._matrixStore.queryAppletGui(appletInstanceInfo.applet.devhubGuiReleaseHash).then(gui => {console.log('Gui added to applet instances: ', gui); guis[encodeHashToBase64(appletInstanceInfo.appletId)] = gui})
+        ))
+        this.guis = guis;
+
+        this.loaded = true
+      } catch (error) {
+        console.error(error)
+      }
     }
   }
 
   renderPage() : TemplateResult {
     switch (this._page) {
       case ConfigPage.DashboardOverview:
-        return html`<dashboard-overview .sensemakerStore=${this._sensemakerStore.value}></dashboard-overview>`;
+        return html`<dashboard-overview .sensemakerStore=${this._sensemakerStore.value} .resourceDefEntries=${this._resourceDefEntries}></dashboard-overview>`;
       case ConfigPage.Dimensions:
         return html`<dimensions-config></dimensions-config>`;
       case ConfigPage.Widgets:
@@ -124,12 +156,17 @@ export default class NHGlobalConfig extends NHComponent {
     }
   }
 
-  async fetchCurrentAppletInstanceRenderers() {
-    if(!this._currentAppletInstance.value) return;
+  async fetchAllAppletInstanceRenderers() {
+    if(!this._currentAppletInstances.value) return;
     try {
-      await this._matrixStore.fetchAppletInstanceRenderers(
-        this._currentAppletInstance.value.appletId,
-      );
+      serializeAsyncActions<NeighbourhoodAppletRenderers>(
+        Object.values(this._currentAppletInstances.value).map(
+          (appletInstanceInfo: AppletInstanceInfo) => {
+            return () => this._matrixStore.fetchAppletInstanceRenderers(appletInstanceInfo.appletId)
+          }
+        )
+      )
+      console.log('got all applet instance renderers')
     } catch (error) {
       console.log('Error fetching applet instance renderers ', error);
     }
