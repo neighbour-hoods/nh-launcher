@@ -56,7 +56,24 @@ export class DashboardFilterMap extends NHComponent {
   @property({ type: AssessmentTableType }) tableType;
   @property({ type: String }) resourceName;
   @property({ type: String }) resourceDefEh;
-  
+
+  // Asssessment/Resource renderer dictionary, keyed by Applet EH
+  @state() _appletInstanceRenderers : StoreSubscriber<any> = new StoreSubscriber(
+    this,
+    () =>  derived(this._currentAppletInstances.store, (appletInstanceInfos: any) => {
+      !!appletInstanceInfos && console.log('All appletInstanceRenderers available in table :>> ', !!appletInstanceInfos
+      ? Object.fromEntries(Object.entries(appletInstanceInfos).map(([appletEh, appletInfo]) => [appletEh, {...(appletInfo as any).renderers.resourceRenderers, ...(appletInfo as any).renderers.assessmentWidgets}]))
+      : {});
+
+      return !!appletInstanceInfos
+        ? Object.fromEntries(Object.entries(appletInstanceInfos).map(([appletEh, appletInfo]) => {
+          return [appletEh, {...(appletInfo as any).renderers.resourceRenderers, ...(appletInfo as any).renderers.assessmentWidgets}]
+        }))
+        : null
+    }),
+    () => [this._currentAppletInstances.value],
+  );
+
   @property() selectedContext;
   @property() selectedContextEhB64!: EntryHashB64;
   
