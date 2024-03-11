@@ -1,4 +1,3 @@
-import { EntryHashB64 } from '@holochain/client';
 import { html, css, TemplateResult, PropertyValueMap } from 'lit';
 import { consume, provide } from '@lit/context';
 import { StoreSubscriber } from 'lit-svelte-stores';
@@ -6,7 +5,7 @@ import { StoreSubscriber } from 'lit-svelte-stores';
 import { MatrixStore } from '../matrix-store';
 import { ConfigPage } from './types';
 import { currentAppletEhContext, appletInstanceInfosContext, matrixContext, resourceDefContext, weGroupContext } from '../context';
-import { DnaHash, EntryHash, EntryHashB64, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
+import { DnaHash, EntryHash, EntryHashB64, encodeHashToBase64 } from '@holochain/client';
 
 import DimensionsConfig from './pages/nh-dimensions-config';
 import AssessmentWidgetConfig from './pages/nh-assessment-widget-config';
@@ -16,7 +15,7 @@ import { NHComponent, NHMenu } from '@neighbourhoods/design-system-components';
 import { property, query, state } from 'lit/decorators.js';
 import { provideWeGroupInfo } from '../matrix-helpers';
 
-import { AppletConfig, NeighbourhoodAppletRenderers, ResourceDef, serializeAsyncActions } from '@neighbourhoods/client';
+import { NeighbourhoodAppletRenderers, ResourceDef, serializeAsyncActions } from '@neighbourhoods/client';
 import { cleanForUI } from '../elements/components/helpers/functions';
 import { Applet, AppletGui, AppletInstanceInfo } from '../types';
 import { derived, get } from 'svelte/store';
@@ -47,7 +46,7 @@ export default class NHGlobalConfig extends NHComponent {
         const appletEh = encodeHashToBase64(resourceDef.applet_eh) as EntryHashB64;
         const linkedApplet : AppletInstanceInfo | undefined = appletInstanceInfos!.find(applet => compareUint8Arrays(resourceDef.applet_eh, applet.appletId))
         if(!linkedApplet) return acc
-        
+
         acc[appletEh] = {...linkedApplet};
         if(!this.guis || !this.guis[encodeHashToBase64(resourceDef.applet_eh)]) return acc
         
