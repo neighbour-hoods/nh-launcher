@@ -208,6 +208,7 @@ export class DashboardFilterMap extends NHComponent {
     const baseRecord = {
       neighbour: encodeHashToBase64(assessment.author),
       resource: {
+        renderer: this._currentAppletInstanceRenderers.value?.renderers.resourceRenderers.task_item,
         eh: encodeHashToBase64(assessment.resource_eh),
       },
     } as AssessmentTableRecord;

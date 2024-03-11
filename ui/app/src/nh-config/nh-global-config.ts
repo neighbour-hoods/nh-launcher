@@ -14,7 +14,7 @@ import NHDashBoardOverview from './pages/nh-dashboard-overview';
 import { NHComponent, NHMenu } from '@neighbourhoods/design-system-components';
 import { property, query, state } from 'lit/decorators.js';
 import { provideWeGroupInfo } from '../matrix-helpers';
-import { removeResourceNameDuplicates } from '../utils';
+
 import { ResourceDef } from '@neighbourhoods/client';
 import { cleanForUI } from '../elements/components/helpers/functions';
 import { Applet, AppletInstanceInfo } from '../types';
@@ -46,8 +46,7 @@ export default class NHGlobalConfig extends NHComponent {
   );
 
   @provide({ context: resourceDefContext })
-  @property()
-  selectedResourceDef!: object | undefined;
+  @property() selectedResourceDef!: object | undefined;
 
   _sensemakerStore = new StoreSubscriber(this, () =>
     this._matrixStore?.sensemakerStore(this.weGroupId),
@@ -63,7 +62,7 @@ export default class NHGlobalConfig extends NHComponent {
     () => [this._matrixStore, this.weGroupId],
   );
 
-  _nhName!: string;
+  @state() _nhName!: string;
 
   @state() _page?: ConfigPage = ConfigPage.DashboardOverview;
 
@@ -73,8 +72,9 @@ export default class NHGlobalConfig extends NHComponent {
     // applet entry hash, applet, and federated groups' dnahashes
     const applets : [EntryHash, Applet, DnaHash[]][] = get(await this._matrixStore.fetchAllApplets(this.weGroupId));
     if(!applets?.length || applets?.length == 0) return
+    console.log('applets[0][0] :>> ', applets[0][0]);
+    console.log('applets[0][1].devhubGuiReleaseHash :>> ', applets[0][1].devhubGuiReleaseHash);
     this.currentAppletInstanceEh = encodeHashToBase64(applets[0][1].devhubGuiReleaseHash); // Set context of the default applet - being the first, (up until a e.g. menu is used to set it)
-    this!._menu!.selectedMenuItemId = "Neighbourhood" + "-0-1"
 
     try {
       (await this.fetchCurrentAppletInstanceRenderers());
@@ -88,11 +88,11 @@ export default class NHGlobalConfig extends NHComponent {
     if (this._neighbourhoodInfo?.value && !this?._nhName) {
       this._nhName = this._neighbourhoodInfo?.value.name;
     }
-
     if(changedProperties.has('weGroupId')) {
       if(!this._sensemakerStore.value) return
       const result = await this._sensemakerStore.value.getResourceDefs()
-      this._resourceDefEntries = removeResourceNameDuplicates(result.map((entryRec) => ({...entryRec.entry, resource_def_eh: entryRec.entryHash}))); // This de-duplicates resources with the same name from other applets (including uninstalled)
+      this._resourceDefEntries = result.map((entryRec) => ({...entryRec.entry, resource_def_eh: entryRec.entryHash})); 
+      console.log('this._resourceDefEntries :>> ', this._resourceDefEntries);
     }
   }
 
@@ -109,12 +109,18 @@ export default class NHGlobalConfig extends NHComponent {
     }
   }
 
-  choosePageFromSubMenuItemId(itemId: string) {
+  choosePageFromSubMenuItemId(itemId: string, mainMenuItemIndex: number) {
     switch (itemId) {
-      case 'sensemaker':
-        return ConfigPage.Widgets
-      case 'neighbourhood':
-        return ConfigPage.DashboardOverview
+      case 'Sensemaker':
+        if(mainMenuItemIndex == 0) {
+          return ConfigPage.DashboardOverview
+        } else if (mainMenuItemIndex == 1) {
+          return ConfigPage.Dimensions 
+        } else { // 2
+          return ConfigPage.Widgets
+        }
+      default:
+        return
     }
   }
 
@@ -132,16 +138,15 @@ export default class NHGlobalConfig extends NHComponent {
   render() : TemplateResult {
     return html`
       <main>
-        <nh-menu
+        ${this._nhName 
+          ? html`<nh-menu
           @sub-nav-item-selected=${(e: CustomEvent) => {
-            const [mainMenuItemName, _mainMenuItemIndex, subMenuItemIndex] = e.detail.itemId.split(/\-/);
-            this._page = this.choosePageFromSubMenuItemId(mainMenuItemName.toLowerCase());
-            // TODO: fix submenu implementation and choose a different static name for menu item 0 other than Neighbourhood
-
-            if (!(['Sensemaker', "Neighbourhood"].includes(mainMenuItemName))) {
+            const [mainMenuItemName, mainMenuItemIndex, subMenuItemIndex] = e.detail.itemId.split(/\-/);
+            this._page = this.choosePageFromSubMenuItemId(mainMenuItemName, mainMenuItemIndex);
+            if (!(['Sensemaker'].includes(mainMenuItemName))) {
               this.selectedResourceDef = undefined;
               return;
-            }; // Only current active main menu item is Sensemaker, but you can change this later
+            };
 
             // THIS RELIES ON THE SAME ORDERING/INDEXING OCCURRING IN `this._resourceDefEntries` AS IN THE RENDERED SUBMENUS for ['Sensemaker', "Neighbourhood"], and may need to be changed
             this.selectedResourceDef = this._resourceDefEntries[subMenuItemIndex]
@@ -149,22 +154,23 @@ export default class NHGlobalConfig extends NHComponent {
           }
           .menuSectionDetails=${
             (() => ([{
-              sectionName: "Neighbourhood",
-              sectionMembers: [
-                {
-                  label: 'Overview',
-                  subSectionMembers: this._resourceDefEntries.map(rd =>  cleanForUI(rd.resource_name)),
-                  callback: () => {
-                      this.selectedResourceDef = this._resourceDefEntries[0];
-                      if(this?._menu) this!._menu!.selectedMenuItemId = "Neighbourhood" + "-0-0"; // pick the first resource as a default
-                      this._page = ConfigPage.DashboardOverview
-                    }
-                },
-              ],
+              sectionName: this._nhName,
+              sectionMembers: []
             },
             {
               sectionName: 'Sensemaker',
               sectionMembers: [
+                  {
+                    label: 'Overview',
+                    subSectionMembers: this._resourceDefEntries.map(rd =>  cleanForUI(rd.resource_name)),
+                    callback: () => {
+                      if(this?._menu) {
+                        const subMenuIdx = this._menu.selectedMenuItemId.split('-', 2)
+                        this.selectedResourceDef = this._resourceDefEntries[+subMenuIdx];
+                      } 
+                        this._page = ConfigPage.DashboardOverview
+                      }
+                  },
                 {
                   label: 'Dimensions',
                   subSectionMembers: [],
@@ -177,7 +183,7 @@ export default class NHGlobalConfig extends NHComponent {
                   subSectionMembers: this._resourceDefEntries.map(rd =>  cleanForUI(rd.resource_name)),
                   callback: () => {
                     this.selectedResourceDef = this._resourceDefEntries[0];
-                    if(this?._menu) this!._menu!.selectedMenuItemId = "Sensemaker-1-0"; // pick the first resource as a default
+                    if(this?._menu) this!._menu!.selectedMenuItemId = "Sensemaker-2-0"; // pick the first resource as a default
                     this._page = ConfigPage.Widgets
                   },
                 },
@@ -209,10 +215,12 @@ export default class NHGlobalConfig extends NHComponent {
               ],
             }]))()
           }
-          .selectedMenuItemId=${'Neighbourhood' + '-0-0' // This is the default selected item
+          .selectedMenuItemId=${'Sensemaker' + '-0' // This is the default selected item
         }
         >
-        </nh-menu>
+        </nh-menu>`
+          : null
+        }
         <slot name="page"> ${this.renderPage()} </slot>
       </main>
     `;
