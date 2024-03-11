@@ -20,6 +20,8 @@ export default class TabbedContextTables extends NHComponent {
 
   @consume({ context: resourceDefContext, subscribe: true })
   @property({ attribute: false }) selectedResourceDef!: object | undefined;
+
+  @property({ attribute: false }) resourceDefEntries!: object[];
   
   @query('#danger-toast-1') private _dangerAlert;
   @query('dashboard-filter-map') private _table;
@@ -102,6 +104,7 @@ export default class TabbedContextTables extends NHComponent {
       >
         <dashboard-filter-map
           .tableType=${type}
+          .resourceDefEntries=${this.resourceDefEntries}
           .resourceName=${this.selectedResourceDef?.resource_name ? cleanForUI(this.selectedResourceDef.resource_name) : "All Resources"}
           .resourceDefEh=${this.selectedResourceDef?.resource_def_eh || "none"}
           .selectedContextEhB64=${this.selectedContextEhB64}

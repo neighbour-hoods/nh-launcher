@@ -3,8 +3,10 @@ import {
   AssessmentWidgetRenderers,
   CulturalContext,
   Dimension,
+  InputAssessmentWidgetDelegate,
   Method,
   OutputAssessmentWidgetDelegate,
+  ResourceDef,
   SensemakerStore,
   sensemakerStoreContext,
 } from '@neighbourhoods/client';
@@ -21,8 +23,7 @@ import { cleanResourceNameForUI, generateHeaderHTML } from '../../elements/compo
 import { derived } from 'svelte/store';
 import { compareUint8Arrays, OutputAssessmentRenderer, createOutputAssessmentWidgetDelegate, createInputAssessmentWidgetDelegate, InputAssessmentRenderer } from '../../../../libs/app-loader';
 import { appletInstanceInfosContext } from '../../context';
-import { AppletInstanceInfo } from '../../types';
-import { NHComponent } from '../../../../libs/design-system-components/dist';
+import { NHComponent } from '@neighbourhoods/design-system-components';
 
 type DecoratorProps = {
   renderers: AssessmentWidgetRenderers,
@@ -76,6 +77,7 @@ export class DashboardFilterMap extends NHComponent {
 
   @property() selectedContext;
   @property() selectedContextEhB64!: EntryHashB64;
+  @property() resourceDefEntries!: object[];
   
   @state() private loaded!: boolean;
   @state() private _dimensionEntries!: EntryRecord<Dimension>[];
@@ -97,7 +99,7 @@ export class DashboardFilterMap extends NHComponent {
 
   async updated(changedProps) {
     if (
-      changedProps.has('loaded') && typeof changedProps.get('loaded') == 'undefined' // all fetching complete by this point, continue to filter/map assessments
+      !!this.resourceDefEntries && changedProps.has('loaded') && typeof changedProps.get('loaded') == 'undefined' && this._appletInstanceRenderers?.value // all fetching complete by this point, continue to filter/map assessments
       || changedProps.has('tableType') && typeof changedProps.get('tableType') !== 'undefined'
     ) {
       this.fieldDefs = this.generateContextFieldDefs();
