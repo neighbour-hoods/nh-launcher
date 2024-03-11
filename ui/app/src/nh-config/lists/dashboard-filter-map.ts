@@ -185,20 +185,11 @@ export class DashboardFilterMap extends NHComponent {
     });
   }
 
-  getOutputControlForAssessment(assessment: Assessment) {
+  getControlForAssessment(assessment: Assessment) : InputAssessmentWidgetDelegate | void {
     try {
-      if(!(this._currentAppletInstanceRenderers?.value) || !(this._currentAppletInstanceRenderers.value?.renderers)) return {
-        renderers: null,
-        delegate: null,
-      }
-      const delegate = createInputAssessmentWidgetDelegate(this._sensemakerStore, assessment.dimension_eh, assessment.resource_def_eh, assessment.resource_eh, assessment)
-      const renderers = this._currentAppletInstanceRenderers.value;
-      return { 
-        renderers: renderers?.renderers?.assessmentWidgets,
-        delegate,
-      }
+      return createInputAssessmentWidgetDelegate(this._sensemakerStore, assessment.dimension_eh, assessment.resource_def_eh, assessment.resource_eh, assessment)
     } catch (error) {
-      console.error(error)
+      console.error('Error creating delegate: ', error)
     }
   };
 
