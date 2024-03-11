@@ -36,8 +36,9 @@ export default class NHDashBoardOverview extends NHComponent {
   @consume({ context: appletContext, subscribe: true })
   @property({ attribute: false }) currentApplet!: string;
   @consume({ context: appletInstanceInfosContext, subscribe: true })
-  @property({ attribute: false }) _currentAppletInstance!: StoreSubscriber<AppletInstanceInfo | undefined>;
 
+  @property({ attribute: false }) resourceDefEntries!: object[];
+  
   sensemakerStore!: SensemakerStore;
 
   @state() currentAppletInstanceId : string = '';
@@ -80,6 +81,7 @@ export default class NHDashBoardOverview extends NHComponent {
         ${this.loadingState == LoadingState.NoAppletSensemakerData
           ? html`<nh-dashboard-skeleton></nh-dashboard-skeleton>`
           : html` <tabbed-context-tables
+                    .resourceDefEntries=${this.resourceDefEntries}
                     .selectedAppletInstanceId=${this.currentAppletInstanceId}
                     .contexts=${this._currentAppletContexts}
                   ></tabbed-context-tables>`
