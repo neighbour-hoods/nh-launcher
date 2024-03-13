@@ -1,4 +1,4 @@
-import { encodeHashToBase64 } from '@holochain/client';
+import { encodeHashToBase64, EntryHashB64 } from '@holochain/client';
 import { html, css, TemplateResult, PropertyValueMap, CSSResult } from 'lit';
 import { consume } from '@lit/context';
 import { StoreSubscriber } from 'lit-svelte-stores';
@@ -96,7 +96,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   @state() selectedInputDimensionEh: EntryHash | undefined; // used to filter for the 3rd select
 
   @state() _workingWidgetControls!: AssessmentWidgetBlockConfig[];
-  @state() _workingWidgetControlRendererCache: Record<string, any> = new Map();
 
   // AssessmentWidgetBlockConfig (group) and AssessmentWidgetRegistrationInputs (individual)
   @state() private _fetchedConfig!: AssessmentWidgetBlockConfig[];
@@ -168,7 +167,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   }
 
   renderWidgetControlPlaceholder() {
-    if(typeof this.selectedWidgetKey != 'undefined' && this?._workingWidgetControlRendererCache.has(this.selectedWidgetKey) && this?.placeHolderWidget) {
+    if(typeof this.selectedWidgetKey != 'undefined' && this?.placeHolderWidget) {
       return repeat([this.selectedWidgetKey], () => +(new Date), (_, _idx) =>this?.placeHolderWidget())
     }
     return html`<span slot="assessment-control"></span>`
@@ -399,8 +398,13 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
 
     const selectedWidget = widgets?.find(widget => widget.name == this._form._model.assessment_widget);
     this.selectedWidgetKey = selectedWidget?.widgetKey;
-    this.placeHolderWidget = this?._workingWidgetControlRendererCache.get(this.selectedWidgetKey)
-
+    if(!this._appletInstanceRenderers.value || !this.resourceDef.applet_eh) throw new Error("Could not get renderers for placeholder widget");
+    const widgetRenderer = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)][this.selectedWidgetKey as string];
+    this.placeHolderWidget = () => html`
+      <input-assessment-renderer slot="assessment-control"
+        .component=${widgetRenderer.component}
+        .nhDelegate=${new FakeInputAssessmentWidgetDelegate()}
+      ></input-assessment-renderer>`
     this.selectedInputDimensionEh = this._form._model.input_dimension;
 
     e.currentTarget.requestUpdate();
@@ -422,23 +426,18 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 placeholder: 'Select',
                 label: '1. Select an assessment widget for this resource: ',
                 selectOptions: (() =>
-                  this?._registeredWidgets && this?.appletRenderers
+                  this?._registeredWidgets && this?._appletInstanceRenderers.value
                     ? Object.values(this._registeredWidgets)!
                       .filter((widget: AssessmentWidgetRegistrationInput) => widget.kind == "input")
                       .map((widget: AssessmentWidgetRegistrationInput) => {
-                          let renderBlock;
-                          if(this?._workingWidgetControlRendererCache.has(widget.widgetKey)) {
-                            renderBlock = this._workingWidgetControlRendererCache.get(widget.widgetKey);
-                          } else {
-                            const fakeDelegate = new FakeInputAssessmentWidgetDelegate();
-                            const renderer: AssessmentWidgetRenderer = this.appletRenderers.assessmentWidgets![widget.widgetKey]
-                            renderBlock = () => html`
+                          const possibleRenderers : ({string: AssessmentWidgetRenderer | ResourceBlockRenderer})[] = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)];
+                          const renderer = possibleRenderers[widget.widgetKey];
+                          if(!renderer || renderer?.kind !== 'input') throw new Error('Could not fill using widget renderer as none could be found')
+                          let renderBlock = () => html`
                             <input-assessment-renderer slot="assessment-control"
                               .component=${renderer.component}
-                              .nhDelegate=${fakeDelegate}
+                              .nhDelegate=${new FakeInputAssessmentWidgetDelegate()}
                             ></input-assessment-renderer>`
-                            this?._workingWidgetControlRendererCache.set(widget.widgetKey, renderBlock)
-                          }
 
                           return ({
                             label: widget.name,
