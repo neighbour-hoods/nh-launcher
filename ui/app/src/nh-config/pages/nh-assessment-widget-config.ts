@@ -1,10 +1,11 @@
+import { encodeHashToBase64 } from '@holochain/client';
 import { html, css, TemplateResult, PropertyValueMap, CSSResult } from 'lit';
 import { consume } from '@lit/context';
 import { StoreSubscriber } from 'lit-svelte-stores';
 
 import { object, string } from 'yup';
 import { MatrixStore } from '../../matrix-store';
-import { matrixContext, weGroupContext } from '../../context';
+import { appletInstanceInfosContext, matrixContext, weGroupContext } from '../../context';
 import {
   AppInfo,
   CallZomeResponse,
@@ -47,28 +48,39 @@ import {
 } from '@neighbourhoods/client';
 import {repeat} from 'lit/directives/repeat.js';
 import { InputAssessmentRenderer } from '@neighbourhoods/app-loader';
-import { get } from 'svelte/store';
+import { derived, get } from 'svelte/store';
 import { Applet, AppletInstanceInfo } from '../../types';
 import { FakeInputAssessmentWidgetDelegate } from '@neighbourhoods/app-loader';
 import { dimensionIncludesControlRange } from '../../utils';
+import { ResourceBlockRenderer } from '@neighbourhoods/app-loader';
 
 export default class NHAssessmentWidgetConfig extends NHComponent {
-  @consume({ context: matrixContext, subscribe: true })
-  @property({ attribute: false })
-  _matrixStore!: MatrixStore;
+  @property() loaded!: boolean;
 
-  @property({ attribute: false })
-  @consume({ context: weGroupContext, subscribe: true })
-  weGroupId!: DnaHash;
+  sensemakerStore!: SensemakerStore;
 
-  _sensemakerStore = new StoreSubscriber(this, () =>
-    this._matrixStore?.sensemakerStore(this.weGroupId),
+  @consume({ context: appletInstanceInfosContext })
+  @property({attribute: false}) _currentAppletInstances;
+
+  // Asssessment/Resource renderer dictionary, keyed by Applet EH
+  @state() _appletInstanceRenderers : StoreSubscriber<any> = new StoreSubscriber(
+    this,
+    () =>  derived(this._currentAppletInstances.store, (appletInstanceInfos: any) => {
+      //@ts-ignore
+      return !!appletInstanceInfos && Object.values(appletInstanceInfos).some(appletInfo => appletInfo!.gui)
+      //@ts-ignore
+        ? Object.fromEntries(Object.entries(appletInstanceInfos).map(([appletEh, appletInfo]) => {
+          if(typeof appletInfo?.gui == 'undefined') return;
+          return [appletEh, {...(appletInfo as any)?.gui?.resourceRenderers, ...(appletInfo as any).gui.assessmentWidgets}]
+        }))
+        : null
+    }),
+    () => [this.loaded],
   );
 
   @property() // Selected from the sub-menu of the page
   resourceDef!: ResourceDef & {resource_def_eh: EntryHash };
 
-  appletRenderers!: NeighbourhoodAppletRenderers;
   currentApplet!: Applet;
 
   @query('nh-form') private _form;
@@ -106,7 +118,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     this.loading = true;
     try {
-      if (!this._sensemakerStore?.value || !this.weGroupId) return;
+      if (!this.sensemakerStore) return;
       await this.fetchDimensionEntries();
       await this.fetchRangeEntries();
       await this.fetchMethodEntries();
@@ -114,10 +126,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
       await this.fetchRegisteredWidgets();
       await this.fetchExistingWidgetConfigBlock();
 
-      await this.fetchCurrentAppletInstanceInfo();
-      if(this._appletInstanceInfo) {
-        await this.fetchCurrentAppletInstanceRenderers();
-      }
       this.loading = false;
     } catch (error) {
       console.error('Could not fetch/assign applet and widget data: ', error);
@@ -129,7 +137,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     if(changedProperties.has('resourceDef') && typeof changedProperties.get('resourceDef') !== 'undefined') {
       await this.fetchExistingWidgetConfigBlock();
     }
-    console.log('this._fetchedConfig :>> ', this._fetchedConfig);
   }
 
   private findInputDimensionsForOutputDimension(outputDimensionEh: EntryHash) {
@@ -193,12 +200,16 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
             >
               <div slot="widgets">
                 ${
-                  this?.appletRenderers && (this._fetchedConfig && this._fetchedConfig.length > 0 || this?._workingWidgetControls)
+                  this._appletInstanceRenderers?.value && (this._fetchedConfig && this._fetchedConfig.length > 0 || this?._workingWidgetControls)
                     ? repeat(renderableWidgets, () => +(new Date), (inputWidgetConfig, _index) => {
-                        if(!this.appletRenderers) return;
+                        const appletKey = encodeHashToBase64((inputWidgetConfig as any).appletId);
+                        const appletRenderers = this._appletInstanceRenderers.value[appletKey] as (AssessmentWidgetConfig | ResourceBlockRenderer)[];
+                        if(!appletRenderers) throw new Error('Could not get applet renderers linked to this ResourcDef');
+
                         const fakeDelegate = new FakeInputAssessmentWidgetDelegate();
-                        const filteredComponentRenderers = Object.values(this.appletRenderers.assessmentWidgets!).filter(component => component.name == (inputWidgetConfig as any).componentName);
-                        const componentToBind = filteredComponentRenderers[0].component;
+                        const filteredComponentRenderers = Object.values(appletRenderers).find(component => component.name == (inputWidgetConfig as { dimensionEh: EntryHash, appletId: string, componentName: string }).componentName);
+                        const componentToBind = filteredComponentRenderers?.component;
+                        if(!componentToBind) return;
                         return html`
                         <assessment-container .editMode=${true}>
                           <span slot="assessment-output">0</span>
@@ -211,7 +222,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                       })
                     : null
                 }
-                ${this.loading || this.editingConfig || !this._fetchedConfig || !this.appletRenderers
+                ${this.loading || this.editingConfig || !this._fetchedConfig
                   ? html`<assessment-container .editMode=${true}>
                     <span slot="assessment-output">0</span>
                     ${this.renderWidgetControlPlaceholder()}
@@ -367,7 +378,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     let successful;
     try {
       successful = await (
-        this._sensemakerStore?.value as SensemakerStore
+        this.sensemakerStore as SensemakerStore
       ).setAssessmentWidgetTrayConfig(resource_def_eh, this.getCombinedWorkingAndFetchedWidgets());
     } catch (error) {
       return Promise.reject('Error setting assessment widget config');
@@ -674,11 +685,12 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
 
 
   async fetchExistingWidgetConfigBlock() {
-    if (!this._sensemakerStore.value || !this.resourceDef) return;
+    if (!this.sensemakerStore || !this.resourceDef) return;
     try {
-      this._fetchedConfig = await this._sensemakerStore.value.getAssessmentWidgetTrayConfig(
+      this._fetchedConfig = await this.sensemakerStore.getAssessmentWidgetTrayConfig(
         this.resourceDef?.resource_def_eh,
       );
+      console.log('fetched persisted widget config block :>> ', this._fetchedConfig);
       this.configuredWidgetsPersisted = true;
     } catch (error) {
       console.error(error);
@@ -703,48 +715,9 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     }
   }
 
-  async fetchCurrentAppletInstanceInfo() {
-    try {
-      const appletInstanceInfos = get(
-        this._matrixStore?.getAppletInstanceInfosForGroup(this.weGroupId),
-      );
-      const applets = get(await this._matrixStore.fetchAllApplets(this.weGroupId));
-      if(!(applets.length > 0)) {
-        this.dispatchEvent(
-          new CustomEvent("trigger-alert", {
-            detail: { 
-              title: "You do not have any applets yet.",
-              msg: "Return to your Neighbourhood home page by clicking its icon on the left sidebar, or the back arrow from this page. Then just install an applet to enable configuring of widgets."
-            },
-            bubbles: true,
-            composed: true,
-          })
-          );
-          return
-      }
-
-      this.currentApplet = applets[0][1]; // TODO: un-hard code this once we are fed an applet Id (maybe from the nav somewhere.. once it distinguishes between applets)
-      this._appletInstanceInfo = appletInstanceInfos?.find(appletInfo => {
-        return appletInfo.applet.title == this.currentApplet.title;
-      });
-    } catch (error) {
-      console.log('Error fetching applet instance info ', error);
-    }
-  }
-
-  async fetchCurrentAppletInstanceRenderers() {
-    try {
-      this.appletRenderers = await this._matrixStore.fetchAppletInstanceRenderers(
-        this._appletInstanceInfo!.appletId,
-      );
-    } catch (error) {
-      console.log('Error fetching applet instance renderers ', error);
-    }
-  }
-
   async fetchRegisteredWidgets() {
     try {
-      this._registeredWidgets = await this._sensemakerStore.value!.getRegisteredWidgets();
+      this._registeredWidgets = await this.sensemakerStore!.getRegisteredWidgets();
     } catch (error) {
       console.log('Error fetching widget registrations: ', error);
     }
@@ -757,12 +730,12 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   }
 
   async fetchMethodEntries() {
-    this._methodEntries = (await this._sensemakerStore.value?.getMethods())?.map(eR => eR.entry);
+    this._methodEntries = (await this.sensemakerStore?.getMethods())?.map(eR => eR.entry);
   }
 
   async fetchDimensionEntries() {
     try {
-      const entryRecords = await this._sensemakerStore.value?.getDimensions();
+      const entryRecords = await this.sensemakerStore?.getDimensions();
       this._unpartitionedDimensionEntries = entryRecords!.map(entryRecord => {
         return {
           ...entryRecord.entry,
@@ -777,7 +750,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   async fetchRangeEntriesFromHashes(rangeEhs: EntryHash[]) {
     let response;
     try {
-      response = await Promise.all(rangeEhs.map(eH => this._sensemakerStore.value?.getRange(eH)))
+      response = await Promise.all(rangeEhs.map(eH => this.sensemakerStore?.getRange(eH)))
     } catch (error) {
       console.log('Error fetching range details: ', error);
     }

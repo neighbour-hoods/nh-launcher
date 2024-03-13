@@ -137,7 +137,7 @@ export default class NHGlobalConfig extends NHComponent {
       case ConfigPage.Dimensions:
         return html`<dimensions-config></dimensions-config>`;
       case ConfigPage.Widgets:
-        return html`<assessment-widget-config .resourceDef=${this.selectedResourceDef}></assessment-widget-config>`;
+        return html`<assessment-widget-config .loaded=${this.loaded} .sensemakerStore=${this._sensemakerStore.value} .resourceDef=${this.selectedResourceDef}></assessment-widget-config>`;
       default:
         return html`<p>Coming Soon</p>`;
     }
