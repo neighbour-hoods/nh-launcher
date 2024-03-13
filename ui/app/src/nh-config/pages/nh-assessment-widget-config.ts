@@ -39,21 +39,18 @@ import {
   AssessmentWidgetConfig,
   AssessmentWidgetRegistrationInput,
   AssessmentWidgetRenderer,
-  AssessmentWidgetRenderers,
   Dimension,
   Method,
   NeighbourhoodAppletRenderers,
   ResourceDef,
   SensemakerStore,
 } from '@neighbourhoods/client';
-import { decode } from '@msgpack/msgpack';
 import {repeat} from 'lit/directives/repeat.js';
 import { InputAssessmentRenderer } from '@neighbourhoods/app-loader';
 import { get } from 'svelte/store';
 import { Applet, AppletInstanceInfo } from '../../types';
 import { FakeInputAssessmentWidgetDelegate } from '@neighbourhoods/app-loader';
 import { dimensionIncludesControlRange } from '../../utils';
-import { EntryRecord } from '@holochain-open-dev/utils';
 
 export default class NHAssessmentWidgetConfig extends NHComponent {
   @consume({ context: matrixContext, subscribe: true })
@@ -127,6 +124,13 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
       console.error('Could not fetch/assign applet and widget data: ', error);
       this.loading = false;
     }
+  }
+
+  protected async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
+    if(changedProperties.has('resourceDef') && typeof changedProperties.get('resourceDef') !== 'undefined') {
+      await this.fetchExistingWidgetConfigBlock();
+    }
+    console.log('this._fetchedConfig :>> ', this._fetchedConfig);
   }
 
   private findInputDimensionsForOutputDimension(outputDimensionEh: EntryHash) {

@@ -1,5 +1,6 @@
 import {
   Assessment,
+  AssessmentWidgetBlockConfig,
   AssessmentWidgetRenderer,
   AssessmentWidgetRenderers,
   CulturalContext,
@@ -10,6 +11,7 @@ import {
   ResourceDef,
   SensemakerStore,
   sensemakerStoreContext,
+  serializeAsyncActions,
 } from '@neighbourhoods/client';
 import { PropertyValueMap, css, html } from 'lit';
 import { property, state } from 'lit/decorators.js';
@@ -22,7 +24,7 @@ import { AssessmentTableRecord, AssessmentTableType } from '../types';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import { cleanResourceNameForUI, generateHeaderHTML } from '../../elements/components/helpers/functions';
 import { derived } from 'svelte/store';
-import { compareUint8Arrays, OutputAssessmentRenderer, createOutputAssessmentWidgetDelegate, createInputAssessmentWidgetDelegate, InputAssessmentRenderer } from '../../../../libs/app-loader';
+import { compareUint8Arrays, createInputAssessmentWidgetDelegate, InputAssessmentRenderer } from '../../../../libs/app-loader';
 import { appletInstanceInfosContext } from '../../context';
 import { NHComponent } from '@neighbourhoods/design-system-components';
 
@@ -72,6 +74,7 @@ export class DashboardFilterMap extends NHComponent {
   @property() selectedContextEhB64!: EntryHashB64;
   @property() resourceDefEntries!: object[];
   
+  @state() private _widgetConfigBlocksForResourceDef: {EntryHashB64: AssessmentWidgetBlockConfig[]} | {} = {};
   @state() private _dimensionEntries!: EntryRecord<Dimension>[];
   @state() private _methodEntries!: Method[];
   @state() private _objectiveDimensionNames: string[] = [];
@@ -84,13 +87,14 @@ export class DashboardFilterMap extends NHComponent {
 
   async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     await this.fetchSelectedDimensionEntries();
+    await this.fetchWidgetConfigBlocks();
     await this.fetchMethods();
     this.partitionDimensionEntries();
   }
 
   async updated(changedProps) {
     if (
-      !!this.resourceDefEntries && (changedProps.has('_objectiveDimensionNames') // all fetching complete by this point, continue to filter/map assessments
+      !!this.resourceDefEntries && !!this._dimensionEntries && (changedProps.has('_objectiveDimensionNames') // all fetching complete by this point, continue to filter/map assessments
       || changedProps.has('resourceDefEh')) // ResourceDef has changed, need to refilter
     ) {
       this.fieldDefs = this.generateContextFieldDefs();
@@ -205,13 +209,15 @@ export class DashboardFilterMap extends NHComponent {
 
   // Mapping
   mapAssessmentToAssessmentTableRecord(assessment: Assessment): AssessmentTableRecord {
-    // Base record with basic fields
     const linkedResourceDef = this.resourceDefEntries.find((rd: any) => compareUint8Arrays(assessment.resource_def_eh, rd.resource_def_eh)) as ResourceDef & {resource_def_eh: EntryHash};
     if(!linkedResourceDef) throw new Error('No ResourceDef record for this assessment');
     if(this._appletInstanceRenderers.value == null) throw new Error('No applet instance infos found');
+    
+    const linkedResourceDefApplet = this._currentAppletInstances.value[encodeHashToBase64(linkedResourceDef.applet_eh)];
     const linkedResourceDefRenderers = this._appletInstanceRenderers.value[encodeHashToBase64(linkedResourceDef.applet_eh)];
-    if(!linkedResourceDefRenderers) throw new Error('No ResourceDef renderers found');
-
+    if(!linkedResourceDefRenderers || !linkedResourceDefRenderers) throw new Error('No renderers/applet instance info found for this ResourceDef');
+    
+    // Base record with basic fields
     const baseRecord = {
       neighbour: encodeHashToBase64(assessment.author),
       resource: {
@@ -221,13 +227,16 @@ export class DashboardFilterMap extends NHComponent {
     } as AssessmentTableRecord;
 
     const delegate = this.getControlForAssessment(assessment);
-    const gui = this._currentAppletInstances.value[encodeHashToBase64(linkedResourceDef.applet_eh)]?.gui;
-    
+    const gui = linkedResourceDefApplet?.gui;
     if (!delegate || !gui || !this._dimensionEntries) return baseRecord; // We are unable to return renedered assessments, but return the base record so data exists in the table
+    
     for (let dimensionEntry of this._dimensionEntries) {
       if(dimensionEntry.entry.computed) continue;
       if(compareUint8Arrays(assessment.dimension_eh, dimensionEntry.entryHash)) {
-        const controlName = 'heatAssessment'; // TODO: remove hard coding
+        
+        console.log('linkedResourceDefRenderers :>> ', this._widgetConfigBlocksForResourceDef);
+        debugger;
+        const controlName = 'importanceAssessment'; // TODO: remove hard coding
         const assessmentRenderer = linkedResourceDefRenderers[controlName];
 
         baseRecord[dimensionEntry.entry.name] = {
@@ -314,6 +323,21 @@ export class DashboardFilterMap extends NHComponent {
         }
       `,
   ];
+
+  async fetchWidgetConfigBlocks() {
+    if (!this._sensemakerStore || !this.resourceDefEntries) return;
+    try {
+      const configs = {} as {EntryHashB64: AssessmentWidgetBlockConfig[]};
+      serializeAsyncActions<Array<AssessmentWidgetBlockConfig>>([...this.resourceDefEntries.map(
+        (resourceDef: any) => {
+          return async () => { return Promise.resolve(this._widgetConfigBlocksForResourceDef[encodeHashToBase64(resourceDef.resource_def_eh) as EntryHashB64] = await this._sensemakerStore.getAssessmentWidgetTrayConfig(resourceDef.resource_def_eh))}
+        }
+      ), async() => Promise.resolve(console.log('fetched widget config blocks for resource defs :>> ',  this._widgetConfigBlocksForResourceDef) as any)])
+
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
   async fetchCurrentContextEntry() {
     if (this.selectedContext == 'none') return;
