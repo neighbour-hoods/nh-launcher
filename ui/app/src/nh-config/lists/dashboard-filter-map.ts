@@ -90,7 +90,8 @@ export class DashboardFilterMap extends NHComponent {
 
   async updated(changedProps) {
     if (
-      !!this.resourceDefEntries && changedProps.has('_objectiveDimensionNames') // all fetching complete by this point, continue to filter/map assessments
+      !!this.resourceDefEntries && (changedProps.has('_objectiveDimensionNames') // all fetching complete by this point, continue to filter/map assessments
+      || changedProps.has('resourceDefEh')) // ResourceDef has changed, need to refilter
     ) {
       this.fieldDefs = this.generateContextFieldDefs();
       this.filterMapRawAssessmentsToTableRecords();
