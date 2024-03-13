@@ -73,7 +73,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
 
   @query('nh-form') private _form;
   @query('#success-toast') private _successAlert;
-  @query('#danger-toast') private _dangerAlert;
   @query("nh-button[type='submit']") private submitBtn;
 
   @state() loading: boolean = false;
@@ -324,14 +323,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
           .open=${false}
           .type=${"success"}></nh-alert>
         </div>
-        <nh-alert
-          id="danger-toast"
-          .title=${"You do not have any applets yet."}
-          .description=${"Return to your Neighbourhood home page by clicking its icon on the left sidebar, or the back arrow from this page. Then just install an applet to enable configuring of widgets."}
-          .closable=${false}
-          .isToast=${true}
-          .open=${false}
-          .type=${"danger"}></nh-alert>
         </div>
       </div>
     </div>`;
@@ -718,7 +709,19 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
         this._matrixStore?.getAppletInstanceInfosForGroup(this.weGroupId),
       );
       const applets = get(await this._matrixStore.fetchAllApplets(this.weGroupId));
-      if(!(applets.length > 0)) return this._dangerAlert.openToast();
+      if(!(applets.length > 0)) {
+        this.dispatchEvent(
+          new CustomEvent("trigger-alert", {
+            detail: { 
+              title: "You do not have any applets yet.",
+              msg: "Return to your Neighbourhood home page by clicking its icon on the left sidebar, or the back arrow from this page. Then just install an applet to enable configuring of widgets."
+            },
+            bubbles: true,
+            composed: true,
+          })
+          );
+          return
+      }
 
       this.currentApplet = applets[0][1]; // TODO: un-hard code this once we are fed an applet Id (maybe from the nav somewhere.. once it distinguishes between applets)
       this._appletInstanceInfo = appletInstanceInfos?.find(appletInfo => {

@@ -230,24 +230,37 @@ export class DashboardFilterMap extends NHComponent {
     const gui = linkedResourceDefApplet?.gui;
     if (!delegate || !gui || !this._dimensionEntries) return baseRecord; // We are unable to return renedered assessments, but return the base record so data exists in the table
     
-    for (let dimensionEntry of this._dimensionEntries) {
-      if(dimensionEntry.entry.computed) continue; // Exclude objective dimensions
-      if(compareUint8Arrays(assessment.dimension_eh, dimensionEntry.entryHash) && this._widgetConfigBlocksForResourceDef[encodeHashToBase64(assessment.resource_def_eh)]) {
-        // Assume that validation on client/zome has enforced XOR on input/output dimensions and use dimension EH comparison to find widget control
-        const controls = this._widgetConfigBlocksForResourceDef[encodeHashToBase64(assessment.resource_def_eh)].find(widgetConfig => compareUint8Arrays(dimensionEntry.entryHash, widgetConfig.inputAssessmentWidget.dimensionEh))
-        if(!controls) throw new Error('Could not find a widget control in the widget config block that matches your assessment dimension');
+    try {
+      for (let dimensionEntry of this._dimensionEntries) {
+        if(dimensionEntry.entry.computed) continue; // Exclude objective dimensions
+        if(compareUint8Arrays(assessment.dimension_eh, dimensionEntry.entryHash) && this._widgetConfigBlocksForResourceDef[encodeHashToBase64(assessment.resource_def_eh)]) {
+          // Assume that validation on client/zome has enforced XOR on input/output dimensions and use dimension EH comparison to find widget control
+          const controls = this._widgetConfigBlocksForResourceDef[encodeHashToBase64(assessment.resource_def_eh)].find(widgetConfig => compareUint8Arrays(dimensionEntry.entryHash, widgetConfig.inputAssessmentWidget.dimensionEh))
+          if(!controls) throw new Error('Could not find a widget control in the widget config block that matches your assessment dimension');
 
-        const inputControlName = controls.inputAssessmentWidget.componentName;
-        const controlRenderer = (Object.values(linkedResourceDefRenderers) as AssessmentWidgetRenderer[]).find((renderer: AssessmentWidgetRenderer) => renderer.name == inputControlName);
-        if(!controlRenderer) throw new Error('Could not find a renderer for the widget config block that matches your assessment dimension');
+          const inputControlName = controls.inputAssessmentWidget.componentName;
+          const controlRenderer = (Object.values(linkedResourceDefRenderers) as AssessmentWidgetRenderer[]).find((renderer: AssessmentWidgetRenderer) => renderer.name == inputControlName);
+          if(!controlRenderer) throw new Error('Could not find a renderer for the widget config block that matches your assessment dimension');
 
-        baseRecord[dimensionEntry.entry.name] = {
-          delegate,
-          renderer: controlRenderer.component
+          baseRecord[dimensionEntry.entry.name] = {
+            delegate,
+            renderer: controlRenderer.component
+          }
+        } else {
+          baseRecord[dimensionEntry.entry.name] = {};
         }
-      } else {
-        baseRecord[dimensionEntry.entry.name] = {};
       }
+    } catch (error) {
+        this.dispatchEvent(
+          new CustomEvent("trigger-alert", {
+            detail: { 
+              title: "Assessment Controls Not Configured",
+              msg: "Your controls have not all been configured correctly -  go to the *Assessments* screen to configure them!"
+            },
+            bubbles: true,
+            composed: true,
+          })
+        );
     }
     return baseRecord;
   }

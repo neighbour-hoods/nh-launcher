@@ -11,7 +11,7 @@ import DimensionsConfig from './pages/nh-dimensions-config';
 import AssessmentWidgetConfig from './pages/nh-assessment-widget-config';
 import NHDashBoardOverview from './pages/nh-dashboard-overview';
 
-import { NHComponent, NHMenu } from '@neighbourhoods/design-system-components';
+import { NHAlert, NHComponent, NHMenu } from '@neighbourhoods/design-system-components';
 import { property, query, state } from 'lit/decorators.js';
 import { provideWeGroupInfo } from '../matrix-helpers';
 
@@ -74,6 +74,10 @@ export default class NHGlobalConfig extends NHComponent {
   );
 
   @state() _nhName!: string;
+  
+  @state() _alertTitle!: string;
+  @state() _alertMsg!: string;
+  @query('#danger-alert') private _dangerAlert;
 
   @state() _page?: ConfigPage = ConfigPage.DashboardOverview;
 
@@ -172,7 +176,15 @@ export default class NHGlobalConfig extends NHComponent {
 
   render() : TemplateResult {
     return html`
-      <div class="container">
+      <div
+        class="container"
+        @trigger-alert=${(e: CustomEvent) =>{
+          const {title, msg} = e.detail;
+          this._alertTitle = title;
+          this._alertMsg = msg;
+          this._dangerAlert.openToast();
+        }}
+      >
         ${this._nhName 
           ? html`<nh-menu
           @sub-nav-item-selected=${(e: CustomEvent) => {
@@ -257,12 +269,23 @@ export default class NHGlobalConfig extends NHComponent {
           : null
         }
         <slot name="page"> ${this.renderPage()} </slot>
+
+        <nh-alert
+          id="danger-alert"
+          .title=${this._alertTitle}
+          .description=${this._alertMsg}
+          .closable=${false}
+          .isToast=${true}
+          .open=${false}
+          .type=${"danger"}>
+        </nh-alert>
       </div>
     `;
   }
 
   static elementDefinitions = {
     'nh-menu': NHMenu,
+    'nh-alert': NHAlert,
     'dimensions-config': DimensionsConfig,
     'assessment-widget-config': AssessmentWidgetConfig,
     'dashboard-overview': NHDashBoardOverview,
