@@ -14,6 +14,7 @@ import { DashboardFilterMap } from './dashboard-filter-map';
 import { encodeHashToBase64 } from '@holochain/client';
 
 export default class TabbedContextTables extends NHComponent {
+  @property() loaded!: boolean;
   @property() selectedContextEhB64: string = 'none';
   @property() selectedAppletInstanceId: string = 'none';
   @property() contexts: any;
@@ -108,6 +109,7 @@ export default class TabbedContextTables extends NHComponent {
           .resourceName=${this.selectedResourceDef?.resource_name ? cleanForUI(this.selectedResourceDef.resource_name) : "All Resources"}
           .resourceDefEh=${this.selectedResourceDef?.resource_def_eh || "none"}
           .selectedContextEhB64=${this.selectedContextEhB64}
+          .loaded=${this.loaded}
         ></dashboard-filter-map>
       </sl-tab-panel>
     `

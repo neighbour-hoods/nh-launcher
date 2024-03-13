@@ -35,6 +35,7 @@ export default class NHGlobalConfig extends NHComponent {
 
   @state() applets : [EntryHash, Applet, DnaHash[]][] = [];
   @state() guis!: { EntryHashB64 : AppletGui };
+  @state() loaded : boolean = false;
 
   @provide({ context: appletInstanceInfosContext })
   @property({attribute: false})
@@ -63,8 +64,6 @@ export default class NHGlobalConfig extends NHComponent {
   _sensemakerStore = new StoreSubscriber(this, () =>
     this._matrixStore?.sensemakerStore(this.weGroupId),
   );
-
-  @state() loaded : boolean = false;
 
   private _resourceDefEntries: Array<ResourceDef> = [];
 
@@ -119,8 +118,8 @@ export default class NHGlobalConfig extends NHComponent {
           (appletInstanceInfo: AppletInstanceInfo) => this._matrixStore.queryAppletGui(appletInstanceInfo.applet.devhubGuiReleaseHash).then(gui => {console.log('Gui added to applet instances: ', gui); guis[encodeHashToBase64(appletInstanceInfo.appletId)] = gui})
         ))
         this.guis = guis;
-
-        this.loaded = true
+        this.loaded = true;
+        console.log('fetched renderers and set guis')
       } catch (error) {
         console.error(error)
       }
@@ -130,7 +129,7 @@ export default class NHGlobalConfig extends NHComponent {
   renderPage() : TemplateResult {
     switch (this._page) {
       case ConfigPage.DashboardOverview:
-        return html`<dashboard-overview .sensemakerStore=${this._sensemakerStore.value} .resourceDefEntries=${this._resourceDefEntries}></dashboard-overview>`;
+        return html`<dashboard-overview .loaded=${this.loaded} .sensemakerStore=${this._sensemakerStore.value} .resourceDefEntries=${this._resourceDefEntries}></dashboard-overview>`;
       case ConfigPage.Dimensions:
         return html`<dimensions-config></dimensions-config>`;
       case ConfigPage.Widgets:

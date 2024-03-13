@@ -47,6 +47,7 @@ export class DashboardFilterMap extends NHComponent {
     () => [this._sensemakerStore],
   );
 
+  @property() loaded: boolean = false;
   @property({ type: AssessmentTableType }) tableType;
   @property({ type: String }) resourceName;
   @property({ type: String }) resourceDefEh;
@@ -55,24 +56,22 @@ export class DashboardFilterMap extends NHComponent {
   @state() _appletInstanceRenderers : StoreSubscriber<any> = new StoreSubscriber(
     this,
     () =>  derived(this._currentAppletInstances.store, (appletInstanceInfos: any) => {
-      !!appletInstanceInfos && console.log('All appletInstanceRenderers available in table :>> ', !!appletInstanceInfos
-      ? Object.fromEntries(Object.entries(appletInstanceInfos).map(([appletEh, appletInfo]) => [appletEh, {...(appletInfo as any).renderers.resourceRenderers, ...(appletInfo as any).renderers.assessmentWidgets}]))
-      : {});
-
-      return !!appletInstanceInfos
+      //@ts-ignore
+      return !!appletInstanceInfos && Object.values(appletInstanceInfos).some(appletInfo => appletInfo!.gui)
+      //@ts-ignore
         ? Object.fromEntries(Object.entries(appletInstanceInfos).map(([appletEh, appletInfo]) => {
-          return [appletEh, {...(appletInfo as any).renderers.resourceRenderers, ...(appletInfo as any).renderers.assessmentWidgets}]
+          if(typeof appletInfo?.gui == 'undefined') return;
+          return [appletEh, {...(appletInfo as any)?.gui?.resourceRenderers, ...(appletInfo as any).gui.assessmentWidgets}]
         }))
         : null
     }),
-    () => [this._currentAppletInstances.value],
+    () => [this.loaded],
   );
 
   @property() selectedContext;
   @property() selectedContextEhB64!: EntryHashB64;
   @property() resourceDefEntries!: object[];
   
-  @state() private loaded!: boolean;
   @state() private _dimensionEntries!: EntryRecord<Dimension>[];
   @state() private _methodEntries!: Method[];
   @state() private _objectiveDimensionNames: string[] = [];
@@ -87,13 +86,11 @@ export class DashboardFilterMap extends NHComponent {
     await this.fetchSelectedDimensionEntries();
     await this.fetchMethods();
     this.partitionDimensionEntries();
-    this.loaded = true;
   }
 
   async updated(changedProps) {
     if (
-      !!this.resourceDefEntries && changedProps.has('loaded') && typeof changedProps.get('loaded') == 'undefined' && this._appletInstanceRenderers?.value // all fetching complete by this point, continue to filter/map assessments
-      || changedProps.has('resourceName') && typeof changedProps.get('resourceName') !== 'undefined'
+      !!this.resourceDefEntries && changedProps.has('_objectiveDimensionNames') // all fetching complete by this point, continue to filter/map assessments
     ) {
       this.fieldDefs = this.generateContextFieldDefs();
       this.filterMapRawAssessmentsToTableRecords();
@@ -128,7 +125,6 @@ export class DashboardFilterMap extends NHComponent {
         : this.filterByResourceDefEh(assessments.flat(), this.resourceDefEh)
     ) as Assessment[];
 
-    console.log('filteredByResourceDef :>> ', filteredByResourceDef);
     // By objective/subjective dimension names
     let filteredByDimension;
 

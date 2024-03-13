@@ -1678,7 +1678,7 @@ export class MatrixStore {
     serializeAsyncActions<NeighbourhoodAppletRenderers>(
       appletInstanceInfos.map(
         (appletInstanceInfo) => {
-          return () => this.fetchAppletInstanceRenderers(appletInstanceInfo.appletId)
+          return async () => await this.fetchAppletInstanceRenderers(appletInstanceInfo.appletId)
         }
       )
     )

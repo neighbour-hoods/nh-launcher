@@ -1,11 +1,11 @@
+import { encodeHashToBase64 } from '@holochain/client';
 import { html, css, PropertyValueMap } from 'lit';
 import { consume } from '@lit/context';
 
 import { MatrixStore } from '../../matrix-store';
-import { appletContext, matrixContext, appletInstanceInfosContext, resourceDefContext, weGroupContext } from '../../context';
+import { matrixContext, appletInstanceInfosContext, resourceDefContext, weGroupContext } from '../../context';
 
 import {
-  NHAlert,
   NHButton,
   NHComponent,
   NHPageHeaderCard,
@@ -19,13 +19,12 @@ import { derived } from 'svelte/store';
 import {
   LoadingState,
 } from '../types';
-import { Applet, AppletInstanceInfo } from '../../types';
+import { AppletGui, AppletInstanceInfo } from '../../types';
 import { StoreSubscriber } from 'lit-svelte-stores';
-import { compareUint8Arrays } from '@neighbourhoods/app-loader';
 
 export default class NHDashBoardOverview extends NHComponent {
-  @state() loading: boolean = true;
-  @state() loadingState: LoadingState = LoadingState.FirstRender;
+  @property() loaded!: boolean;
+  @state() loadedState: LoadingState = LoadingState.FirstRender;
 
   @consume({ context: matrixContext, subscribe: true })
   @property({ attribute: false }) _matrixStore!: MatrixStore;
@@ -33,9 +32,8 @@ export default class NHDashBoardOverview extends NHComponent {
   @property({ attribute: false }) _weGroupId!: Uint8Array;
   @consume({ context: resourceDefContext, subscribe: true })
   @property({ attribute: false }) selectedResourceDef!: object | undefined;
-  @consume({ context: appletContext, subscribe: true })
-  @property({ attribute: false }) currentApplet!: string;
   @consume({ context: appletInstanceInfosContext, subscribe: true })
+  @property({ attribute: false }) _currentAppletInstances!: StoreSubscriber<{EntryHashB64: AppletInstanceInfo & {gui: AppletGui}} | undefined>;
 
   @property({ attribute: false }) resourceDefEntries!: object[];
   
@@ -45,20 +43,21 @@ export default class NHDashBoardOverview extends NHComponent {
 
   _currentAppletConfig = new StoreSubscriber(
     this,
-    () =>  derived(this._currentAppletInstance.store, async (applet: AppletInstanceInfo | undefined) => {
-      if(!this.currentApplet || !applet) return {}
-      // this.currentAppletInstanceId = currentAppletInstanceInfo?.appInfo.installed_app_id as string;
-      const maybe_config = await this.sensemakerStore.checkIfAppletConfigExists(applet!.appInfo.installed_app_id);
-      return maybe_config || {}
+    () =>  derived(this._currentAppletInstances.store, async (applets: { EntryHashB64: AppletInstanceInfo & {gui: AppletGui}} | undefined) => {
+      if(!applets || !this.selectedResourceDef) return {}
+      const appletId = (this.selectedResourceDef as any).applet_eh;
+      console.log('applets[encodeHashToBase64(appletId)] :>> ', applets[encodeHashToBase64(appletId)]);
+      return applets[encodeHashToBase64(appletId)]
     }),
-    () => [this._currentAppletInstance, this.currentApplet],
+    () => [this._currentAppletInstances],
   );
 
   @state() _currentAppletContexts : any[] = [];
 
   protected async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
+    // If we have a derived applet config, set its contexts in state so that the tab buttons are rendered
     if(this._currentAppletConfig?.value) {
-      const currentConfig = await this._currentAppletConfig.value as  AppletConfig;
+      const currentConfig = await this._currentAppletConfig.value as AppletConfig;
       if(typeof currentConfig?.cultural_contexts !== 'object') return
       this._currentAppletContexts = Object.entries(currentConfig!.cultural_contexts);
     }
@@ -78,12 +77,13 @@ export default class NHDashBoardOverview extends NHComponent {
           </nh-button>
         </nh-page-header-card>
 
-        ${this.loadingState == LoadingState.NoAppletSensemakerData
+        ${!this.loaded || this.loadedState == LoadingState.NoAppletSensemakerData
           ? html`<nh-dashboard-skeleton></nh-dashboard-skeleton>`
           : html` <tabbed-context-tables
                     .resourceDefEntries=${this.resourceDefEntries}
                     .selectedAppletInstanceId=${this.currentAppletInstanceId}
                     .contexts=${this._currentAppletContexts}
+                    .loaded=${this.loaded}
                   ></tabbed-context-tables>`
         }
       </div>
