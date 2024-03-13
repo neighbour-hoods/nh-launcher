@@ -231,17 +231,19 @@ export class DashboardFilterMap extends NHComponent {
     if (!delegate || !gui || !this._dimensionEntries) return baseRecord; // We are unable to return renedered assessments, but return the base record so data exists in the table
     
     for (let dimensionEntry of this._dimensionEntries) {
-      if(dimensionEntry.entry.computed) continue;
-      if(compareUint8Arrays(assessment.dimension_eh, dimensionEntry.entryHash)) {
-        
-        console.log('linkedResourceDefRenderers :>> ', this._widgetConfigBlocksForResourceDef);
-        debugger;
-        const controlName = 'importanceAssessment'; // TODO: remove hard coding
-        const assessmentRenderer = linkedResourceDefRenderers[controlName];
+      if(dimensionEntry.entry.computed) continue; // Exclude objective dimensions
+      if(compareUint8Arrays(assessment.dimension_eh, dimensionEntry.entryHash) && this._widgetConfigBlocksForResourceDef[encodeHashToBase64(assessment.resource_def_eh)]) {
+        // Assume that validation on client/zome has enforced XOR on input/output dimensions and use dimension EH comparison to find widget control
+        const controls = this._widgetConfigBlocksForResourceDef[encodeHashToBase64(assessment.resource_def_eh)].find(widgetConfig => compareUint8Arrays(dimensionEntry.entryHash, widgetConfig.inputAssessmentWidget.dimensionEh))
+        if(!controls) throw new Error('Could not find a widget control in the widget config block that matches your assessment dimension');
+
+        const inputControlName = controls.inputAssessmentWidget.componentName;
+        const controlRenderer = (Object.values(linkedResourceDefRenderers) as AssessmentWidgetRenderer[]).find((renderer: AssessmentWidgetRenderer) => renderer.name == inputControlName);
+        if(!controlRenderer) throw new Error('Could not find a renderer for the widget config block that matches your assessment dimension');
 
         baseRecord[dimensionEntry.entry.name] = {
           delegate,
-          renderer: assessmentRenderer.component
+          renderer: controlRenderer.component
         }
       } else {
         baseRecord[dimensionEntry.entry.name] = {};
