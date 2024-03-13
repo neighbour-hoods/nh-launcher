@@ -1,5 +1,6 @@
 import {
   Assessment,
+  AssessmentWidgetRenderer,
   AssessmentWidgetRenderers,
   CulturalContext,
   Dimension,
@@ -26,7 +27,7 @@ import { appletInstanceInfosContext } from '../../context';
 import { NHComponent } from '@neighbourhoods/design-system-components';
 
 type DecoratorProps = {
-  renderers: AssessmentWidgetRenderers,
+  renderer: AssessmentWidgetRenderer,
   delegate: OutputAssessmentWidgetDelegate
 }
 
@@ -35,15 +36,7 @@ export class DashboardFilterMap extends NHComponent {
   @property({attribute: false}) _sensemakerStore!: SensemakerStore;
 
   @consume({ context: appletInstanceInfosContext })
-  @property({attribute: false}) _currentAppletInstance;
-
-  @state() _currentAppletInstanceRenderers = new StoreSubscriber(
-    this,
-    () =>  derived(this._currentAppletInstance.store, (applet: AppletInstanceInfo | any) => {
-      return {...applet}
-    }),
-    () => [this._currentAppletInstance.value],
-  );
+  @property({attribute: false}) _currentAppletInstances;
 
   @property() _rawAssessments = new StoreSubscriber(
     this,
@@ -100,7 +93,7 @@ export class DashboardFilterMap extends NHComponent {
   async updated(changedProps) {
     if (
       !!this.resourceDefEntries && changedProps.has('loaded') && typeof changedProps.get('loaded') == 'undefined' && this._appletInstanceRenderers?.value // all fetching complete by this point, continue to filter/map assessments
-      || changedProps.has('tableType') && typeof changedProps.get('tableType') !== 'undefined'
+      || changedProps.has('resourceName') && typeof changedProps.get('resourceName') !== 'undefined'
     ) {
       this.fieldDefs = this.generateContextFieldDefs();
       this.filterMapRawAssessmentsToTableRecords();
@@ -135,6 +128,7 @@ export class DashboardFilterMap extends NHComponent {
         : this.filterByResourceDefEh(assessments.flat(), this.resourceDefEh)
     ) as Assessment[];
 
+    console.log('filteredByResourceDef :>> ', filteredByResourceDef);
     // By objective/subjective dimension names
     let filteredByDimension;
 
@@ -215,24 +209,33 @@ export class DashboardFilterMap extends NHComponent {
   // Mapping
   mapAssessmentToAssessmentTableRecord(assessment: Assessment): AssessmentTableRecord {
     // Base record with basic fields
+    const linkedResourceDef = this.resourceDefEntries.find((rd: any) => compareUint8Arrays(assessment.resource_def_eh, rd.resource_def_eh)) as ResourceDef & {resource_def_eh: EntryHash};
+    if(!linkedResourceDef) throw new Error('No ResourceDef record for this assessment');
+    if(this._appletInstanceRenderers.value == null) throw new Error('No applet instance infos found');
+    const linkedResourceDefRenderers = this._appletInstanceRenderers.value[encodeHashToBase64(linkedResourceDef.applet_eh)];
+    if(!linkedResourceDefRenderers) throw new Error('No ResourceDef renderers found');
+
     const baseRecord = {
       neighbour: encodeHashToBase64(assessment.author),
       resource: {
-        renderer: this._currentAppletInstanceRenderers.value?.renderers.resourceRenderers.task_item,
+        renderer: linkedResourceDefRenderers[linkedResourceDef.resource_name],
         eh: encodeHashToBase64(assessment.resource_eh),
       },
     } as AssessmentTableRecord;
 
-    if (!this._dimensionEntries || !this._currentAppletInstance.value) return baseRecord;
-
-    const { renderers, delegate } = this.getOutputControlForAssessment(assessment) as any;
-    if(!renderers || !delegate) return baseRecord
-
+    const delegate = this.getControlForAssessment(assessment);
+    const gui = this._currentAppletInstances.value[encodeHashToBase64(linkedResourceDef.applet_eh)]?.gui;
+    
+    if (!delegate || !gui || !this._dimensionEntries) return baseRecord; // We are unable to return renedered assessments, but return the base record so data exists in the table
     for (let dimensionEntry of this._dimensionEntries) {
+      if(dimensionEntry.entry.computed) continue;
       if(compareUint8Arrays(assessment.dimension_eh, dimensionEntry.entryHash)) {
+        const controlName = 'heatAssessment'; // TODO: remove hard coding
+        const assessmentRenderer = linkedResourceDefRenderers[controlName];
+
         baseRecord[dimensionEntry.entry.name] = {
           delegate,
-          renderers
+          renderer: assessmentRenderer.component
         }
       } else {
         baseRecord[dimensionEntry.entry.name] = {};
@@ -257,10 +260,10 @@ export class DashboardFilterMap extends NHComponent {
             [name]: new FieldDefinition<AssessmentTableRecord>({
               heading: generateHeaderHTML('Assessment', cleanResourceNameForUI(name)),
               decorator: (value : DecoratorProps) => {
-                return !!value && value?.renderers && value?.delegate
+                return !!value && value?.renderer && value?.delegate
                     ? html`
                       <input-assessment-renderer
-                        .component=${value.renderers.heatAssessment.component}
+                        .component=${value.renderer}
                         .nhDelegate=${value.delegate}
                       ></input-assessment-renderer>
                     `
