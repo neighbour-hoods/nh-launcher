@@ -71,7 +71,7 @@ export class BlockRenderer<D> extends HTMLElement implements NHDelegateReceiver<
 
   // Expose the component setter/getter
   set component(component: NHDelegateReceiverConstructor<D>) {
-    this._registry.define('child-elem', this._component = component)
+    !this._registry.get('child-elem') && this._registry.define('child-elem', this._component = component)
     this.render()
   }
 
