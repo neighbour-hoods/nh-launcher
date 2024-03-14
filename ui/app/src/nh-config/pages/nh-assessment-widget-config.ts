@@ -308,13 +308,9 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
 
                 <nh-button
                   type="submit"
-                  @click=${async () => {
-                    try {
-                      await this._form?.handleSubmit();
-                      this._form?.reset();
-                      this.selectedWidgetKey = undefined;
-                    } catch (error) {
-                    }
+                  @submit-successful=${async () => {
+                    this.selectedWidgetKey = undefined;
+                    this.configuredWidgetsPersisted = false;
                   }}
                   id="add-widget-config"
                   .variant=${'success'}

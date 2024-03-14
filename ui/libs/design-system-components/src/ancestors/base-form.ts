@@ -79,7 +79,6 @@ export abstract class NHBaseForm extends NHComponentShoelace {
       }
     } else {
       console.warn('An error was thrown in form validation. Check that it was handled correctly.');
-      throw new Error('Form is invalid')
     }
   }
 
