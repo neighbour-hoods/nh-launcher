@@ -349,13 +349,13 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
 
     const inputDimensionBinding = {
       type: "applet",
-      appletId: this._appletInstanceInfo?.appletId as any, // TODO: Needs changing from string to EntryHash in the client package before correct typing here
+      appletId: this.resourceDef.applet_eh as any,
       componentName: assessment_widget,
       dimensionEh: decodeHashFromBase64(input_dimension),
     } as AssessmentWidgetConfig;
     const outputDimensionBinding = {
       type: "applet",
-      appletId: this._appletInstanceInfo?.appletId as any,
+      appletId: this.resourceDef.applet_eh as any,
       componentName: assessment_widget,
       dimensionEh: decodeHashFromBase64(output_dimension),
     } as AssessmentWidgetConfig;
