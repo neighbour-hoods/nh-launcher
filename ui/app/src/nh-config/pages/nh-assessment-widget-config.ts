@@ -96,6 +96,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   @state() selectedInputDimensionEh: EntryHash | undefined; // used to filter for the 3rd select
 
   @state() _workingWidgetControls!: AssessmentWidgetBlockConfig[];
+  @state() _workingWidgetControlRendererCache: Map<string, () => TemplateResult> = new Map();
 
   // AssessmentWidgetBlockConfig (group) and AssessmentWidgetRegistrationInputs (individual)
   @state() private _fetchedConfig!: AssessmentWidgetBlockConfig[];
@@ -134,6 +135,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
 
   protected async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     if(changedProperties.has('resourceDef') && typeof changedProperties.get('resourceDef') !== 'undefined') {
+      await this.resetWorkingState()
       await this.fetchExistingWidgetConfigBlock();
     }
   }
@@ -163,11 +165,12 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     this._workingWidgetControls = [];
     this.configuredInputWidgets = this._fetchedConfig
     this.selectedWidgetKey = undefined;
+    this._form.reset()
     this.requestUpdate()
   }
 
   renderWidgetControlPlaceholder() {
-    if(typeof this.selectedWidgetKey != 'undefined' && this?.placeHolderWidget) {
+    if(typeof this.selectedWidgetKey != 'undefined' && this._workingWidgetControlRendererCache?.has(this.selectedWidgetKey) && this?.placeHolderWidget) {
       return repeat([this.selectedWidgetKey], () => +(new Date), (_, _idx) =>this?.placeHolderWidget())
     }
     return html`<span slot="assessment-control"></span>`
@@ -201,7 +204,8 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 ${
                   this._appletInstanceRenderers?.value && (this._fetchedConfig && this._fetchedConfig.length > 0 || this?._workingWidgetControls)
                     ? repeat(renderableWidgets, () => +(new Date), (inputWidgetConfig, _index) => {
-                        const appletKey = encodeHashToBase64((inputWidgetConfig as any).appletId);
+                        const appletEh = (inputWidgetConfig as any)?.appletId;
+                        const appletKey = appletEh && encodeHashToBase64(appletEh);
                         const appletRenderers = this._appletInstanceRenderers.value[appletKey] as (AssessmentWidgetConfig | ResourceBlockRenderer)[];
                         if(!appletRenderers) throw new Error('Could not get applet renderers linked to this ResourcDef');
 
@@ -394,13 +398,9 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
 
     const selectedWidget = widgets?.find(widget => widget.name == this._form._model.assessment_widget);
     this.selectedWidgetKey = selectedWidget?.widgetKey;
-    if(!this._appletInstanceRenderers.value || !this.resourceDef.applet_eh) throw new Error("Could not get renderers for placeholder widget");
-    const widgetRenderer = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)][this.selectedWidgetKey as string];
-    this.placeHolderWidget = () => html`
-      <input-assessment-renderer slot="assessment-control"
-        .component=${widgetRenderer.component}
-        .nhDelegate=${new FakeInputAssessmentWidgetDelegate()}
-      ></input-assessment-renderer>`
+
+    this.placeHolderWidget = this?._workingWidgetControlRendererCache.get(this.selectedWidgetKey as string) as () => TemplateResult;
+
     this.selectedInputDimensionEh = this._form._model.input_dimension;
 
     e.currentTarget.requestUpdate();
@@ -435,6 +435,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                               .nhDelegate=${new FakeInputAssessmentWidgetDelegate()}
                             ></input-assessment-renderer>`
 
+                          this._workingWidgetControlRendererCache?.set(widget.widgetKey, renderBlock)
                           return ({
                             label: widget.name,
                             value: widget.name,
@@ -686,7 +687,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
         this.resourceDef?.resource_def_eh,
       );
       console.log('fetched persisted widget config block :>> ', this._fetchedConfig);
-      this.configuredWidgetsPersisted = true;
     } catch (error) {
       console.error(error);
     }
