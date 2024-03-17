@@ -38,7 +38,6 @@ export abstract class NHBaseForm extends NHComponentShoelace {
   protected handleInputChange(e: Event) {
     let name, value;
     let target = e.target as SlInput | SlCheckbox | HTMLInputElement | SlRadio | HTMLOptionElement;
-
     if(target.tagName === 'SL-RADIO' || target.tagName === 'OPTION') {
       //@ts-ignore
       name = target.parentElement.name || target.parentElement.dataset.name

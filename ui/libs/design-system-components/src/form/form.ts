@@ -13,7 +13,7 @@ import NHAlert from '../alert';
 
 // Define the interface for the field configuration
 interface BaseFieldConfig {
-  type: 'text' | 'select' | 'checkbox' | 'radio-group'| 'textarea';
+  type: 'text' | 'select' | 'checkbox' | 'radio-group'| 'textarea' | 'file';
   name: string;
   id?: string;
   size?: 'small' | 'medium' | 'large';
@@ -21,7 +21,7 @@ interface BaseFieldConfig {
   placeholder?: string;
   label?: string;
   defaultValue: string | boolean;
-  handleInputChangeOverload?: (e: Event, model: any, fields: any) => void;
+  handleInputChangeOverload?: (e: Event, model: any, fields: any, errors: any) => void;
   mutateValue?: (value: string | boolean) => unknown;
 }
 
@@ -44,8 +44,14 @@ interface RadioGroupFieldConfig extends BaseFieldConfig {
   direction: 'horizontal' | 'vertical';
 }
 
+// Define the interface for file upload field configuration
+interface FileUploadFieldConfig extends BaseFieldConfig {
+  type: 'file';
+  extension: string;
+}
+
 // Use a type union for the FieldConfig/Field types
-type FieldConfig = BaseFieldConfig | SelectFieldConfig | RadioGroupFieldConfig | CheckboxFieldConfig;
+type FieldConfig = BaseFieldConfig | SelectFieldConfig | RadioGroupFieldConfig | CheckboxFieldConfig | FileUploadFieldConfig;
 
 type NHField = NHTextInput | NHRadioGroup | NHCheckbox | NHSelect;
 
@@ -69,7 +75,7 @@ interface FormConfig {
 export default class NHForm extends NHBaseForm {
   @property({ type: Object }) config!: FormConfig;
 
-  @property() private inputChangeOverloads?: Map<string, (e: Event, model: object, fields: object) => void>; // Will be assigned from the config in the firstUpdated hook
+  @property() private inputChangeOverloads?: Map<string, (e: Event, model: object, fields: object, errors: object) => void>; // Will be assigned from the config in the firstUpdated hook
   @property() private inputMutationOverloads?: Map<string, (value: string | boolean) => unknown>; // Will be assigned from the config in the firstUpdated hook
   @property() private fieldRefs: Map<string, NHField> = new Map();// Will be assigned from the config in the firstUpdated hook
 
@@ -163,7 +169,7 @@ export default class NHForm extends NHBaseForm {
 
     // Additionally overload input change with a callback that takes the model, form field refs (e.g. for manually disabling other inputs)
     if(this.inputChangeOverloads?.has(target.name)) {
-      this.inputChangeOverloads?.get(target.name)?.apply(null, [e, this._model, Object.fromEntries(this.fieldRefs.entries())]);
+      this.inputChangeOverloads?.get(target.name)?.apply(null, [e, this._model, Object.fromEntries(this.fieldRefs.entries()), this.errors]);
     }
   }
 
@@ -302,10 +308,10 @@ export default class NHForm extends NHBaseForm {
           </nh-tooltip>`;
       case "textarea":
         return html`
-          <nh-tooltip .visible=${this.shouldShowValidationErrorForField(fieldConfig.name)} .text=${this.getErrorMessage(fieldConfig.name)} .variant=${"danger"}>
+          <nh-tooltip .visible=${fieldConfig.required && this.shouldShowValidationErrorForField(fieldConfig.name)} .text=${this.getErrorMessage(fieldConfig.name)} .variant=${"danger"}>
             <nh-textarea
               slot="hoverable"
-              .errored=${this.shouldShowValidationErrorForField(fieldConfig.name)}
+              .errored=${fieldConfig.required && this.shouldShowValidationErrorForField(fieldConfig.name)}
               .size=${fieldConfig.size}
               .required=${fieldConfig.required}
               id=${fieldConfig.id}
@@ -385,6 +391,49 @@ export default class NHForm extends NHBaseForm {
               @change=${(e: Event) => this.handleInputChange(e)}
             />
           </nh-tooltip>`;
+    
+      case "file":
+        const fileConfig = fieldConfig as FileUploadFieldConfig;
+        return html`
+          <nh-tooltip
+            .variant=${'danger'}
+            .visible=${this.shouldShowValidationErrorForField(fileConfig.name)}
+            .text=${this.getErrorMessage(fileConfig.name)}
+          >
+            <div
+              slot="hoverable"
+              class="file-upload${classMap({
+                errored: !!this.shouldShowValidationErrorForField(fileConfig.name)
+                })}"
+            >
+              <label
+                for=${fileConfig.name}
+              >${fileConfig.label}</label>
+              <label
+                class="reqd"
+                for=${fileConfig.name}
+                name=${fileConfig.name}
+                data-name=${fileConfig.name}
+              >⁎</label>
+              <nh-button
+                .variant=${"primary"}
+                .size=${"md"}
+                @click=${(e) => { e.currentTarget.nextElementSibling.click() }}
+              >
+                ${fileConfig.placeholder}  
+              </nh-button>
+              <input
+                style="display:none;"
+                type="file"
+                accept=${fileConfig.extension}
+                id=${fileConfig.id}
+                name=${fileConfig.name}
+                @change=${(e: Event) => this.handleInputChange(e)}
+                value=${(this as any)._model[fileConfig.name as any]}
+              />
+            </div>
+          </nh-tooltip>
+            `;
       default:
         return html``;
     }
@@ -431,7 +480,7 @@ export default class NHForm extends NHBaseForm {
 
         form > * {
           display: flex;
-          flex: 1;
+          flex: 1 1 100%;
           justify-content: center;
         }
 
@@ -470,6 +519,28 @@ export default class NHForm extends NHBaseForm {
           min-width: 18rem;
           justify-content: center;
           margin-top: calc(1px * var(--nh-spacing-md));
+        }
+
+        .row .file-upload {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: calc(1px * var(--nh-spacing-sm)) calc(1px * var(--nh-spacing-md));
+          margin-top: calc(1px * var(--nh-spacing-sm));
+        }
+        .row .file-upload.errored {
+          outline: 2px solid var(--nh-theme-error-default, #E95C7B);
+          border-radius: 4px;
+        }
+    
+        label.reqd {
+          height: 100%;
+          align-items: center;
+          flex: 1;
+          flex-grow: 0;
+          flex-basis: 8px;
+          padding-left: 4px;
+          color: var(--nh-theme-error-default);
         }
 
         /* Bugfix for custom select */
