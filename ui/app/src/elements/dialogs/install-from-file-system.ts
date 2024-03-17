@@ -4,10 +4,6 @@ import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
 import { consume } from '@lit/context';
 import {
   TextField,
-  Button,
-  Snackbar,
-  Dialog,
-  CircularProgress,
   TextArea,
 } from '@scoped-elements/material-web';
 
@@ -18,7 +14,7 @@ import { provideAllApplets } from "../../matrix-helpers";
 import { matrixContext, weGroupContext } from '../../context';
 import { DnaHash, EntryHash, EntryHashB64 } from '@holochain/client';
 import { fakeSeededEntryHash } from '../../utils';
-import { SlInput, SlTextarea } from '@scoped-elements/shoelace';
+import { SlInput, SlSpinner, SlTextarea } from '@scoped-elements/shoelace';
 import { NHAlert, NHButton, NHDialog } from '@neighbourhoods/design-system-components';
 
 export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
@@ -29,6 +25,8 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
   @consume({ context: weGroupContext, subscribe: true })
   @property({attribute: false})
   weGroupId!: DnaHash;
+
+  @state() loading!: boolean;
 
   _allApplets = new StoreSubscriber(
     this,
@@ -88,6 +86,7 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
   }
 
   async createApplet() {
+    this.loading = true;
     try {
       const appletInfo: AppletMetaData = {
         title: this._installedAppIdField.value, // for the applet class name we just take the user defined name for now.
@@ -106,6 +105,7 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
       );
       await this.updateComplete;
 
+
       this.dispatchEvent(
         new CustomEvent("trigger-alert", {
           detail: { 
@@ -117,7 +117,7 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
           composed: true,
         })
       );
-
+      
       this.dispatchEvent(
         new CustomEvent('applet-installed', {
           detail: { appletEntryHash, weGroupId: this.weGroupId },
@@ -125,6 +125,7 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
           bubbles: true,
         }),
       );
+      this.loading = false;
     } catch (e) {
       this.dispatchEvent(
         new CustomEvent("trigger-alert", {
@@ -137,6 +138,7 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
           composed: true,
         })
       );
+      this.loading = false;
       console.log('Installation error:', e);
     }
   }
@@ -158,7 +160,9 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
   }
 
   render() {
-    return html`
+    return this.loading
+        ? html`<sl-spinner style="position: absolute; left: calc(50% - 2.5rem); top: calc(50vh - 2.5rem); font-size: 5rem; --track-width: 12px; --track-color: var(--nh-theme-accent-default); --indicator-color: var(--nh-theme-accent-subtle);"></sl-spinner>`
+        : html`
       <button id="open-applet-dialog-button" style="opacity:0" type="button"></button>
       <nh-dialog
         id="applet-dialog"
@@ -225,7 +229,7 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
     'nh-alert': NHAlert,
     'nh-button': NHButton,
     'nh-dialog': NHDialog,
-    'mwc-snackbar': Snackbar,
+    "sl-spinner": SlSpinner,
   }
 
   static get styles() {
