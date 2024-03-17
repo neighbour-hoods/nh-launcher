@@ -1,21 +1,17 @@
-import { css, html, LitElement } from 'lit';
+import { css, html, LitElement, TemplateResult } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
 import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
 import { consume } from '@lit/context';
-import {
-  TextField,
-  TextArea,
-} from '@scoped-elements/material-web';
-
 import { AppletMetaData } from '../../types';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import { MatrixStore } from '../../matrix-store';
 import { provideAllApplets } from "../../matrix-helpers";
 import { matrixContext, weGroupContext } from '../../context';
-import { DnaHash, EntryHash, EntryHashB64 } from '@holochain/client';
+import { DnaHash, EntryHash } from '@holochain/client';
 import { fakeSeededEntryHash } from '../../utils';
-import { SlInput, SlSpinner, SlTextarea } from '@scoped-elements/shoelace';
-import { NHAlert, NHButton, NHDialog } from '@neighbourhoods/design-system-components';
+import { SlSpinner } from '@scoped-elements/shoelace';
+import { NHButton, NHDialog, NHForm } from '@neighbourhoods/design-system-components';
+import { array, object, string } from 'yup';
 
 export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
   @consume({ context: matrixContext , subscribe: true })
@@ -34,64 +30,44 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
     () => [this._matrixStore, this.weGroupId],
   );
 
-  @query('#open-applet-dialog-button')
-  _openAppletDialogButton!: HTMLElement;
+  @query('nh-form') private _form;
+  @query("nh-button[type='submit']") private _submitBtn;
+  @query('#open-applet-dialog-button') private _openAppletDialogButton!: HTMLElement;
 
-  @query('#installed-app-id')
-  _installedAppIdField!: TextField;
-
-  @query('#description-field')
-  _descriptionField!: TextArea;
-
-  @state()
-  _duplicateName: boolean = false;
-
-  @state()
-  _fileBytes: Uint8Array | undefined = undefined;
-
-  @state()
-  _fakeDevhubHappReleaseHash: EntryHash | undefined = undefined;
+  // Local state for values not covered by the nh-form api:
+  @state() private _duplicateName: boolean = false;
+  @state() private _fileBytes: Uint8Array | undefined = undefined;
+  @state() private _fakeDevhubHappReleaseHash: EntryHash | undefined = undefined;
 
   open() {
     this._openAppletDialogButton.click();
   }
 
-  close() {
-    this._fileBytes = undefined;
-    this._installedAppIdField.value = '';
-    this._descriptionField.value = '';
-  }
+  private resetLocalState() { this._fileBytes = undefined }
 
-  get publishDisabled() {
-    return !this._installedAppIdField || this._duplicateName || !this._fileBytes;
-  }
-
-  checkValidity(newValue) {
+  private checkNameUniqueness(newValue: string): boolean {
     if (this._allApplets.value) {
       const allNames = this._allApplets.value!.map(
         ([_appletEntryHash, applet]) => applet.customName,
       );
       if (allNames.includes(newValue)) {
         this._duplicateName = true;
-        return {
-          valid: false,
-        };
+        return false
       }
     }
 
     this._duplicateName = false;
-    return {
-      valid: true,
-    };
+    return true
   }
 
-  async createApplet() {
+  private async createApplet(model: any) {
     this.loading = true;
+    const { applet_name, applet_description } = model;
     try {
       const appletInfo: AppletMetaData = {
-        title: this._installedAppIdField.value, // for the applet class name we just take the user defined name for now.
+        title: applet_name, // for the applet class name we just take the user defined name for now.
         subtitle: undefined,
-        description: this._descriptionField.value,
+        description: applet_description,
         devhubHappReleaseHash: this._fakeDevhubHappReleaseHash!,
         devhubGuiReleaseHash: this._fakeDevhubHappReleaseHash!, // just take the same fake hash for the GUI hash
         icon: undefined,
@@ -100,11 +76,10 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
       const appletEntryHash = await this._matrixStore.createApplet(
         this.weGroupId,
         appletInfo,
-        this._installedAppIdField.value,
+        applet_name,
         this._fileBytes, // compressed webhapp as Uint8Array
       );
       await this.updateComplete;
-
 
       this.dispatchEvent(
         new CustomEvent("trigger-alert", {
@@ -143,7 +118,7 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
     }
   }
 
-  async loadFileBytes(e: Event) {
+  private async loadFileBytes(e: Event) {
     const target = e.target as HTMLInputElement
     if (target.files) {
       const file = target.files.item(0);
@@ -159,83 +134,114 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
     }
   }
 
-  render() {
-    return this.loading
-        ? html`<sl-spinner style="position: absolute; left: calc(50% - 2.5rem); top: calc(50vh - 2.5rem); font-size: 5rem; --track-width: 12px; --track-color: var(--nh-theme-accent-default); --indicator-color: var(--nh-theme-accent-subtle);"></sl-spinner>`
-        : html`
-      <button id="open-applet-dialog-button" style="opacity:0" type="button"></button>
-      <nh-dialog
-        id="applet-dialog"
-        size="medium"
-        dialogType=${"applet-install"}
-        handleOk=${this.createApplet.bind(this)}
-        .title=${"Install Applet"}
-        .openButtonRef=${this._openAppletDialogButton}
-        .primaryButtonDisabled=${this.publishDisabled}
+  private renderMainForm(): TemplateResult {
+    return html`
+      <nh-form
+        .config=${(() => ({
+          submitBtnRef: (() => this._submitBtn)(),
+          resetOverload: this.resetLocalState,
+          rows: [1, 1, 1],
+          fields: [
+            [
+              {
+                type: 'text',
+                placeholder: 'Enter your applet name',
+                label: 'Applet Name:',
+                name: 'applet_name',
+                id: 'applet-name',
+                defaultValue: '',
+                required: true,
+                handleInputChangeOverload: async (_e, model, _fields) => {this.checkNameUniqueness.call(this, model.applet_name)},
+              },
+            ],
+            [
+              {
+                type: 'textarea',
+                placeholder: 'Enter a description',
+                label: 'Description:',
+                name: 'applet_description',
+                id: 'applet-description',
+                defaultValue: '',
+                required: false,
+              },
+            ],
+            [
+              {
+                type: 'file',
+                placeholder: 'Choose File',
+                label: 'Upload:',
+                name: 'webhapp_file',
+                id: 'webhapp-file',
+                extension: '.webhapp',
+                required: true,
+                disabled: false,
+                defaultValue: '',
+                handleInputChangeOverload: this.loadFileBytes.bind(this),
+              },
+            ],
+          ],
+          submitOverload: this.createApplet.bind(this),
+          schema: object({
+            applet_name: string()
+              .min(1, 'Must be at least 1 characters')
+              .required('Enter a name for your new applet.')
+              .test('is_duplicate', 'This name has already been used', () => !this._duplicateName),
+            applet_description: string(),
+            webhapp_file: string()
+              .min(1, 'Your webhapp bundle have a valid path.')
+              .required('Add a webhapp bundle')
+          }),
+        }))()}
       >
-        <div slot="inner-content" class="column">
-          <nh-alert
-            .title=${"Note:"}
-            .description=${"It is recommended to download and install Applets from the Applets Library if available. This guarantees compatibility between Applets of the same type and version across neighbourhoods and it allows features like federation."}
-            .closable=${false}
-            .type=${"neutral"}
-          >
-          </nh-alert>
-          <div style="width: 100%;">
-            <sl-input
-              id="installed-app-id"
-              label="Applet Name"
-              type="text"
-              size="medium"
-              @sl-input=${e => this.requestUpdate()}
-              required
-              @sl-change=${(e) => this.checkValidity(e.target.value)}
-            ></sl-input>
-            ${this._duplicateName
-              ? html`<div
-                  class="default-font"
-                  style="margin-bottom: 16px; color: var(--nh-theme-error-emphasis); font-size: calc(1px * var(--nh-font-size-base));"
-                >
-                  Name already exists.
-                </div>`
-              : html``}
-            <sl-textarea id="description-field" label="Description"> </sl-textarea>
-            <div style="display: flex; justify-content: space-between">
-              <div style="display: flex; flex-direction: column; gap: calc(1px * var(--nh-spacing-md))">
-                <span class="label">Select file</span>
-                ${this._fileBytes
-                  ? html``
-                  : html`<div
-                      class="default-font"
-                      style="color: var(--nh-theme-error-emphasis); font-size: calc(1px * var(--nh-font-size-base));"
-                    >
-                      No file selected.
-                    </div>`}
-              </div>
-              <nh-button .disabled=${this._fileBytes} .variant=${"primary"} .size=${"md"} @click=${(e) => {if (this._fileBytes) return; e.currentTarget.nextElementSibling.click()}}>
-                ${!this._fileBytes ? "Choose File" : "File Chosen"}
-              </nh-button>
-              <input style="display:none;" type="file" id="filepicker" accept=".webhapp" @change=${this.loadFileBytes} />
-            </div>
-          </div>
-        </div>
-      </nh-dialog>
+      </nh-form>
     `;
   }
 
+  render() {
+    return this.loading
+      ? html`<sl-spinner style="position: absolute; left: calc(50% - 2.5rem); top: calc(50vh - 2.5rem); font-size: 5rem; --track-width: 12px; --track-color: var(--nh-theme-accent-default); --indicator-color: var(--nh-theme-accent-subtle);"></sl-spinner>`
+      : html`
+        <button id="open-applet-dialog-button" style="opacity:0" type="button"></button>
+        <nh-dialog
+          .handleClose=${() => {this.resetLocalState.call(this); this._form.reset()}}
+          id="applet-dialog"
+          size="medium"
+          .dialogType=${'applet-install'}
+          @form-submitted=${() => {console.log('submitted!');this.createApplet.bind(this)}}
+          .title=${"Install Applet"}
+          .openButtonRef=${this._openAppletDialogButton}
+        >
+          <div slot="inner-content" class="container">
+            ${this.renderMainForm()}
+          </div>
+
+          <nh-button
+            slot="primary-action"
+            type="submit"
+            id="install-applet"
+            .variant=${'primary'}
+            .size=${'md'}
+          >Install</nh-button>
+        </nh-dialog>
+      `;
+  }
+
   static elementDefinitions = {
-    'sl-textarea': SlTextarea,
-    'sl-input': SlInput,
-    'nh-alert': NHAlert,
     'nh-button': NHButton,
     'nh-dialog': NHDialog,
+    'nh-form': NHForm,
     "sl-spinner": SlSpinner,
   }
 
   static get styles() {
     return css`
-      .column {
+      :host {
         display: flex;
+      }
+      .container {
+        padding: 0.5rem;
+        display: flex;
+        flex: 1;
         flex-direction: column;
         align-items: start;
         justify-content: space-between;
@@ -245,39 +251,14 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
         overflow: auto !important;
         color: var(--nh-theme-fg-on-dark);
       }
+      nh-form {
+        padding-bottom: 2rem;
+      }
       @media (max-height: 767px) {
         .column {
           flex-basis: 400%;
           padding-left: calc(1px * var(--nh-spacing-xl));
         }
-      }
-      sl-input::part(base),
-      sl-textarea::part(base) {
-        border: none;
-        background-color: var(--nh-theme-bg-detail);
-        padding: calc(1px * var(--nh-spacing-md)) calc(1px * var(--nh-spacing-md));
-      }
-      sl-input::part(base) {
-        height: calc(1px * var(--nh-spacing-xxl));
-      }
-      sl-input::part(form-control), sl-textarea::part(form-control) {
-        margin-bottom: calc(1px * var(--nh-spacing-xl));
-      }
-      sl-input::part(input),
-      sl-textarea::part(textarea) {
-        color: var(--nh-theme-fg-default);
-        height: auto !important;
-        font-weight: 500;
-        margin: 0 calc(1px * var(--nh-spacing-xs));
-        padding: calc(1px * var(--nh-spacing-xs));
-      }
-      *::part(label), span.label {
-        --sl-spacing-3x-small: calc(1px * var(--nh-spacing-xl));
-        font-size: calc(1px * var(--nh-font-size-base));
-      }
-      sl-input::part(input)::placeholder {
-        color: var(--nh-theme-input-placeholder);
-        opacity: 1;
       }
     `;
   }
