@@ -24,7 +24,7 @@ import { AppletIconBadge } from './elements/components/applet-icon-badge';
 import { getStatus } from '@neighbourhoods/app-loader';
 import { AppletNotRunning } from './elements/dashboard/applet-not-running';
 import { IconDot } from './elements/components/icon-dot';
-import { NHButton, NHDialog, NHProfileCard, NHTooltip } from '@neighbourhoods/design-system-components';
+import { NHAlert, NHButton, NHDialog, NHProfileCard, NHTooltip } from '@neighbourhoods/design-system-components';
 import { WithProfile } from './elements/components/profile/with-profile';
 import { b64images } from '@neighbourhoods/design-system-styles';
 import { provideMatrix } from './matrix-helpers.js';
@@ -49,6 +49,13 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
   _sensemakerDashboard;
   @queryAsync('#nh-home')
   _neighbourhoodHome;
+
+
+  @state() _alertTitle!: string;
+  @state() _alertMsg!: string;
+  @state() _alertClosable: boolean = true;
+  @state() _alertType!: "success" | "danger";
+  @query('#alert') private _alert;
 
   /**
    * Defines the content of the dashboard
@@ -439,27 +446,19 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
         .openDialogButton=${this._createNHDialogButton}
       ></create-nh-dialog>
 
-      <mwc-snackbar
-        id="applet-centric-snackbar"
-        labelText="Applet-Centric Navigation"
-        style="text-align: center;"
-      ></mwc-snackbar>
-      <mwc-snackbar
-        id="group-centric-snackbar"
-        labelText="Group-Centric Navigation"
-        style="text-align: center;"
-      ></mwc-snackbar>
-      <mwc-snackbar
-        id="group-left-snackbar"
-        labelText="Group left."
-        style="text-align: center;"
-      ></mwc-snackbar>
-
       <div
         class="row"
         style="flex: 1"
         @we-group-joined=${e => this.handleWeGroupAdded(e)}
         @group-left=${e => this.handleWeGroupLeft(e)}
+        @trigger-alert=${(e: CustomEvent) =>{
+          const {title, msg, closable, type} = e.detail;
+          this._alertTitle = title;
+          this._alertMsg = msg;
+          this._alertType = type;
+          this._alertClosable = closable;
+          this._alert.openToast();
+        }}
       >
         <div class="column">
           <div
@@ -545,6 +544,15 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
             ${this.renderDashboardContent()}
           </div>
         </div>
+        <nh-alert
+          id="alert"
+          .title=${this._alertTitle}
+          .description=${this._alertMsg}
+          .closable=${this._alertClosable}
+          .isToast=${true}
+          .open=${false}
+          .type=${this._alertType}>
+        </nh-alert>
       </div>
     `;
   }
@@ -562,6 +570,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
       'nh-home': NeighbourhoodHome,
       'nh-dialog': NHDialog,
       'with-profile': WithProfile,
+      'nh-alert': NHAlert,
       'nh-button': NHButton,
       'nh-profile-card': NHProfileCard,
       'nh-global-config': NHGlobalConfig,
