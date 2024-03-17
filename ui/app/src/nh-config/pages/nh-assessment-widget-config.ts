@@ -145,7 +145,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
 
   private getCombinedWorkingAndFetchedWidgets() {
     let widgets: AssessmentWidgetBlockConfig[]
-    debugger;
     if(this._fetchedConfig && this._workingWidgetControls && this._workingWidgetControls.length > 0) {
       widgets = this._fetchedConfig.length > 0 ? [
         ...this._fetchedConfig, ...this._workingWidgetControls
