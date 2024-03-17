@@ -8,7 +8,8 @@ import { sharedStyles } from "./sharedStyles";
 import { MatrixStore } from "./matrix-store";
 import { matrixContext } from "./context";
 import { MainDashboard } from "./main-dashboard";
-import { connectHolochainApp, getCellId } from "@neighbourhoods/app-loader";
+import { connectHolochainApp } from "@neighbourhoods/app-loader";
+import { NHAlert } from "@neighbourhoods/design-system-components";
 
 @customElement('we-app')
 export class WeApp extends ScopedRegistryHost(LitElement) {
@@ -33,19 +34,43 @@ export class WeApp extends ScopedRegistryHost(LitElement) {
     this.loading = false;
   }
 
+  @state() _alertTitle!: string;
+  @state() _alertMsg!: string;
+  @state() _alertClosable: boolean = true;
+  @state() _alertType!: "success" | "danger";
+  @query('#alert') private _alert;
+
   render() {
     if (this.loading)
       return html`<div class="row center-content" style="flex: 1;">
         <mwc-circular-progress indeterminate></mwc-circular-progress>
       </div>`;
 
-    return html` <main-dashboard style="flex: 1;"></main-dashboard> `;
+    return html` <main-dashboard  
+      @trigger-alert=${(e: CustomEvent) =>{
+        const {title, msg, closable, type} = e.detail;
+        this._alertTitle = title;
+        this._alertMsg = msg;
+        this._alertType = type;
+        this._alertClosable = closable;
+        this._alert.openToast();
+      }} 
+      >
+        <nh-alert
+          id="alert"
+          .title=${this._alertTitle}
+          .description=${this._alertMsg}
+          .closable=${this._alertClosable}
+          .isToast=${true}
+          .open=${false}
+          .type=${this._alertType}>
+        </nh-alert>
+      </main-dashboard> `;
   }
 
-  static get elementDefinitions() {
-    return {
+  static elementDefinitions = {
       "main-dashboard": MainDashboard,
-    };
+      'nh-alert': NHAlert
   }
 
   static get styles() {
@@ -56,6 +81,9 @@ export class WeApp extends ScopedRegistryHost(LitElement) {
           margin: 0px;
           height: 100vh;
           display: flex;
+        }
+        main-dashboard {
+          flex: 1
         }
       `,
     ];

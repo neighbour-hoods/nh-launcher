@@ -88,7 +88,6 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
   }
 
   async createApplet() {
-    (this.shadowRoot?.getElementById('installing-progress') as Snackbar).show();
     try {
       const appletInfo: AppletMetaData = {
         title: this._installedAppIdField.value, // for the applet class name we just take the user defined name for now.
@@ -105,8 +104,19 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
         this._installedAppIdField.value,
         this._fileBytes, // compressed webhapp as Uint8Array
       );
-      (this.shadowRoot?.getElementById('installing-progress') as Snackbar).close();
-      (this.shadowRoot?.getElementById('success-snackbar') as Snackbar).show();
+      await this.updateComplete;
+
+      this.dispatchEvent(
+        new CustomEvent("trigger-alert", {
+          detail: { 
+            title: "Applet Installed",
+            msg: "You can now use your applet, and any assessments made in it will show up on your dashboard.",
+            type: "success"
+          },
+          bubbles: true,
+          composed: true,
+        })
+      );
 
       this.dispatchEvent(
         new CustomEvent('applet-installed', {
@@ -116,8 +126,17 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
         }),
       );
     } catch (e) {
-      (this.shadowRoot?.getElementById('installing-progress') as Snackbar).close();
-      (this.shadowRoot?.getElementById('error-snackbar') as Snackbar).show();
+      this.dispatchEvent(
+        new CustomEvent("trigger-alert", {
+          detail: { 
+            title: "Applet Could Not Be Installed",
+            msg: "There was a problem installing your applet. Please check that you have a valid and functioning webhapp bundle.",
+            type: "danger"
+          },
+          bubbles: true,
+          composed: true,
+        })
+      );
       console.log('Installation error:', e);
     }
   }
@@ -138,31 +157,8 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
     }
   }
 
-  renderErrorSnackbar() {
-    return html`
-      <mwc-snackbar id="error-snackbar" labelText="Installation failed! (See console for details)">
-      </mwc-snackbar>
-    `;
-  }
-
-  renderSuccessSnackbar() {
-    return html`
-      <mwc-snackbar id="success-snackbar" labelText="Installation successful"></mwc-snackbar>
-    `;
-  }
-
-  renderInstallingProgress() {
-    return html`
-      <mwc-snackbar id="installing-progress" labelText="Installing..." .timeoutMs=${-1}>
-      </mwc-snackbar>
-    `;
-  }
-
   render() {
     return html`
-      ${this.renderErrorSnackbar()} ${this.renderSuccessSnackbar()}
-      ${this.renderInstallingProgress()}
-
       <button id="open-applet-dialog-button" style="opacity:0" type="button"></button>
       <nh-dialog
         id="applet-dialog"

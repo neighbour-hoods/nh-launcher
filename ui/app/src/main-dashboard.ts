@@ -51,12 +51,6 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
   _neighbourhoodHome;
 
 
-  @state() _alertTitle!: string;
-  @state() _alertMsg!: string;
-  @state() _alertClosable: boolean = true;
-  @state() _alertType!: "success" | "danger";
-  @query('#alert') private _alert;
-
   /**
    * Defines the content of the dashboard
    */
@@ -451,14 +445,6 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
         style="flex: 1"
         @we-group-joined=${e => this.handleWeGroupAdded(e)}
         @group-left=${e => this.handleWeGroupLeft(e)}
-        @trigger-alert=${(e: CustomEvent) =>{
-          const {title, msg, closable, type} = e.detail;
-          this._alertTitle = title;
-          this._alertMsg = msg;
-          this._alertType = type;
-          this._alertClosable = closable;
-          this._alert.openToast();
-        }}
       >
         <div class="column">
           <div
@@ -544,15 +530,6 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
             ${this.renderDashboardContent()}
           </div>
         </div>
-        <nh-alert
-          id="alert"
-          .title=${this._alertTitle}
-          .description=${this._alertMsg}
-          .closable=${this._alertClosable}
-          .isToast=${true}
-          .open=${false}
-          .type=${this._alertType}>
-        </nh-alert>
       </div>
     `;
   }
@@ -570,7 +547,6 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
       'nh-home': NeighbourhoodHome,
       'nh-dialog': NHDialog,
       'with-profile': WithProfile,
-      'nh-alert': NHAlert,
       'nh-button': NHButton,
       'nh-profile-card': NHProfileCard,
       'nh-global-config': NHGlobalConfig,
