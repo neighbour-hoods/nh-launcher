@@ -89,7 +89,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
 
   @state() loading: boolean = false;
   @state() editingConfig: boolean = false;
-  @state() placeHolderWidget!: () => TemplateResult;
+  @state() placeHolderWidget!: (() => TemplateResult) | undefined;
   @state() configuredWidgetsPersisted: boolean = true; // Is the in memory representation the same as on DHT?
 
   @state() selectedWidgetKey: string | undefined; // nh-form select options for the 2nd/3rd selects are configured dynamically when this state change triggers a re-render
@@ -104,8 +104,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
 
   // Derived from _fetchedConfig
   @state() configuredInputWidgets!: AssessmentWidgetBlockConfig[];
-
-  @state() private _appletInstanceInfo!: AppletInstanceInfo | undefined;
 
   @state() private _inputDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
   @state() private _outputDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
@@ -147,6 +145,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
 
   private getCombinedWorkingAndFetchedWidgets() {
     let widgets: AssessmentWidgetBlockConfig[]
+    debugger;
     if(this._fetchedConfig && this._workingWidgetControls && this._workingWidgetControls.length > 0) {
       widgets = this._fetchedConfig.length > 0 ? [
         ...this._fetchedConfig, ...this._workingWidgetControls
@@ -162,16 +161,17 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   private async resetWorkingState() {
     await this.fetchExistingWidgetConfigBlock();
     this.configuredWidgetsPersisted = true
+    this.placeHolderWidget = undefined;
+    this.selectedWidgetKey = undefined;
     this._workingWidgetControls = [];
     this.configuredInputWidgets = this._fetchedConfig
-    this.selectedWidgetKey = undefined;
     this._form.reset()
     this.requestUpdate()
   }
 
   renderWidgetControlPlaceholder() {
     if(typeof this.selectedWidgetKey != 'undefined' && this._workingWidgetControlRendererCache?.has(this.selectedWidgetKey) && this?.placeHolderWidget) {
-      return repeat([this.selectedWidgetKey], () => +(new Date), (_, _idx) =>this?.placeHolderWidget())
+      return repeat([this.selectedWidgetKey], () => +(new Date), (_, _idx) => this.placeHolderWidget!())
     }
     return html`<span slot="assessment-control"></span>`
   }
@@ -279,6 +279,11 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
             @sl-hide=${(_e: Event) => {
               this.editingConfig = false;
             }}
+            @submit-successful=${async () => {
+              this.placeHolderWidget = undefined;
+              this.requestUpdate()
+              await this.updateComplete
+            }}
           >
             <div>
               <h2>Add Assessment Control</h2>
@@ -312,10 +317,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
 
                 <nh-button
                   type="submit"
-                  @submit-successful=${async () => {
-                    this.selectedWidgetKey = undefined;
-                    this.configuredWidgetsPersisted = false;
-                  }}
                   id="add-widget-config"
                   .variant=${'success'}
                   .size=${'md'}
