@@ -1,6 +1,5 @@
 import { html, css, TemplateResult } from 'lit';
-import { property, state } from 'lit/decorators.js';
-import { ref } from "lit/directives/ref.js";
+import { property, query, state } from 'lit/decorators.js';
 
 import {
   FieldDefinitions,
@@ -30,18 +29,19 @@ export class DashboardTable extends NHComponent {
   @property({ type: Array })
   assessments: AssessmentTableRecord[] = [];
 
-  @property()
-  resourceName!: string;
-  @state()
-  columns: number = 0;
-  @state()
-  loading: boolean = true;
+  @property() resourceName!: string;
+  @state() columns: number = 0;
+  @state() loading: boolean = true;
+  @state() showSkeleton: boolean = false;
+
+  @query('wc-table') _table;
+
   @property()
   contextFieldDefs!: { [x: string]: FieldDefinition<AssessmentTableRecord> };
   @property()
   tableType!: AssessmentTableType;
 
-  updateTable() {
+  async updateTable() {
     this.tableStore.fieldDefs = this.generateFieldDefs(this.resourceName, this.contextFieldDefs);
 
     // Check if we have the necessary data to create the table
@@ -51,10 +51,12 @@ export class DashboardTable extends NHComponent {
     }
     
     // The following line removes records in the table that have no assessment value for the context field definitions generate by generateFieldDefs
-    this.contextFieldDefs && Object.entries(this.contextFieldDefs).length  && 
-      (this.tableStore.records = this.assessments.filter(assessment => Object.keys(this.contextFieldDefs).some(contextField => assessment[contextField] !== "")) as AssessmentTableRecord[] )
-      
-    if(this.assessments.length == 0) {
+    if(this.contextFieldDefs && Object.entries(this.contextFieldDefs).length ) {
+      this.tableStore.records = this.assessments.filter(assessment => Object.keys(this.contextFieldDefs).some(contextField => assessment[contextField] !== "")) as AssessmentTableRecord[];
+      this.showSkeleton = false;
+    } 
+
+    if(!this.loading && this.tableStore.records.length == 0 && this.assessments.length == 0) {
       this.dispatchEvent(
         new CustomEvent("trigger-alert", {
           detail: { 
@@ -66,7 +68,8 @@ export class DashboardTable extends NHComponent {
           bubbles: true,
           composed: true,
         })
-      );
+        );
+        this.showSkeleton = true;
     }
     if(typeof this.contextFieldDefs == 'object') this.columns = Object.values(this.contextFieldDefs).length + 2
   }
@@ -84,15 +87,14 @@ export class DashboardTable extends NHComponent {
     });
   }
 
-  updated(changedProps) {
+  async updated(changedProps) {
     if (changedProps.has('assessments') || changedProps.has('contextFieldDefs') || changedProps.has('resourceName')) {
-      this.updateTable();
+      await this.updateTable();
+      await this.updateComplete;
+      await this._table?.updateComplete;
       this.loading = false;
     }
   }
-
-  refMemo = {}
-
 
   generateFieldDefs(
     resourceName: string,
@@ -123,7 +125,7 @@ export class DashboardTable extends NHComponent {
   render(): TemplateResult {
     return !this.loading && this.contextFieldDefs
       ? html`<wc-table .tableStore=${this.tableStore}></wc-table>
-      ${this.tableStore.records.length == 0
+      ${!this.loading && this.showSkeleton
         ? html`
         <div class="skeleton-main-container">
               ${Array.from(Array(24)).map(
