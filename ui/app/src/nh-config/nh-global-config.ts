@@ -74,10 +74,6 @@ export default class NHGlobalConfig extends NHComponent {
   );
 
   @state() _nhName!: string;
-  
-  @state() _alertTitle!: string;
-  @state() _alertMsg!: string;
-  @query('#danger-alert') private _dangerAlert;
 
   @state() _page?: ConfigPage = ConfigPage.DashboardOverview;
 
@@ -178,12 +174,6 @@ export default class NHGlobalConfig extends NHComponent {
     return html`
       <div
         class="container"
-        @trigger-alert=${(e: CustomEvent) =>{
-          const {title, msg} = e.detail;
-          this._alertTitle = title;
-          this._alertMsg = msg;
-          this._dangerAlert.openToast();
-        }}
       >
         ${this._nhName 
           ? html`<nh-menu
@@ -269,23 +259,12 @@ export default class NHGlobalConfig extends NHComponent {
           : null
         }
         <slot name="page"> ${this.renderPage()} </slot>
-
-        <nh-alert
-          id="danger-alert"
-          .title=${this._alertTitle}
-          .description=${this._alertMsg}
-          .closable=${false}
-          .isToast=${true}
-          .open=${false}
-          .type=${"danger"}>
-        </nh-alert>
       </div>
     `;
   }
 
   static elementDefinitions = {
     'nh-menu': NHMenu,
-    'nh-alert': NHAlert,
     'dimensions-config': DimensionsConfig,
     'assessment-widget-config': AssessmentWidgetConfig,
     'dashboard-overview': NHDashBoardOverview,

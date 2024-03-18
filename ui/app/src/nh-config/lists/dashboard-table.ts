@@ -54,6 +54,20 @@ export class DashboardTable extends NHComponent {
     this.contextFieldDefs && Object.entries(this.contextFieldDefs).length  && 
       (this.tableStore.records = this.assessments.filter(assessment => Object.keys(this.contextFieldDefs).some(contextField => assessment[contextField] !== "")) as AssessmentTableRecord[] )
       
+    if(this.assessments.length == 0) {
+      this.dispatchEvent(
+        new CustomEvent("trigger-alert", {
+          detail: { 
+            title: "No Assessments Found",
+            msg: "Go to your applets to start making assessments.",
+            type: "success",
+            closable: true,
+          },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
     if(typeof this.contextFieldDefs == 'object') this.columns = Object.values(this.contextFieldDefs).length + 2
   }
   
@@ -108,7 +122,16 @@ export class DashboardTable extends NHComponent {
 
   render(): TemplateResult {
     return !this.loading && this.contextFieldDefs
-      ? html`<wc-table .tableStore=${this.tableStore}></wc-table>`
+      ? html`<wc-table .tableStore=${this.tableStore}></wc-table>
+      ${this.tableStore.records.length == 0
+        ? html`
+        <div class="skeleton-main-container">
+              ${Array.from(Array(24)).map(
+                () => html`<sl-skeleton effect="sheen" class="skeleton-part"></sl-skeleton>`,
+              )}
+        </div>`
+        : null
+      }`
       : html`<div class="skeleton-main-container" data-columns=${this.columns}>
       ${Array.from(Array(this.columns)).map(
         () => html`<sl-skeleton effect="pulse" class="skeleton-part-header"></sl-skeleton>`,
@@ -214,8 +237,9 @@ export class DashboardTable extends NHComponent {
     }
 
     .skeleton-main-container {
+      width: 100%;
       display: grid;
-      grid-template-columns: 204px 204px repeat(2, 140px);
+      grid-template-columns: minmax(26.5%, 255px) minmax(26.5%, 255px) repeat(2, minmax(24.5%, 175px));
       gap: calc(1px * var(--nh-spacing-sm));
       margin: calc(1px * var(--nh-spacing-sm));
       grid-template-rows: 86px repeat(8, 4rem);

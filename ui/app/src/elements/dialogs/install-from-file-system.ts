@@ -86,7 +86,8 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
           detail: { 
             title: "Applet Installed",
             msg: "You can now use your applet, and any assessments made in it will show up on your dashboard.",
-            type: "success"
+            type: "success",
+            closable: true,
           },
           bubbles: true,
           composed: true,
@@ -107,7 +108,8 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
           detail: { 
             title: "Applet Could Not Be Installed",
             msg: "There was a problem installing your applet. Please check that you have a valid and functioning webhapp bundle.",
-            type: "danger"
+            type: "danger",
+            closable: true,
           },
           bubbles: true,
           composed: true,

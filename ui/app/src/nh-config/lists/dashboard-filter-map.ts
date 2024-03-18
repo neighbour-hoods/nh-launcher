@@ -251,11 +251,14 @@ export class DashboardFilterMap extends NHComponent {
         }
       }
     } catch (error) {
+        console.error(error)
         this.dispatchEvent(
           new CustomEvent("trigger-alert", {
             detail: { 
               title: "Assessment Controls Not Configured",
-              msg: "Your controls have not all been configured correctly -  go to the *Assessments* screen to configure them!"
+              msg: "Your controls have not all been configured correctly -  go to the *Assessments* screen to configure them!",
+              type: "danger",
+              closable: true,
             },
             bubbles: true,
             composed: true,
