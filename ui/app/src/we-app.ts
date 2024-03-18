@@ -34,10 +34,11 @@ export class WeApp extends ScopedRegistryHost(LitElement) {
     this.loading = false;
   }
 
-  @state() _alertTitle!: string;
-  @state() _alertMsg!: string;
+  @state() _alertTitle!: string | undefined;
+  @state() _alertMsg!: string | undefined;
   @state() _alertClosable: boolean = true;
-  @state() _alertType!: "success" | "danger";
+  @state() _alertType!: "success" | "danger" | undefined;
+  @state() _alertStateReady: boolean = false;
   @query('#alert') private _alert;
 
   render() {
@@ -47,23 +48,26 @@ export class WeApp extends ScopedRegistryHost(LitElement) {
       </div>`;
 
     return html` <main-dashboard  
-      @trigger-alert=${(e: CustomEvent) =>{
+      @trigger-alert=${async (e: CustomEvent) =>{
         const {title, msg, closable, type} = e.detail;
+        console.log('title, msg, closable, type :>> ', title, msg, closable, type);
         this._alertTitle = title;
         this._alertMsg = msg;
         this._alertType = type;
         this._alertClosable = closable;
-        this._alert.openToast();
+        this._alertStateReady = true;
+        await this.updateComplete;
+        setTimeout(() => this._alert.openToast.call(this._alert), 0);
       }} 
       >
         <nh-alert
           id="alert"
-          .title=${this._alertTitle}
-          .description=${this._alertMsg}
+          .title=${this._alertStateReady && this._alertTitle}
+          .description=${this._alertStateReady && this._alertMsg}
+          .type=${this._alertStateReady && this._alertType}>
           .closable=${this._alertClosable}
           .isToast=${true}
           .open=${false}
-          .type=${this._alertType}>
         </nh-alert>
       </main-dashboard> `;
   }
