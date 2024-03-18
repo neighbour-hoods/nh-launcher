@@ -251,7 +251,6 @@ export class DashboardFilterMap extends NHComponent {
         }
       }
     } catch (error) {
-        console.error(error)
         this.dispatchEvent(
           new CustomEvent("trigger-alert", {
             detail: { 
