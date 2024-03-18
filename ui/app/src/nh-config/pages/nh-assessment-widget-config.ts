@@ -95,7 +95,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   @state() selectedWidgetKey: string | undefined; // nh-form select options for the 2nd/3rd selects are configured dynamically when this state change triggers a re-render
   @state() selectedInputDimensionEh: EntryHash | undefined; // used to filter for the 3rd select
 
-  @state() _workingWidgetControls!: AssessmentWidgetBlockConfig[];
+  @state() _workingWidgetControls: AssessmentWidgetBlockConfig[] = [];
   @state() _workingWidgetControlRendererCache: Map<string, () => TemplateResult> = new Map();
 
   // AssessmentWidgetBlockConfig (group) and AssessmentWidgetRegistrationInputs (individual)
@@ -154,6 +154,8 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     } else {
       widgets = [];
     }
+    console.log('this._workingWidgetControls :>> ', this._workingWidgetControls);
+    console.log('widgets :>> ', widgets);
     return widgets;
   }
 
@@ -363,7 +365,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
       inputAssessmentWidget: inputDimensionBinding,
       outputAssessmentWidget: outputDimensionBinding,
     }
-
     this.configuredInputWidgets = [ ...this?.getCombinedWorkingAndFetchedWidgets(), input];
     this._workingWidgetControls = [ ...(this?._workingWidgetControls || []), input];
     this.configuredWidgetsPersisted = false;
@@ -424,7 +425,11 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 selectOptions: (() =>
                   this?._registeredWidgets && this?._appletInstanceRenderers.value
                     ? Object.values(this._registeredWidgets)!
-                      .filter((widget: AssessmentWidgetRegistrationInput) => widget.kind == "input")
+                      .filter((widget: AssessmentWidgetRegistrationInput) => {
+                        const linkedResourceDefApplet = Object.values(this._currentAppletInstances.value).find(applet => compareUint8Arrays(applet.appletId, this.resourceDef.applet_eh))
+                        const fromLinkedApplet = !!linkedResourceDefApplet && (linkedResourceDefApplet.appInfo.installed_app_id == widget.appletId)
+                        return fromLinkedApplet && widget.kind == "input"
+                      })
                       .map((widget: AssessmentWidgetRegistrationInput) => {
                           const possibleRenderers : ({string: AssessmentWidgetRenderer | ResourceBlockRenderer})[] = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)];
                           const renderer = possibleRenderers[widget.widgetKey];
@@ -463,6 +468,8 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                           const selectedWidgetRangeKind = Object.values(
                             this._registeredWidgets,
                           ).find(widget => widget.widgetKey == this.selectedWidgetKey)?.rangeKind;
+                          const widgetKeyFromLinkedApplet = false;
+                          
                           if (typeof this.selectedWidgetKey == 'undefined' || !selectedWidgetRangeKind) return false;
 
                           const dimensionRange = this._rangeEntries!.find(range =>
