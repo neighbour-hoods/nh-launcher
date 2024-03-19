@@ -103,6 +103,7 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
       );
       this.loading = false;
     } catch (e) {
+      this.resetLocalState()
       this.dispatchEvent(
         new CustomEvent("trigger-alert", {
           detail: { 
