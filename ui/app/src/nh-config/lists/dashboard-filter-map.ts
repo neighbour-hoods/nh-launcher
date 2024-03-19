@@ -64,7 +64,7 @@ export class DashboardFilterMap extends NHComponent {
         ? Object.fromEntries(Object.entries(appletInstanceInfos).map(([appletEh, appletInfo]) => {
           if(typeof appletInfo?.gui == 'undefined') return;
           return [appletEh, {...(appletInfo as any)?.gui?.resourceRenderers, ...(appletInfo as any).gui.assessmentWidgets}]
-        }))
+        }) || [])
         : null
     }),
     () => [this.loaded],
@@ -254,7 +254,7 @@ export class DashboardFilterMap extends NHComponent {
         this.dispatchEvent(
           new CustomEvent("trigger-alert", {
             detail: { 
-              title: "Assessment Controls Not Configured",
+              title: "Some Controls Not Configured",
               msg: "Your controls have not all been configured correctly -  go to the *Assessments* screen to configure them!",
               type: "danger",
               closable: true,
