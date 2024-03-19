@@ -1,7 +1,7 @@
 import { provide } from "@lit/context";
 import { state, query, customElement } from "lit/decorators.js";
 import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
-import { LitElement, html, css } from "lit";
+import { LitElement, html, css, TemplateResult, PropertyValueMap } from "lit";
 import './global-toast-styles.css'
 
 import { sharedStyles } from "./sharedStyles";
@@ -10,6 +10,7 @@ import { matrixContext } from "./context";
 import { MainDashboard } from "./main-dashboard";
 import { connectHolochainApp } from "@neighbourhoods/app-loader";
 import { NHAlert } from "@neighbourhoods/design-system-components";
+import { SlAlert } from "@scoped-elements/shoelace";
 
 @customElement('we-app')
 export class WeApp extends ScopedRegistryHost(LitElement) {
@@ -28,18 +29,34 @@ export class WeApp extends ScopedRegistryHost(LitElement) {
 
     this._matrixStore = await MatrixStore.connect(appWebsocket, adminWebsocket, weAppInfo);
 
-
     // TODO: add code to prefetch groups and register applets here.
-
     this.loading = false;
+  }
+
+  protected updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    this._alert = this.renderRoot.querySelector('nh-alert') as NHAlert;
   }
 
   @state() _alertTitle!: string | undefined;
   @state() _alertMsg!: string | undefined;
   @state() _alertClosable: boolean = true;
   @state() _alertType!: "success" | "danger" | undefined;
-  @state() _alertStateReady: boolean = false;
-  @query('#alert') private _alert;
+  @state() _alert!: NHAlert;
+
+  renderAlert(): TemplateResult {
+    return html`
+      <nh-alert
+        id="alert"
+        .title=${this._alertTitle}
+        .description=${this._alertMsg}
+        .type=${this._alertType}
+        .closable=${this._alertClosable}
+        .isToast=${true}
+        .open=${false}
+      >
+      </nh-alert>
+    `
+  }
 
   render() {
     if (this.loading)
@@ -50,25 +67,25 @@ export class WeApp extends ScopedRegistryHost(LitElement) {
     return html` <main-dashboard  
       @trigger-alert=${async (e: CustomEvent) =>{
         const {title, msg, closable, type} = e.detail;
-        console.log('title, msg, closable, type :>> ', title, msg, closable, type);
         this._alertTitle = title;
         this._alertMsg = msg;
         this._alertType = type;
         this._alertClosable = closable;
-        this._alertStateReady = true;
+        this.requestUpdate()
         await this.updateComplete;
-        setTimeout(() => this._alert.openToast.call(this._alert), 0);
+
+        const newAlert = this._alert?.cloneNode(true) as NHAlert;
+        const newSlAlert = this._alert.alert?.cloneNode(true) as SlAlert;
+        newAlert.title = title;
+        newAlert.description = msg;
+        newSlAlert.variant = type;
+        newAlert.alert = newSlAlert;
+        document.body.querySelector('.sl-toast-stack')?.replaceChildren(newAlert.alert)
+        newAlert.alert?.toast()
+        this._alert = newAlert;
       }} 
       >
-        <nh-alert
-          id="alert"
-          .title=${this._alertStateReady && this._alertTitle}
-          .description=${this._alertStateReady && this._alertMsg}
-          .type=${this._alertStateReady && this._alertType}>
-          .closable=${this._alertClosable}
-          .isToast=${true}
-          .open=${false}
-        </nh-alert>
+      ${this.renderAlert()}
       </main-dashboard> `;
   }
 

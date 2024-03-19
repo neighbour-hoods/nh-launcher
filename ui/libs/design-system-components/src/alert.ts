@@ -27,7 +27,7 @@ export default class NHAlert extends NHComponentShoelace {
   alertStack!: HTMLElement;
 
   openToast() {
-    this.alert.toast()
+    this.alert?.toast()
   }
 
   firstUpdated() {
@@ -39,7 +39,7 @@ export default class NHAlert extends NHComponentShoelace {
       <sl-alert id="main"
         @sl-hide=${(e: Event) => {
           // Over-rides Shoelace Alert's implementation which removes the references Sl-Alert from the DOM on close
-          const alert = (e.target as any).cloneNode(true);
+          const alert = (e.target as any)?.cloneNode(true);
           alert.open = false;
           this.alert = alert;
           this.alertStack = (e.target as any).parentElement;
