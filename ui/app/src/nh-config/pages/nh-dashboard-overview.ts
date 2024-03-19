@@ -63,6 +63,25 @@ export default class NHDashBoardOverview extends NHComponent {
     }
   }
 
+  protected updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+
+    if(this.loaded && !(this._currentAppletInstances?.value && Object.values(this._currentAppletInstances.value).length > 0)) {
+      
+      this.dispatchEvent(
+        new CustomEvent("trigger-alert", {
+          detail: { 
+            title: "No Applets Installed",
+            msg: "You cannot use the Sensemaker dashboard without installing and using applets.",
+            type: "success",
+            closable: true,
+          },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }  
+  }
+
   render() {
     return html`
       <div class="container">
