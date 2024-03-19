@@ -154,8 +154,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     } else {
       widgets = [];
     }
-    console.log('this._workingWidgetControls :>> ', this._workingWidgetControls);
-    console.log('widgets :>> ', widgets);
     return widgets;
   }
 
