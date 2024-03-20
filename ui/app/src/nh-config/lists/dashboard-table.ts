@@ -13,7 +13,7 @@ import { NHComponent } from '@neighbourhoods/design-system-components';
 import { AgentPubKeyB64, encodeHashToBase64 } from '@holochain/client';
 import { AssessmentTableRecord, AssessmentTableType, assessmentTableId } from '../types';
 import { generateHashHTML, generateHeaderHTML } from '../../elements/components/helpers/functions';
-import { InputAssessmentRenderer, OutputAssessmentRenderer } from '../../../../libs/app-loader';
+import { InputAssessmentRenderer, OutputAssessmentRenderer, ResourceBlockRenderer } from '../../../../libs/app-loader';
 
 export const tableId = 'assessmentsForResource';
 
@@ -21,6 +21,7 @@ class BlockRendererTable extends Table {
   static elementDefinitions = {
     'output-assessment-renderer': OutputAssessmentRenderer,
     'input-assessment-renderer': InputAssessmentRenderer,
+    'resource-block-renderer': ResourceBlockRenderer,
   }
 }
 
@@ -104,6 +105,7 @@ export class DashboardTable extends NHComponent {
       resource: new FieldDefinition<AssessmentTableRecord>({
         heading: generateHeaderHTML('Resource', resourceName),
         decorator: (resource: any) => {
+          console.log('resource :>> ', resource);
           return html`<div style="width: 100%; display: grid;place-content: start center; height: 100%; justify-items: center;">
             ${generateHashHTML(resource.eh)}
           </div>`},
