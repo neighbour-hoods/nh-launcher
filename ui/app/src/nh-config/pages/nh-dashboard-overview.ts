@@ -46,7 +46,6 @@ export default class NHDashBoardOverview extends NHComponent {
     () =>  derived(this._currentAppletInstances.store, async (applets: { EntryHashB64: AppletInstanceInfo & {gui: AppletGui}} | undefined) => {
       if(!applets || !this.selectedResourceDef) return {}
       const appletId = (this.selectedResourceDef as any).applet_eh;
-      console.log('applets[encodeHashToBase64(appletId)] :>> ', applets[encodeHashToBase64(appletId)]);
       return applets[encodeHashToBase64(appletId)]
     }),
     () => [this._currentAppletInstances],

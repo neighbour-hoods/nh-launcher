@@ -210,7 +210,6 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
           id="applet-dialog"
           size="medium"
           .dialogType=${'applet-install'}
-          @form-submitted=${() => {console.log('submitted!');this.createApplet.bind(this)}}
           .title=${"Install Applet"}
           .openButtonRef=${this._openAppletDialogButton}
         >
