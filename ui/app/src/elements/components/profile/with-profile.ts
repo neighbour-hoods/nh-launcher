@@ -57,6 +57,7 @@ export class WithProfile extends NHComponent {
       return html`<nh-profile-identicon
       .responsive=${true}
           .loading=${false}
+          .background=${false}
           .agentAvatarSrc=${status.value?.entry.fields.avatar}
           .agentName=${status.value?.entry.nickname ||  "No Profile Found"}
           .agentHashB64=${this.agentHash}

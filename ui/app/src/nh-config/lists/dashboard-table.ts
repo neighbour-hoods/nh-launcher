@@ -13,7 +13,7 @@ import { NHComponent } from '@neighbourhoods/design-system-components';
 import { AgentPubKeyB64, encodeHashToBase64 } from '@holochain/client';
 import { AssessmentTableRecord, AssessmentTableType, assessmentTableId } from '../types';
 import { generateHashHTML, generateHeaderHTML } from '../../elements/components/helpers/functions';
-import { InputAssessmentRenderer, OutputAssessmentRenderer, ResourceBlockRenderer } from '../../../../libs/app-loader';
+import { WithProfile } from '../../elements/components/profile/with-profile';
 
 export const tableId = 'assessmentsForResource';
 
@@ -22,6 +22,7 @@ class BlockRendererTable extends Table {
     'output-assessment-renderer': OutputAssessmentRenderer,
     'input-assessment-renderer': InputAssessmentRenderer,
     'resource-block-renderer': ResourceBlockRenderer,
+    'with-profile': WithProfile,
   }
 }
 
@@ -114,7 +115,7 @@ export class DashboardTable extends NHComponent {
         heading: generateHeaderHTML('Neighbour', 'Member'),
         decorator: (agentPublicKeyB64: AgentPubKeyB64) => {
           return html` <div style="width: 100%; display: flex; flex-direction: column; align-items: start; height: 100%; justify-items: center;" >
-            ${generateHashHTML(agentPublicKeyB64)}
+            <with-profile class="identicon" .agentHash=${agentPublicKeyB64} .component=${"identicon"}></with-profile>
           </div>`}},
       ),
     };
@@ -153,6 +154,9 @@ export class DashboardTable extends NHComponent {
   };
 
   static styles = css`
+    .identicon {
+      margin: 0 auto;
+    }
     :host {
       /** Global Table **/
       color: var(--nh-theme-fg-default);
