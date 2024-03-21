@@ -12,7 +12,10 @@ import { SlAlert, SlSkeleton, SlSpinner } from '@scoped-elements/shoelace';
 import { NHComponent } from '@neighbourhoods/design-system-components';
 import { AgentPubKeyB64, encodeHashToBase64 } from '@holochain/client';
 import { AssessmentTableRecord, AssessmentTableType, assessmentTableId } from '../types';
-import { generateHashHTML, generateHeaderHTML } from '../../elements/components/helpers/functions';
+import { generateHeaderHTML } from '../../elements/components/helpers/functions';
+import { InputAssessmentRenderer, OutputAssessmentRenderer, ResourceBlockRenderer, compareUint8Arrays } from '../../../../libs/app-loader';
+import { appletInstanceInfosContext } from '../../context';
+import { consume } from '@lit/context';
 import { WithProfile } from '../../elements/components/profile/with-profile';
 
 export const tableId = 'assessmentsForResource';
@@ -27,9 +30,12 @@ class BlockRendererTable extends Table {
 }
 
 export class DashboardTable extends NHComponent {
+  @consume({ context: appletInstanceInfosContext })
+  @property({attribute: false}) _currentAppletInstances;
+  
   @property() tableStore!: TableStore<AssessmentTableRecord>;
-  @property({ type: Array })
-  assessments: AssessmentTableRecord[] = [];
+  @property({ type: Array }) assessments: AssessmentTableRecord[] = [];
+  @property() resourceDefEntries!: object[];
 
   @property() resourceName!: string;
   @state() columns: number = 0;
@@ -106,9 +112,12 @@ export class DashboardTable extends NHComponent {
       resource: new FieldDefinition<AssessmentTableRecord>({
         heading: generateHeaderHTML('Resource', resourceName),
         decorator: (resource: any) => {
-          console.log('resource :>> ', resource);
+          const linkedResourceEntry = this.resourceDefEntries.find(resourceEntry => compareUint8Arrays(resourceEntry.resource_def_eh, resource.eh))
+          if(!linkedResourceEntry) throw new Error('No entry found for this ResourceDef');
+          const linkedAppletInstance = this._currentAppletInstances?.value[encodeHashToBase64(linkedResourceEntry.applet_eh)]
+          const delegate = linkedAppletInstance?.resourceBlockDelegate;
           return html`<div style="width: 100%; display: grid;place-content: start center; height: 100%; justify-items: center;">
-            ${generateHashHTML(resource.eh)}
+            <resource-block-renderer .component=${resource.renderer} .nhDelegate=${delegate}></resource-block-renderer>
           </div>`},
       }),
       neighbour: new FieldDefinition<AssessmentTableRecord>({

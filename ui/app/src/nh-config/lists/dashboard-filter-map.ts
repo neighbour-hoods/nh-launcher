@@ -222,7 +222,7 @@ export class DashboardFilterMap extends NHComponent {
       neighbour: encodeHashToBase64(assessment.author),
       resource: {
         renderer: linkedResourceDefRenderers[linkedResourceDef.resource_name],
-        eh: encodeHashToBase64(assessment.resource_eh),
+        eh: assessment.resource_def_eh,
       },
     } as AssessmentTableRecord;
 
@@ -317,6 +317,7 @@ export class DashboardFilterMap extends NHComponent {
     return html`
       <dashboard-table
         .resourceName=${this.resourceName}
+        .resourceDefEntries=${this.resourceDefEntries}
         .assessments=${this.filteredTableRecords}
         .tableType=${this.tableType}
         .contextFieldDefs=${this.fieldDefs}
