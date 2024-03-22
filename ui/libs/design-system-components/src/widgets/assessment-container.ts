@@ -1,6 +1,7 @@
 import { css, CSSResult, html, PropertyValueMap } from "lit";
-import { property } from "lit/decorators.js";
+import { property, query } from "lit/decorators.js";
 import { NHComponentShoelace } from "../ancestors/base";
+import { InputAssessmentControl } from "@neighbourhoods/client";
 
 /**
  * NHAssessmentContainer has as slot for an assessment-control and a slot for an
@@ -17,6 +18,9 @@ export default class NHAssessmentContainer extends NHComponentShoelace {
   @property()
   editMode: boolean = false;
 
+  @query("slot[name='assessment-control']")
+  assessmentControl!: InputAssessmentControl;
+  
   render() {
     return html`
       <div class="assessment-container ${this.editMode ? 'edit-mode': ''}">
