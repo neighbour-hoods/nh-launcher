@@ -8,10 +8,10 @@ import {
   Table,
 } from '@adaburrows/table-web-component';
 
-import { SlAlert, SlSkeleton, SlSpinner } from '@scoped-elements/shoelace';
+import { SlAlert, SlSkeleton } from '@scoped-elements/shoelace';
 import { NHComponent } from '@neighbourhoods/design-system-components';
 import { AgentPubKeyB64, encodeHashToBase64 } from '@holochain/client';
-import { AssessmentTableRecord, AssessmentTableType, assessmentTableId } from '../types';
+import { AssessmentTableRecord, AssessmentTableType } from '../types';
 import { generateHeaderHTML } from '../../elements/components/helpers/functions';
 import { InputAssessmentRenderer, OutputAssessmentRenderer, ResourceBlockRenderer, compareUint8Arrays } from '../../../../libs/app-loader';
 import { appletInstanceInfosContext } from '../../context';
