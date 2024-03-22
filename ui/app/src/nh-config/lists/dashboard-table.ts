@@ -112,10 +112,11 @@ export class DashboardTable extends NHComponent {
       resource: new FieldDefinition<AssessmentTableRecord>({
         heading: generateHeaderHTML('Resource', resourceName),
         decorator: (resource: any) => {
-          const linkedResourceEntry = this.resourceDefEntries.find(resourceEntry => compareUint8Arrays(resourceEntry.resource_def_eh, resource.eh))
+          const linkedResourceEntry = this.resourceDefEntries.find(resourceEntry => compareUint8Arrays(resourceEntry.resource_def_eh, resource.resource_def_eh))
           if(!linkedResourceEntry) throw new Error('No entry found for this ResourceDef');
           const linkedAppletInstance = this._currentAppletInstances?.value[encodeHashToBase64(linkedResourceEntry.applet_eh)]
-          const delegate = linkedAppletInstance?.resourceBlockDelegate;
+          const delegate = linkedAppletInstance?.curriedResourceBlockDelegate(resource.resource_eh);
+          
           return html`<div style="width: 100%; display: grid;place-content: start center; height: 100%; justify-items: center;">
             <resource-block-renderer .component=${resource.renderer} .nhDelegate=${delegate}></resource-block-renderer>
           </div>`},
