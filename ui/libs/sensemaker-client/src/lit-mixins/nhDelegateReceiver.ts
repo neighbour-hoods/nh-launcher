@@ -1,3 +1,4 @@
+import { EntryHash } from "@holochain/client";
 import {
   AppBlockDelegate,
   ResourceBlockDelegate,
@@ -27,7 +28,13 @@ class DelegateReceiverClass<D> extends LitElement {
 
 export class AppBlock extends DelegateReceiverClass<AppBlockDelegate> {}
 
-export class RenderBlock extends DelegateReceiverClass<ResourceBlockDelegate> {}
+export class RenderBlock extends DelegateReceiverClass<ResourceBlockDelegate> {
+  @property() resourceHash!: EntryHash | undefined;
+
+  public async loadData() {
+    this.resourceHash = this.nhDelegate.resourceEntryHash
+  }
+}
 
 export class InputAssessmentControl extends DelegateReceiverClass<InputAssessmentWidgetDelegate> {
   @property()

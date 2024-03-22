@@ -1,6 +1,7 @@
 import {
   AppAgentClient,
   AppInfo,
+  EntryHash,
 } from "@holochain/client";
 import {
   AppBlockDelegate,
@@ -70,13 +71,15 @@ export function createAppDelegate(
 export function createResourceBlockDelegate(
   appAgentWebsocket: AppAgentClient,
   appInfo: AppInfo,
-  neighbourhoodInfo: NeighbourhoodInfo
+  neighbourhoodInfo: NeighbourhoodInfo,
+  resourceEntryHash: EntryHash,
 ): ResourceBlockDelegate {
 
   const delegate: ResourceBlockDelegate = {
     appAgentWebsocket,
     appInfo,
-    neighbourhoodInfo
+    neighbourhoodInfo,
+    resourceEntryHash
   }
 
   return delegate;

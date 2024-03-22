@@ -409,7 +409,7 @@ export class MatrixStore {
   /**
    * Creates an ResourceBlockDelegate to be passed into an resource block
    */
-  public createResourceBlockDelegate(appletInstanceId: Uint8Array): ResourceBlockDelegate {
+  public createResourceBlockDelegate(appletInstanceId: Uint8Array, resourceEntryHash: EntryHash): ResourceBlockDelegate {
     // Get Neighbourhood id
     // XXX: This seems like a very round-about way of getting the weGroupId, especially since
     // we get the same data we get from the matrix one step later.
@@ -422,7 +422,8 @@ export class MatrixStore {
     return createResourceBlockDelegate(
       appInstanceInfo.appAgentWebsocket!,
       appInstanceInfo.appInfo!,
-      weGroupData.info.info
+      weGroupData.info.info,
+      resourceEntryHash
     );
   }
 

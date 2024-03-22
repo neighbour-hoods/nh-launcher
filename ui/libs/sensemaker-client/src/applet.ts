@@ -73,6 +73,7 @@ export interface ResourceBlockDelegate {
   appAgentWebsocket: AppAgentClient;
   appInfo: AppInfo;
   neighbourhoodInfo: NeighbourhoodInfo;
+  resourceEntryHash: EntryHash;
 }
 
 /**
