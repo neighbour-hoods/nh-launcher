@@ -1,15 +1,10 @@
-import { encodeHashToBase64, EntryHashB64 } from '@holochain/client';
 import { html, css, TemplateResult, PropertyValueMap, CSSResult } from 'lit';
 import { consume } from '@lit/context';
 import { StoreSubscriber } from 'lit-svelte-stores';
 
 import { object, string } from 'yup';
-import { MatrixStore } from '../../matrix-store';
-import { appletInstanceInfosContext, matrixContext, weGroupContext } from '../../context';
+import { appletInstanceInfosContext } from '../../context';
 import {
-  AppInfo,
-  CallZomeResponse,
-  DnaHash,
   EntryHash,
   EntryHashB64,
   decodeHashFromBase64,
@@ -26,12 +21,13 @@ import {
   NHComponent,
   NHDialog,
   NHForm,
+  NHIconContainer,
   NHPageHeaderCard,
   NHResourceAssessmentTray,
   NHTooltip,
 } from '@neighbourhoods/design-system-components';
 
-import { property, query, state } from 'lit/decorators.js';
+import { property, query, queryAll, state } from 'lit/decorators.js';
 import { b64images } from '@neighbourhoods/design-system-styles';
 import { SlDetails, SlSpinner } from '@scoped-elements/shoelace';
 import { classMap } from 'lit/directives/class-map.js';
@@ -42,14 +38,13 @@ import {
   AssessmentWidgetRenderer,
   Dimension,
   Method,
-  NeighbourhoodAppletRenderers,
   ResourceDef,
   SensemakerStore,
 } from '@neighbourhoods/client';
 import {repeat} from 'lit/directives/repeat.js';
 import { InputAssessmentRenderer } from '@neighbourhoods/app-loader';
-import { derived, get } from 'svelte/store';
-import { Applet, AppletInstanceInfo } from '../../types';
+import { derived } from 'svelte/store';
+import { Applet } from '../../types';
 import { FakeInputAssessmentWidgetDelegate } from '@neighbourhoods/app-loader';
 import { dimensionIncludesControlRange } from '../../utils';
 import { ResourceBlockRenderer } from '@neighbourhoods/app-loader';
@@ -86,8 +81,10 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   @query('nh-form') private _form;
   @query('#success-toast') private _successAlert;
   @query("nh-button[type='submit']") private submitBtn;
+  @queryAll("assessment-container") private _assessmentContainers;
 
   @state() loading: boolean = false;
+  @state() editMode: boolean = false;
   @state() editingConfig: boolean = false;
   @state() placeHolderWidget!: (() => TemplateResult) | undefined;
   @state() configuredWidgetsPersisted: boolean = true; // Is the in memory representation the same as on DHT?
@@ -172,7 +169,13 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     if(typeof this.selectedWidgetKey != 'undefined' && this._workingWidgetControlRendererCache?.has(this.selectedWidgetKey) && this?.placeHolderWidget) {
       return repeat([this.selectedWidgetKey], () => +(new Date), (_, _idx) => this.placeHolderWidget!())
     }
-    return html`<span slot="assessment-control"></span>`
+    return html`<nh-icon-container slot="assessment-control" .selected=${!this.editMode}></nh-icon-container>`
+  }
+
+  handleAssessmentControlSelected(e: CustomEvent) {
+      this._assessmentContainers 
+        .forEach((container) => container.selected = !!(container == e.currentTarget));
+      this.editMode = true;
   }
 
   render(): TemplateResult {
@@ -202,7 +205,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
               <div slot="widgets">
                 ${
                   this._appletInstanceRenderers?.value && (this._fetchedConfig && this._fetchedConfig.length > 0 || this?._workingWidgetControls)
-                    ? repeat(renderableWidgets, () => +(new Date), (inputWidgetConfig, _index) => {
+                    ? repeat(renderableWidgets, () => +(new Date), (inputWidgetConfig, index) => {
                         const appletEh = (inputWidgetConfig as any)?.appletId;
                         const appletKey = appletEh && encodeHashToBase64(appletEh);
                         const appletRenderers = this._appletInstanceRenderers.value[appletKey] as (AssessmentWidgetConfig | ResourceBlockRenderer)[];
@@ -213,7 +216,8 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                         const componentToBind = filteredComponentRenderers?.component;
                         if(!componentToBind) return;
                         return html`
-                        <assessment-container .editMode=${true}>
+                        <assessment-container .editMode=${true}
+                          @selected=${this.handleAssessmentControlSelected}>
                           <span slot="assessment-output">0</span>
                           <input-assessment-renderer slot="assessment-control"
                             .component=${componentToBind}
@@ -224,12 +228,17 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                       })
                     : null
                 }
-                ${this.loading || this.editingConfig || !this._fetchedConfig
-                  ? html`<assessment-container .editMode=${true}>
-                    <span slot="assessment-output">0</span>
-                    ${this.renderWidgetControlPlaceholder()}
-                  </assessment-container>`
-                  : null}
+                ${this.loading 
+                  ? html`<sl-spinner class="icon-spinner"></sl-spinner>`
+                  : this.editingConfig || !this._fetchedConfig
+                    ? html` <assessment-container .editMode=${true} 
+                              @selected=${this.handleAssessmentControlSelected}
+                              .selected=${true}
+                            >
+                              <span slot="assessment-output">0</span>
+                              ${this.renderWidgetControlPlaceholder()}
+                            </assessment-container>`
+                    : null}
               </div>
               <div slot="controls">
                 <div name="add-widget-icon" class="add-widget-icon" @click=${async (e: CustomEvent) => {
@@ -402,6 +411,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   }
 
   private renderMainForm(): TemplateResult {
+    console.log('editMode :>> ', this.editMode);
     return html`
       <nh-form
         class="responsive"
@@ -547,6 +557,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     'nh-alert': NHAlert,
     'assessment-widget-tray': NHResourceAssessmentTray,
     'input-assessment-renderer': InputAssessmentRenderer,
+    'nh-icon-container': NHIconContainer,
     'assessment-container': NHAssessmentContainer,
   };
 
