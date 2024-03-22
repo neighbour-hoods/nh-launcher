@@ -48,7 +48,7 @@ export default class NHGlobalConfig extends NHComponent {
         const linkedApplet : AppletInstanceInfo | undefined = appletInstanceInfos!.find(applet => compareUint8Arrays(resourceDef.applet_eh, applet.appletId))
         if(!linkedApplet) return acc
 
-        acc[appletEh] = {...linkedApplet, resourceBlockDelegate: this._matrixStore.createResourceBlockDelegate(linkedApplet.appletId)};
+        acc[appletEh] = {...linkedApplet, curriedResourceBlockDelegate: (resourceEntryHash: EntryHash) => this._matrixStore.createResourceBlockDelegate(linkedApplet.appletId, resourceEntryHash)};
         if(!this.guis || !this.guis[encodeHashToBase64(resourceDef.applet_eh)]) return acc
         
         acc[appletEh].gui = this.guis[encodeHashToBase64(resourceDef.applet_eh)] as AppletGui;
