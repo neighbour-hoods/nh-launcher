@@ -238,16 +238,11 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                   ${
                   this.editingConfig
                   ? html`<sl-spinner class="icon-spinner"></sl-spinner>`
-                  : null
-                  }
-                  ${
-                  !this.editingConfig
-                    ? html`
+                  : html`
                     <nh-tooltip .variant=${this.editingConfig ? "warning" : "success"} text="To add a widget, click the plus icon." class="right">
                       <img slot="hoverable" class="add-assessment-icon" src=${`data:image/svg+xml;base64,${b64images.icons.plus}`} alt=${"Add a widget"} />
                     </nh-tooltip>
-                    `
-                    : null
+                  `
                   }
                 </div>
               </div>
