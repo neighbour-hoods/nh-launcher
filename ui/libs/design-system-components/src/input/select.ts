@@ -1,6 +1,6 @@
 import { repeat } from 'lit/directives/repeat.js';
 import { classMap } from 'lit/directives/class-map.js';
-import { css, CSSResult, html, TemplateResult } from 'lit';
+import { css, CSSResult, html, PropertyValueMap, TemplateResult } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
 import { NHComponentShoelace } from '../ancestors/base';
 import { b64images } from '@neighbourhoods/design-system-styles';
@@ -30,6 +30,8 @@ export default class NHSelect extends NHComponentShoelace {
   disabled: boolean = false;
   @property()
   errored: boolean = false;
+  @property()
+  defaultValue?: OptionConfig;
 
   @state()
   value?: string = undefined;
@@ -58,17 +60,26 @@ export default class NHSelect extends NHComponentShoelace {
     );
   } 
 
+  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    if(!!this.defaultValue && this.defaultValue?.label && this.defaultValue?.value) {
+      this.value = this.defaultValue.value;
+      this.image = this.defaultValue.imageB64;
+    }
+  }
+
   renderVisibleOption() : TemplateResult {
     return this.options?.some((option: OptionConfig) => option?.imageB64 || option?.renderBlock)
         ? html`<div class="flex">
-                ${this?.image ? html `<span class="option-image"><img
-                    class="icon"
-                    alt=${this.value}
-                    src=${`data:image/png;base64,${this?.image || b64images.icons.refresh}`}
-                  /></span>` : null}
-                <span>${this.value || this.placeholder}</span>
+                ${this?.image 
+                    ? html `<span class="option-image"><img
+                              class="icon"
+                              alt=${this.value}
+                              src=${`data:image/png;base64,${this?.image || b64images.icons.refresh}`}
+                            /></span>` 
+                : this.defaultValue && this.defaultValue?.renderBlock && html`<span class="option-image">${this.defaultValue?.renderBlock()}</span>` }
+                <span>${this.value || this.defaultValue?.value || this.placeholder}</span>
               </div>`
-        : html`<span>${this.visibleSelectValue || this.placeholder}</span>`
+        : html`<span>${this.visibleSelectValue || this.defaultValue?.label || this.placeholder}</span>`
   }
 
   renderAllOptions() {
@@ -247,10 +258,12 @@ export default class NHSelect extends NHComponentShoelace {
       .field.with-icons .option {
         justify-content: space-between;
       }
-      .field.with-icons .flex {
+      .flex {
         display: flex;
         align-items: center;
         justify-content: space-between;
+      }
+      .field.with-icons .flex {
         flex: 1;
         padding: 0;
         padding-right: 12px;

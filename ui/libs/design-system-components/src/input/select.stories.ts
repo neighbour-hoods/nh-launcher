@@ -12,6 +12,7 @@ export interface SelectProps {
   placeholder: string;
   errored: boolean;
   required: boolean;
+  defaultValue: OptionConfig;
   size: "medium" | "large";
 }
 
@@ -151,6 +152,61 @@ export const ImagesTooltip: Story = {
   `,
   
   args: {
+    placeholder: "Select dimension:",
+    size: "medium",
+    options: [
+      {
+        label: "One",
+        value: "1",
+        imageB64: b64images.icons.chili
+      },
+      {
+        label: "Two",
+        value: "2",
+        imageB64: b64images.icons.fire
+      },
+      {
+        label: "Three",
+        value: "3",
+        imageB64: b64images.icons.icecube
+      },
+      {
+        label: "Four",
+        value: "4",
+        imageB64: b64images.icons.pear
+      },
+      {
+        label: "Five",
+        value: "5",
+        imageB64: b64images.icons.snowflake
+      },
+    ]
+  },
+};
+
+
+export const ImagesTooltipWithDefault: Story = {
+  render: (args) => html` <nh-tooltip .visible=${true} .variant=${"primary"} .text=${"Info about your field"}>
+    <nh-select
+    .required=${args.required}
+    .errored=${args.errored}
+    .size=${"large"}
+    class="untouched"
+    slot="hoverable"
+    .options=${args.options}
+    .placeholder=${args.placeholder}
+    .defaultValue=${args.defaultValue}
+    >${args.placeholder}</nh-select>
+  </nh-tooltip>
+  `,
+  
+  args: {
+    defaultValue: 
+    {
+      label: "One",
+      value: "1",
+      imageB64: b64images.icons.chili
+    },
     placeholder: "Select dimension:",
     size: "medium",
     options: [
