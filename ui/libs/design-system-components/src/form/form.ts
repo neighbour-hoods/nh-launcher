@@ -339,6 +339,7 @@ export default class NHForm extends NHBaseForm {
               .id=${fieldConfig.id}
               .name=${fieldConfig.name}
               .placeholder=${fieldConfig.placeholder}
+              .defaultValue=${fieldConfig.defaultValue}
               .label=${fieldConfig.label}
               @change=${(e: Event) => this.handleInputChange(e)}
               .options=${(fieldConfig as SelectFieldConfig).selectOptions}
