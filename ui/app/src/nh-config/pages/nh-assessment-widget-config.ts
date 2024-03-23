@@ -133,6 +133,9 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
       await this.resetWorkingState()
       await this.fetchExistingWidgetConfigBlock();
     }
+    if(changedProperties.has('editMode') && !!this.editMode && this._assessmentContainers.slice(0,-1).length > 1) {
+      this.resetAssessmentControlsSelected();
+    }
   }
 
   private findInputDimensionsForOutputDimension(outputDimensionEh: EntryHash) {
@@ -169,13 +172,17 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     if(typeof this.selectedWidgetKey != 'undefined' && this._workingWidgetControlRendererCache?.has(this.selectedWidgetKey) && this?.placeHolderWidget) {
       return repeat([this.selectedWidgetKey], () => +(new Date), (_, _idx) => this.placeHolderWidget!())
     }
-    return html`<nh-icon-container slot="assessment-control" .selected=${!this.editMode}></nh-icon-container>`
+    return html`<span slot="assessment-control"></span>`
   }
 
   handleAssessmentControlSelected(e: CustomEvent) {
       this._assessmentContainers 
         .forEach((container) => container.selected = !!(container == e.currentTarget));
       this.editMode = true;
+  }
+  resetAssessmentControlsSelected() {
+      this._assessmentContainers 
+        .forEach((container) => container.selected = false);
   }
 
   render(): TemplateResult {
@@ -205,7 +212,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
               <div slot="widgets">
                 ${
                   this._appletInstanceRenderers?.value && (this._fetchedConfig && this._fetchedConfig.length > 0 || this?._workingWidgetControls)
-                    ? repeat(renderableWidgets, () => +(new Date), (inputWidgetConfig, index) => {
+                    ? renderableWidgets.map((inputWidgetConfig, index) => {
                         const appletEh = (inputWidgetConfig as any)?.appletId;
                         const appletKey = appletEh && encodeHashToBase64(appletEh);
                         const appletRenderers = this._appletInstanceRenderers.value[appletKey] as (AssessmentWidgetConfig | ResourceBlockRenderer)[];
@@ -242,6 +249,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
               </div>
               <div slot="controls">
                 <div name="add-widget-icon" class="add-widget-icon" @click=${async (e: CustomEvent) => {
+                  this.resetAssessmentControlsSelected();
                   this.editingConfig = true;
                 }}>
                   ${
@@ -411,7 +419,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   }
 
   private renderMainForm(): TemplateResult {
-    console.log('editMode :>> ', this.editMode);
     return html`
       <nh-form
         class="responsive"
