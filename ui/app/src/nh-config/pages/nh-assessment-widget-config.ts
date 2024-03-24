@@ -89,7 +89,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   @state() placeHolderWidget!: (() => TemplateResult) | undefined;
   @state() configuredWidgetsPersisted: boolean = true; // Is the in memory representation the same as on DHT?
   
-  @state() selectedWidgetIndex: number = -1; // -1 represents the placeholder widget, otherwise this is the index of the widget in the renderableWidgets array
+  @state() selectedWidgetIndex: number | undefined = -1; // -1 represents the placeholder widget, otherwise this is the index of the widget in the renderableWidgets array
   @state() selectedWidgetKey: string | undefined; // nh-form select options for the 2nd/3rd selects are configured dynamically when this state change triggers a re-render
   @state() selectedInputDimensionEh: EntryHash | undefined; // used to filter for the 3rd select
 
@@ -165,15 +165,17 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     this.configuredWidgetsPersisted = true
     this.placeHolderWidget = undefined;
     this.selectedWidgetKey = undefined;
+    this.selectedWidgetIndex = undefined;
     this._workingWidgetControls = [];
     this.configuredInputWidgets = this._fetchedConfig
+    this.resetAssessmentControlsSelected()
     this._form.reset()
     this.requestUpdate()
   }
 
   // Methods for managing the state of the placeholder/selected control
   renderWidgetControlPlaceholder() {
-    if(typeof this.selectedWidgetKey != 'undefined' && this._workingWidgetControlRendererCache?.has(this.selectedWidgetKey) && this?.placeHolderWidget) {
+    if(!this.editMode && typeof this.selectedWidgetKey != 'undefined' && this._workingWidgetControlRendererCache?.has(this.selectedWidgetKey) && this?.placeHolderWidget) {
       return repeat([this.selectedWidgetKey], () => +(new Date), (_, _idx) => this.placeHolderWidget!())
     }
     return html`<span slot="assessment-control"></span>`
@@ -185,7 +187,11 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
       this.editMode = true;
       this.editingConfig = true;
       this.selectedWidgetIndex = selectedIndex;
-      if(selectedIndex == -1) this.editMode = false;
+      if(selectedIndex == -1) {
+        this.editMode = false;
+        this._form.reset()
+        this._form.requestUpdate()
+      }
   }
   undoDeselect(e: CustomEvent) {
     const container = e.target as NHAssessmentContainer;
@@ -198,7 +204,8 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   }
   reselectPlaceholderControl() {
       const containers = [...this._assessmentContainers]
-      containers[containers.length - 1].selected = true;
+      const placeHolderContainer = containers[containers.length - 1]?.id == "placeholder" && containers[containers.length - 1];
+      if(placeHolderContainer) placeHolderContainer.selected = true;
   }
 
   render(): TemplateResult {
@@ -259,7 +266,8 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 ${this.loading 
                   ? html`<sl-spinner class="icon-spinner"></sl-spinner>`
                   : this.editingConfig || !this._fetchedConfig
-                    ? html` <assessment-container .editMode=${true} 
+                    ? html` <assessment-container .editMode=${true}
+                              id=${"placeholder"}
                               @selected=${(e: CustomEvent) => { this.resetAssessmentControlsSelected(); this.handleAssessmentControlSelected(e)}}
                               @deselected=${this.undoDeselect}
                               .selected=${this.selectedWidgetIndex == -1}
@@ -272,6 +280,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
               <div slot="controls">
                 <div name="add-widget-icon" class="add-widget-icon" @click=${async (e: CustomEvent) => {
                   this.resetAssessmentControlsSelected();
+                  this.reselectPlaceholderControl();
                   this.editingConfig = true;
                 }}>
                   ${
@@ -333,7 +342,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                   .size=${'md'}
                   @click=${async () => {
                     this.editingConfig = false;
-                    this._form?.reset();
                     await this.resetWorkingState()
                   }}
                 >Cancel</nh-button>
@@ -343,8 +351,8 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                   .variant=${'warning'}
                   .size=${'md'}
                   @click=${async () => {
-                    this._form?.reset();
-                    await this.resetWorkingState()
+                    await this.resetWorkingState();
+                    this.reselectPlaceholderControl()
                   }}
                 >Reset</nh-button>
 
@@ -485,7 +493,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 id: 'assessment-widget',
                 size: 'large',
                 required: true,
-                defaultValue: (() => !!foundEditableWidget ? ({
+                defaultValue: (() => this?._form?.touched && !Object.values(this._form.touched).some(touched => touched) && !!foundEditableWidget ? ({
                   label: foundEditableWidget.name,
                   value: foundEditableWidget.name,
                   renderBlock: this._workingWidgetControlRendererCache.get(foundEditableWidget.widgetKey)
