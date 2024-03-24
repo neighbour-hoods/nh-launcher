@@ -157,6 +157,9 @@ export default class NHForm extends NHBaseForm {
     Object.values(Object.fromEntries(this.fieldRefs.entries())).forEach(inputRef => {if (inputRef !== null) inputRef.disabled = false});
     this.config.resetOverload?.call(this);
     super.reset();
+    this.config.fields.flat().map((field: FieldConfig) => {
+      this._model = { ...this._model, [field.name]: field.defaultValue }
+    })
   }
 
   handleInputChange(e: Event) {

@@ -187,9 +187,10 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
       this.editMode = true;
       this.editingConfig = true;
       this.selectedWidgetIndex = selectedIndex;
+      this._form.reset()
       if(selectedIndex == -1) {
         this.editMode = false;
-        this._form.reset()
+        this.placeHolderWidget = undefined;
         this._form.requestUpdate()
       }
   }
@@ -351,8 +352,11 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                   .variant=${'warning'}
                   .size=${'md'}
                   @click=${async () => {
-                    await this.resetWorkingState();
-                    this.reselectPlaceholderControl()
+                    if(!this.editingConfig) {
+                      await this.resetWorkingState();
+                      this.reselectPlaceholderControl()
+                    }
+                    this._form.reset()
                   }}
                 >Reset</nh-button>
 
@@ -493,7 +497,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 id: 'assessment-widget',
                 size: 'large',
                 required: true,
-                defaultValue: (() => this?._form?.touched && !Object.values(this._form.touched).some(touched => touched) && !!foundEditableWidget ? ({
+                defaultValue: (() => !!foundEditableWidget ? ({
                   label: foundEditableWidget.name,
                   value: foundEditableWidget.name,
                   renderBlock: this._workingWidgetControlRendererCache.get(foundEditableWidget.widgetKey)
@@ -537,6 +541,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 defaultValue: (() => {
                   if(!!foundEditableWidgetConfig) {
                     const dimensionName = this._inputDimensionEntries.find(dimension => compareUint8Arrays(dimension.dimension_eh, foundEditableWidgetConfig!.dimensionEh))?.name
+                    if(this?._form?.touched && this._form.touched.assessment_widget) return null
                     return {
                       label: dimensionName || 'Could not retrieve dimension',
                       value: encodeHashToBase64(foundEditableWidgetConfig!.dimensionEh),
@@ -570,6 +575,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 size: 'large',
                 required: true,
                 defaultValue: (() => {
+                  if(this?._form?.touched && this._form.touched.assessment_widget) return null 
                   if(!!foundEditableWidgetConfig) {
                     if(typeof this._methodEntries !== 'undefined') {
                       const outputDimensionEh = this.findOutputDimensionForInputDimension(foundEditableWidgetConfig.dimensionEh);
