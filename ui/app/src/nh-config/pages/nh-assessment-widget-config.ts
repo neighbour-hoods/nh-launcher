@@ -184,6 +184,12 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
         .forEach((container) => container.selected = !!(container == e.currentTarget));
       this.editMode = true;
       this.selectedWidgetIndex = selectedIndex;
+      if(selectedIndex == -1) this.editMode = false;
+  }
+  undoDeselect(e: CustomEvent) {
+    const container = e.target as NHAssessmentContainer;
+    container.selected = true;
+    container.requestUpdate()
   }
   resetAssessmentControlsSelected() {
       this._assessmentContainers 
@@ -236,7 +242,9 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                         if(!componentToBind) return;
                         return html`
                         <assessment-container .editMode=${true}
-                          @selected=${this.handleAssessmentControlSelected}>
+                          @selected=${this.handleAssessmentControlSelected}
+                          @deselected=${this.undoDeselect}
+                        >
                           <span slot="assessment-output">0</span>
                           <input-assessment-renderer slot="assessment-control"
                             .component=${componentToBind}
@@ -252,6 +260,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                   : this.editingConfig || !this._fetchedConfig
                     ? html` <assessment-container .editMode=${true} 
                               @selected=${(e: CustomEvent) => { this.resetAssessmentControlsSelected(); this.handleAssessmentControlSelected(e)}}
+                              @deselected=${this.undoDeselect}
                               .selected=${true}
                             >
                               <span slot="assessment-output">0</span>
@@ -309,7 +318,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
             }}
           >
             <div>
-              <h2>Add Assessment Control</h2>
+              <h2>${this.editMode ? "Update Control" : "Add Control"}</h2>
               ${this.renderMainForm(!!foundEditableWidget ? foundEditableWidget : null, !!foundEditableWidgetConfig ? foundEditableWidgetConfig : null, )}
             </div>
             <nh-button-group
@@ -343,7 +352,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                   id="add-widget-config"
                   .variant=${'success'}
                   .size=${'md'}
-                >Add</nh-button>
+                >${this.editMode ? "Update" : "Add"}</nh-button>
               </span>
             </nh-button-group>
           </div>
@@ -444,7 +453,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
               {
                 type: 'select',
                 placeholder: 'Select',
-                label: '1. Select an assessment widget for this resource: ',
+                label: '1. Select an assessment control for this resource: ',
                 selectOptions: (() =>
                   this?._registeredWidgets && this?._appletInstanceRenderers.value
                     ? Object.values(this._registeredWidgets)!
@@ -600,7 +609,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     'nh-alert': NHAlert,
     'assessment-widget-tray': NHResourceAssessmentTray,
     'input-assessment-renderer': InputAssessmentRenderer,
-    'nh-icon-container': NHIconContainer,
     'assessment-container': NHAssessmentContainer,
   };
 
