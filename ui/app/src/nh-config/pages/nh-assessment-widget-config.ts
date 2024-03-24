@@ -183,6 +183,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
       this._assessmentContainers 
         .forEach((container) => container.selected = !!(container == e.currentTarget));
       this.editMode = true;
+      this.editingConfig = true;
       this.selectedWidgetIndex = selectedIndex;
       if(selectedIndex == -1) this.editMode = false;
   }
@@ -261,7 +262,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                     ? html` <assessment-container .editMode=${true} 
                               @selected=${(e: CustomEvent) => { this.resetAssessmentControlsSelected(); this.handleAssessmentControlSelected(e)}}
                               @deselected=${this.undoDeselect}
-                              .selected=${true}
+                              .selected=${this.selectedWidgetIndex == -1}
                             >
                               <span slot="assessment-output">0</span>
                               ${this.renderWidgetControlPlaceholder()}
