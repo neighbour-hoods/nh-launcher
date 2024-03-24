@@ -88,7 +88,8 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   @state() editingConfig: boolean = false;
   @state() placeHolderWidget!: (() => TemplateResult) | undefined;
   @state() configuredWidgetsPersisted: boolean = true; // Is the in memory representation the same as on DHT?
-
+  
+  @state() selectedWidgetIndex: number = -1; // -1 represents the placeholder widget, otherwise this is the index of the widget in the renderableWidgets array
   @state() selectedWidgetKey: string | undefined; // nh-form select options for the 2nd/3rd selects are configured dynamically when this state change triggers a re-render
   @state() selectedInputDimensionEh: EntryHash | undefined; // used to filter for the 3rd select
 
@@ -133,14 +134,16 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
       await this.resetWorkingState()
       await this.fetchExistingWidgetConfigBlock();
     }
-    if(changedProperties.has('editMode') && !!this.editMode && this._assessmentContainers.slice(0,-1).length > 1) {
-      this.resetAssessmentControlsSelected();
-    }
   }
 
   private findInputDimensionsForOutputDimension(outputDimensionEh: EntryHash) {
     const methods = this._methodEntries!.filter((method: Method) => compareUint8Arrays(method.output_dimension_eh, outputDimensionEh))
     return methods.map((method: Method) => method.input_dimension_ehs[0])
+  }
+
+  private findOutputDimensionForInputDimension(inputDimensionEh: EntryHash) {
+    const methods = this._methodEntries!.filter((method: Method) => compareUint8Arrays(method.input_dimension_ehs[0], inputDimensionEh))
+    return methods.map((method: Method) => method.output_dimension_eh)[0]
   }
 
   private getCombinedWorkingAndFetchedWidgets() {
@@ -168,25 +171,34 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     this.requestUpdate()
   }
 
+  // Methods for managing the state of the placeholder/selected control
   renderWidgetControlPlaceholder() {
     if(typeof this.selectedWidgetKey != 'undefined' && this._workingWidgetControlRendererCache?.has(this.selectedWidgetKey) && this?.placeHolderWidget) {
       return repeat([this.selectedWidgetKey], () => +(new Date), (_, _idx) => this.placeHolderWidget!())
     }
     return html`<span slot="assessment-control"></span>`
   }
-
   handleAssessmentControlSelected(e: CustomEvent) {
+    const selectedIndex = [...this._assessmentContainers].findIndex(container => container.selected)
       this._assessmentContainers 
         .forEach((container) => container.selected = !!(container == e.currentTarget));
       this.editMode = true;
+      this.selectedWidgetIndex = selectedIndex;
   }
   resetAssessmentControlsSelected() {
       this._assessmentContainers 
         .forEach((container) => container.selected = false);
   }
+  reselectPlaceholderControl() {
+      const containers = [...this._assessmentContainers]
+      containers[containers.length - 1].selected = true;
+  }
 
   render(): TemplateResult {
     let renderableWidgets = (this.configuredInputWidgets || this.getCombinedWorkingAndFetchedWidgets())?.map((widgetRegistrationEntry: AssessmentWidgetBlockConfig) => widgetRegistrationEntry.inputAssessmentWidget as AssessmentWidgetConfig)
+
+    const foundEditableWidget = this.editMode && this.selectedWidgetIndex !== -1 && renderableWidgets[this.selectedWidgetIndex] && Object.values(this._registeredWidgets)?.find(widget => widget.name == renderableWidgets[this.selectedWidgetIndex]?.componentName);
+    const foundEditableWidgetConfig = this.editMode && this.selectedWidgetIndex !== -1 && renderableWidgets[this.selectedWidgetIndex]
     return html`
       <div class="container" @assessment-widget-config-set=${async () => {await this.fetchRegisteredWidgets()}}>
         <nh-page-header-card .heading=${'Assessment Widget Config'}>
@@ -239,7 +251,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                   ? html`<sl-spinner class="icon-spinner"></sl-spinner>`
                   : this.editingConfig || !this._fetchedConfig
                     ? html` <assessment-container .editMode=${true} 
-                              @selected=${this.handleAssessmentControlSelected}
+                              @selected=${(e: CustomEvent) => { this.resetAssessmentControlsSelected(); this.handleAssessmentControlSelected(e)}}
                               .selected=${true}
                             >
                               <span slot="assessment-output">0</span>
@@ -298,7 +310,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
           >
             <div>
               <h2>Add Assessment Control</h2>
-              ${this.renderMainForm()}
+              ${this.renderMainForm(!!foundEditableWidget ? foundEditableWidget : null, !!foundEditableWidgetConfig ? foundEditableWidgetConfig : null, )}
             </div>
             <nh-button-group
               .direction=${'horizontal'}
@@ -378,6 +390,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     this.configuredInputWidgets = [ ...this?.getCombinedWorkingAndFetchedWidgets(), input];
     this._workingWidgetControls = [ ...(this?._workingWidgetControls || []), input];
     this.configuredWidgetsPersisted = false;
+    this.reselectPlaceholderControl();
     this.requestUpdate();
   }
 
@@ -418,7 +431,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     await e.currentTarget.updateComplete;
   }
 
-  private renderMainForm(): TemplateResult {
+  private renderMainForm(foundEditableWidget?: AssessmentWidgetRegistrationInput | null, foundEditableWidgetConfig?: AssessmentWidgetConfig | null): TemplateResult {
     return html`
       <nh-form
         class="responsive"
@@ -460,9 +473,13 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 )(), // IIFE regenerates select options dynamically
                 name: 'assessment_widget',
                 id: 'assessment-widget',
-                defaultValue: '',
                 size: 'large',
                 required: true,
+                defaultValue: (() => !!foundEditableWidget ? ({
+                  label: foundEditableWidget.name,
+                  value: foundEditableWidget.name,
+                  renderBlock: this._workingWidgetControlRendererCache.get(foundEditableWidget.widgetKey)
+                }) : null)()
               },
             ],
 
@@ -478,8 +495,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                           const selectedWidgetRangeKind = Object.values(
                             this._registeredWidgets,
                           ).find(widget => widget.widgetKey == this.selectedWidgetKey)?.rangeKind;
-                          const widgetKeyFromLinkedApplet = false;
-                          
                           if (typeof this.selectedWidgetKey == 'undefined' || !selectedWidgetRangeKind) return false;
 
                           const dimensionRange = this._rangeEntries!.find(range =>
@@ -499,9 +514,17 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                     : [])(),
                 name: 'input_dimension',
                 id: 'input-dimension',
-                defaultValue: '',
                 size: 'large',
                 required: true,
+                defaultValue: (() => {
+                  if(!!foundEditableWidgetConfig) {
+                    const dimensionName = this._inputDimensionEntries.find(dimension => compareUint8Arrays(dimension.dimension_eh, foundEditableWidgetConfig!.dimensionEh))?.name
+                    return {
+                      label: dimensionName || 'Could not retrieve dimension',
+                      value: encodeHashToBase64(foundEditableWidgetConfig!.dimensionEh),
+                    } 
+                  }
+                })()
               },
             ],
 
@@ -526,9 +549,22 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                   : []).bind(this)(),
                 name: 'output_dimension',
                 id: 'output-dimension',
-                defaultValue: '',
                 size: 'large',
                 required: true,
+                defaultValue: (() => {
+                  if(!!foundEditableWidgetConfig) {
+                    if(typeof this._methodEntries !== 'undefined') {
+                      const outputDimensionEh = this.findOutputDimensionForInputDimension(foundEditableWidgetConfig.dimensionEh);
+                      const outputDimension = this._outputDimensionEntries.find(dimension => compareUint8Arrays(dimension.dimension_eh, outputDimensionEh))
+                      return !!outputDimension 
+                        ? { 
+                            label: outputDimension?.name || 'Could not retrieve dimension',
+                            value: encodeHashToBase64(outputDimensionEh)
+                          } 
+                        : false
+                    }
+                  }
+                })()
               },
             ],
           ],
