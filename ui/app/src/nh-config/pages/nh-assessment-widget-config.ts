@@ -384,6 +384,42 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     </div>`;
   }
 
+  async replaceInMemoryWidgetControl(model: any) {
+    if(typeof this.selectedWidgetIndex == 'undefined') throw new Error('No widget index so cannot replace widget control in working widgets array');
+    const { assessment_widget, input_dimension, output_dimension } = model;
+
+    const selectedWidgetDetails = Object.entries(this._registeredWidgets || {}).find(
+      ([_widgetEh, widget]) => widget.name == assessment_widget,
+    );
+    const selectedWidgetEh = selectedWidgetDetails?.[0];
+    if (!selectedWidgetEh) return Promise.reject('Could not get an entry hash for your selected widget.');
+
+    const inputDimensionBinding = {
+      type: "applet",
+      appletId: this.resourceDef.applet_eh as any,
+      componentName: assessment_widget,
+      dimensionEh: decodeHashFromBase64(input_dimension),
+    } as AssessmentWidgetConfig;
+    const outputDimensionBinding = {
+      type: "applet",
+      appletId: this.resourceDef.applet_eh as any,
+      componentName: assessment_widget,
+      dimensionEh: decodeHashFromBase64(output_dimension),
+    } as AssessmentWidgetConfig;
+    const input = {
+      inputAssessmentWidget: inputDimensionBinding,
+      outputAssessmentWidget: outputDimensionBinding,
+    }
+    const isFromWorkingConfig = this.selectedWidgetIndex > this._fetchedConfig.length;
+    let newIndex = isFromWorkingConfig ? (this.selectedWidgetIndex - this._fetchedConfig.length - 1) : this.selectedWidgetIndex;
+    (isFromWorkingConfig ? this._workingWidgetControls : this._fetchedConfig).splice(newIndex, 1, input);
+
+    this._updateToFetchedConfig = this._fetchedConfig;
+    this.configuredWidgetsPersisted = false;
+    
+    this.requestUpdate();
+  }
+  
   async pushToInMemoryWidgetControls(model: any) {
     const { assessment_widget, input_dimension, output_dimension } = model;
 
@@ -589,7 +625,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
               },
             ],
           ],
-          submitOverload: model => this.pushToInMemoryWidgetControls(model),
+          submitOverload: model => this.editMode ? this.replaceInMemoryWidgetControl(model) : this.pushToInMemoryWidgetControls(model),
           progressiveValidation: true,
           schema: object({
             assessment_widget: string()
