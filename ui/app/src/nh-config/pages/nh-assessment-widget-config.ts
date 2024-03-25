@@ -533,6 +533,15 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 id: 'assessment-widget',
                 size: 'large',
                 required: true,
+                handleInputChangeOverload: (_e, model) => { // Update the currently editable widget constrol renderer component
+                  if(this.editMode) {
+                    const possibleRenderers : ({string: AssessmentWidgetRenderer | ResourceBlockRenderer})[] = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)];
+                    const widget = Object.values(this._registeredWidgets)?.find(widget=> widget.name == model.assessment_widget);
+                    if(!widget?.widgetKey || widget?.kind !== 'input' || !(possibleRenderers[widget.widgetKey])) throw new Error('Could not update currently editable widget control')
+                    const renderer = possibleRenderers[widget.widgetKey];
+                    this.updatedComponent = renderer.component;
+                  }
+                },
                 useDefault: () => !this._form?.touched.assessment_widget,
                 defaultValue: (() => !!foundEditableWidget ? ({
                   label: foundEditableWidget.name,
