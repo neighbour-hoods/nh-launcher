@@ -239,7 +239,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
               <div slot="widgets">
                 ${
                   this._appletInstanceRenderers?.value && (this._fetchedConfig && this._fetchedConfig.length > 0 || this?._workingWidgetControls)
-                    ? renderableWidgets.map((inputWidgetConfig, index) => {
+                    ? repeat(renderableWidgets, (widget) => `${encodeHashToBase64(widget.dimensionEh)}-${(widget as any).componentName.replace(" ","")}`, (inputWidgetConfig, idx) => {
                         const appletEh = (inputWidgetConfig as any)?.appletId;
                         const appletKey = appletEh && encodeHashToBase64(appletEh);
                         const appletRenderers = this._appletInstanceRenderers.value[appletKey] as (AssessmentWidgetConfig | ResourceBlockRenderer)[];
