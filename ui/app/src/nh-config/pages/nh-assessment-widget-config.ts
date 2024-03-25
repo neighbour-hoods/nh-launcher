@@ -552,6 +552,8 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                     if(!widget?.widgetKey || widget?.kind !== 'input' || !(possibleRenderers[widget.widgetKey])) throw new Error('Could not update currently editable widget control')
                     const renderer = possibleRenderers[widget.widgetKey];
                     this.updatedComponent = renderer.component;
+                    model.input_dimension = undefined;
+                    model.output_dimension = undefined;
                   }
                 },
                 useDefault: () => !this._form?.touched.assessment_widget,
