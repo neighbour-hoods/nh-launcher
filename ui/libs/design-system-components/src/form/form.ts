@@ -20,9 +20,10 @@ interface BaseFieldConfig {
   required?: boolean;
   placeholder?: string;
   label?: string;
-  defaultValue: string | boolean;
+  defaultValue: string | boolean | OptionConfig;
   handleInputChangeOverload?: (e: Event, model: any, fields: any, errors: any) => void;
   mutateValue?: (value: string | boolean) => unknown;
+  useDefault?: () => boolean;
 }
 
 // Define the interface for select field configuration
@@ -93,10 +94,15 @@ export default class NHForm extends NHBaseForm {
 
     if (changedProperties.has('config')) {
       this.config.fields.flat().map((field: FieldConfig) => {
+        // By default enable default value in form reset
+        if(!field?.useDefault) {
+          field.useDefault = () => true;
+        }
         // Set the form model
-        this._model = { ...this._model, [field.name]: field.defaultValue }
+        const defaultValue = field.type == 'select' ? (field?.defaultValue as OptionConfig)?.value : field?.defaultValue;
+        if(defaultValue) this._model = { ...this._model, [field.name]: defaultValue }
 
-        // Index overloads ready for use
+        // Index mutation overloads ready for use
         if(field?.mutateValue) {
           this.inputMutationOverloads?.set(field.name, field.mutateValue)
         }
@@ -158,7 +164,10 @@ export default class NHForm extends NHBaseForm {
     this.config.resetOverload?.call(this);
     super.reset();
     this.config.fields.flat().map((field: FieldConfig) => {
-      this._model = { ...this._model, [field.name]: field.defaultValue }
+      const defaultValue = field.type == 'select' ? (field?.defaultValue as OptionConfig)?.value : field?.defaultValue;
+      if(typeof field.useDefault !== 'undefined' && field.useDefault() && defaultValue) {
+        this._model = { ...this._model, [field.name]: defaultValue }
+      }
     })
   }
 
@@ -342,7 +351,7 @@ export default class NHForm extends NHBaseForm {
               .id=${fieldConfig.id}
               .name=${fieldConfig.name}
               .placeholder=${fieldConfig.placeholder}
-              .defaultValue=${fieldConfig.defaultValue}
+              .defaultValue=${(typeof fieldConfig?.useDefault !== 'undefined') && fieldConfig.useDefault() ? fieldConfig.defaultValue : null}
               .label=${fieldConfig.label}
               @change=${(e: Event) => this.handleInputChange(e)}
               .options=${(fieldConfig as SelectFieldConfig).selectOptions}

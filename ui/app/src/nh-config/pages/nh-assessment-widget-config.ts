@@ -497,6 +497,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 id: 'assessment-widget',
                 size: 'large',
                 required: true,
+                useDefault: () => !this._form?.touched.assessment_widget,
                 defaultValue: (() => !!foundEditableWidget ? ({
                   label: foundEditableWidget.name,
                   value: foundEditableWidget.name,
@@ -538,10 +539,10 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 id: 'input-dimension',
                 size: 'large',
                 required: true,
+                useDefault: () => !(this?._form?.touched && this._form.touched.assessment_widget),
                 defaultValue: (() => {
                   if(!!foundEditableWidgetConfig) {
                     const dimensionName = this._inputDimensionEntries.find(dimension => compareUint8Arrays(dimension.dimension_eh, foundEditableWidgetConfig!.dimensionEh))?.name
-                    if(this?._form?.touched && this._form.touched.assessment_widget) return null
                     return {
                       label: dimensionName || 'Could not retrieve dimension',
                       value: encodeHashToBase64(foundEditableWidgetConfig!.dimensionEh),
@@ -574,20 +575,16 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 id: 'output-dimension',
                 size: 'large',
                 required: true,
+                useDefault: () => !(this?._form?.touched && this._form.touched.assessment_widget) && typeof this._methodEntries !== 'undefined',
                 defaultValue: (() => {
-                  if(this?._form?.touched && this._form.touched.assessment_widget) return null 
-                  if(!!foundEditableWidgetConfig) {
-                    if(typeof this._methodEntries !== 'undefined') {
-                      const outputDimensionEh = this.findOutputDimensionForInputDimension(foundEditableWidgetConfig.dimensionEh);
-                      const outputDimension = this._outputDimensionEntries.find(dimension => compareUint8Arrays(dimension.dimension_eh, outputDimensionEh))
-                      return !!outputDimension 
-                        ? { 
-                            label: outputDimension?.name || 'Could not retrieve dimension',
-                            value: encodeHashToBase64(outputDimensionEh)
-                          } 
-                        : false
-                    }
-                  }
+                  const outputDimensionEh = foundEditableWidgetConfig && this.findOutputDimensionForInputDimension(foundEditableWidgetConfig!.dimensionEh);
+                  const outputDimension = outputDimensionEh && this._outputDimensionEntries.find(dimension => compareUint8Arrays(dimension.dimension_eh, outputDimensionEh))
+                  return !!outputDimension 
+                    ? { 
+                        label: outputDimension?.name || 'Could not retrieve dimension',
+                        value: encodeHashToBase64(outputDimensionEh)
+                      } 
+                    : null
                 })()
               },
             ],
