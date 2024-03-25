@@ -460,6 +460,10 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     this.configuredInputWidgets = [ ...this?.getCombinedWorkingAndFetchedWidgets(), input];
     this._workingWidgetControls = [ ...(this?._workingWidgetControls || []), input];
     this.configuredWidgetsPersisted = false;
+
+    this.resetAssessmentControlsSelected();
+    this.selectedWidgetIndex = -1;
+    this.editMode = false;
     this.reselectPlaceholderControl();
     this.requestUpdate();
   }
