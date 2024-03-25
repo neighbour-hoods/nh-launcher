@@ -100,8 +100,8 @@ export default class NHForm extends NHBaseForm {
         }
         // Set the form model
         const defaultValue = field.type == 'select' ? (field?.defaultValue as OptionConfig)?.value : field?.defaultValue;
-        if(defaultValue) this._model = { ...this._model, [field.name]: defaultValue }
-
+        this._model = { ...this._model, [field.name]: defaultValue }
+        
         // Index mutation overloads ready for use
         if(field?.mutateValue) {
           this.inputMutationOverloads?.set(field.name, field.mutateValue)
@@ -165,7 +165,7 @@ export default class NHForm extends NHBaseForm {
     super.reset();
     this.config.fields.flat().map((field: FieldConfig) => {
       const defaultValue = field.type == 'select' ? (field?.defaultValue as OptionConfig)?.value : field?.defaultValue;
-      if(typeof field.useDefault !== 'undefined' && field.useDefault() && defaultValue) {
+      if(typeof field.useDefault !== 'undefined' && field.useDefault() && !!defaultValue) {
         this._model = { ...this._model, [field.name]: defaultValue }
       }
     })
