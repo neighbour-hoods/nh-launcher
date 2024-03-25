@@ -188,18 +188,19 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     return html`<span slot="assessment-control"></span>`
   }
   handleAssessmentControlSelected(e: CustomEvent) {
+    this.resetAssessmentControlsSelected();
+    e.currentTarget.selected = true;
+    this.editMode = true;
+    this.editingConfig = true;
+    
     const selectedIndex = [...this._assessmentContainers].findIndex(container => container.selected)
-      this._assessmentContainers 
-        .forEach((container) => container.selected = !!(container == e.currentTarget));
-      this.editMode = true;
-      this.editingConfig = true;
-      this.selectedWidgetIndex = selectedIndex;
-      this._form.reset()
-      if(selectedIndex == -1) {
-        this.editMode = false;
-        this.placeHolderWidget = undefined;
-        this._form.requestUpdate()
-      }
+    this.selectedWidgetIndex = selectedIndex;
+    this._form.reset()
+    if(selectedIndex == -1 || e.currentTarget.id == 'placeholder') {
+      this.editMode = false;
+      this.placeHolderWidget = undefined;
+      this._form.requestUpdate()
+    }
   }
   undoDeselect(e: CustomEvent) {
     const container = e.target as NHAssessmentContainer;
@@ -280,8 +281,8 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                   ? html`<sl-spinner class="icon-spinner"></sl-spinner>`
                   : this.editingConfig || !this._fetchedConfig
                     ? html` <assessment-container .editMode=${true}
-                              id=${"placeholder"}
-                              @selected=${(e: CustomEvent) => { this.resetAssessmentControlsSelected(); this.handleAssessmentControlSelected(e)}}
+                              id="placeholder"
+                              @selected=${this.handleAssessmentControlSelected}
                               @deselected=${this.undoDeselect}
                               .selected=${this.selectedWidgetIndex == -1}
                             >
