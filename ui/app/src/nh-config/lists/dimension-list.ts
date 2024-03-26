@@ -27,23 +27,19 @@ type OutputDimensionTableRecord = InputDimensionTableRecord & {
 type DimensionTableRecord = InputDimensionTableRecord | OutputDimensionTableRecord;
 
 export default class DimensionList extends NHComponent {  
-  @property()
-  sensemakerStore!: SensemakerStore;
+  @property() sensemakerStore!: SensemakerStore;
 
-  @property()
-  dimensionType: "input" | "output" = "input";
+  @property() dimensionType: "input" | "output" = "input";
 
-  @state()
-  tableStore!: TableStore<DimensionTableRecord>;
+  @state() tableStore!: TableStore<DimensionTableRecord>;
 
-  @state()
-  private _dimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
+  @property() existingDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
 
-  @state()
-  private _rangeEntries!: Array<Range & { range_eh: EntryHash }>;
+  @state() private _dimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
+
+  @state() private _rangeEntries!: Array<Range & { range_eh: EntryHash }>;
   
-  @state()
-  private _methodEntries!: Array<Method>;
+  @state() private _methodEntries!: Array<Method>;
 
   async fetchDimensionEntries() {
     try {
@@ -70,14 +66,18 @@ export default class DimensionList extends NHComponent {
   }
 
   async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
-    try {
-      await this.fetchDimensionEntries();
-      if(!this._dimensionEntries) return
-      await this.fetchRangeEntriesFromHashes(this._dimensionEntries.map((dimension: Dimension) => dimension.range_eh));
+    if(this.existingDimensionEntries) { 
+      console.log('this.existingDimensionEntries :>> ', this.existingDimensionEntries);
+    } else if (!!this.sensemakerStore) { // We need to fetch all global dimensions
+      try {
+        await this.fetchDimensionEntries();
+        if(!this._dimensionEntries) return
+        await this.fetchRangeEntriesFromHashes(this._dimensionEntries.map((dimension: Dimension) => dimension.range_eh));
 
-      this._methodEntries = (await (this.sensemakerStore.getMethods()) as Array<EntryRecord<Method>>).map(eR => eR.entry);
-    } catch (error) {
-      console.error('Could not fetch: ', error)
+        this._methodEntries = (await (this.sensemakerStore.getMethods()) as Array<EntryRecord<Method>>).map(eR => eR.entry);
+      } catch (error) {
+        console.error('Could not fetch: ', error)
+      }
     }
   }
 
