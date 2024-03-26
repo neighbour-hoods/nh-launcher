@@ -84,19 +84,6 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
         this._fileBytes, // compressed webhapp as Uint8Array
       );
       await this.updateComplete;
-
-      this.dispatchEvent(
-        new CustomEvent("trigger-alert", {
-          detail: { 
-            title: "Applet Installed",
-            msg: "You can now use your applet, and any assessments made in it will show up on your dashboard.",
-            type: "success",
-            closable: true,
-          },
-          bubbles: true,
-          composed: true,
-        })
-      );
       
       this.dispatchEvent(
         new CustomEvent('applet-installed', {
