@@ -104,10 +104,16 @@ export function createOutputAssessmentWidgetDelegate(
      *
      */
     async getLatestAssessment(): Promise<Assessment | undefined> {
-      const assessments : Record<string, Assessment[]> = await sensemakerStore.getAssessmentsForResources({
-        resource_ehs: [resourceEh],
-        dimension_ehs: [dimensionEh],
-      });
+      let assessments: Record<string, Assessment[]>;
+      try {
+        assessments = await sensemakerStore.getAssessmentsForResources({
+          resource_ehs: [resourceEh],
+          dimension_ehs: [dimensionEh],
+        });
+      } catch (error) {
+        console.warn('Could not get assessments for resource - if there are no dimensions configured you may need to handle that in your delegate creation code');
+        return
+      }
       return assessment || getLatest(assessments)
     },
 
@@ -146,11 +152,17 @@ export function createInputAssessmentWidgetDelegate(
      *
      */
     async getLatestAssessmentForUser(): Promise<Assessment | undefined> {
-      const assessments : Record<string, Assessment[]> = await sensemakerStore.getAssessmentsForResources({
-        resource_ehs: [resourceEh],
-        dimension_ehs: [dimensionEh],
-      });
-      return assessment || getLatest(assessments)
+      let assessments: Record<string, Assessment[]>;
+      try {
+        assessments = await sensemakerStore.getAssessmentsForResources({
+          resource_ehs: [resourceEh],
+          dimension_ehs: [dimensionEh],
+        });
+      } catch (error) {
+        console.warn('Could not get assessments for resource - if there are no dimensions configured you may need to handle that in your delegate creation code');
+        return
+      }
+      return assessment || getLatest(assessments as Record<string, Assessment[]>)
     },
 
     /**
