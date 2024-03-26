@@ -7,7 +7,7 @@ use sensemaker_integrity::{
 };
 
 use crate::{
-    create_cultural_context, create_dimension, create_method, create_range, create_resource_def,
+    create_cultural_context, create_method, create_range, create_resource_def,
     utils::{entry_from_record, entry_hash_from_record},
 };
 
@@ -73,14 +73,8 @@ pub fn create_entries_from_applet_config(
         ranges.insert(range.name.clone(), entry_hash_from_record(create_range(range)?)?);
     }
 
-    // dimensions
-    let mut dimensions: BTreeMap<String, EntryHash> = BTreeMap::new();
-    for config_dimension in config.dimensions {
-        dimensions.insert(
-            config_dimension.name.clone(),
-            entry_hash_from_record(create_dimension(Dimension::try_from(config_dimension)?)?)?,
-        );
-    }
+    // dimensions -- pass an empty vector as dimensions need't always be accepted in the config
+    let dimensions: BTreeMap<String, EntryHash> = BTreeMap::new();
 
     // resource defs
     let mut resource_defs: BTreeMap<String, EntryHash> = BTreeMap::new();
