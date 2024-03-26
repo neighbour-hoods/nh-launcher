@@ -1,3 +1,4 @@
+import { ConfigureAppletDimensions } from './elements/dialogs/configure-applet-dimensions-dialog';
 import { consume } from '@lit/context';
 import { state, query, queryAsync, property } from 'lit/decorators.js';
 import { DnaHash, EntryHash, encodeHashToBase64 } from '@holochain/client';
@@ -33,6 +34,7 @@ import NHTooltip from '@neighbourhoods/design-system-components/tooltip';
 import NHDialog from '@neighbourhoods/design-system-components/dialog';
 import NHProfileCard from '@neighbourhoods/design-system-components/profile/profile-card';
 import { b64images } from '@neighbourhoods/design-system-styles';
+import { ConfigDimension } from '@neighbourhoods/client';
 
 export class MainDashboard extends ScopedRegistryHost(LitElement) {
   @consume({ context: matrixContext , subscribe: true })
@@ -72,8 +74,12 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
   @state()
   private _selectedAppletInstanceId: EntryHash | undefined; // hash of the Applet's entry in group's we dna of the selected Applet instance
 
-  @query('#open-create-nh-dialog')
-  _createNHDialogButton!: HTMLElement;
+  
+  @query('#open-create-nh-dialog') _createNHDialogButton!: HTMLElement;
+  
+  @query('configure-applet-dimensions-dialog') _configureAppletDimensionsDialog!: ConfigureAppletDimensions;
+  @state() private _currentlyConfiguringAppletEh!: EntryHash;
+  @state() private _currentlyConfiguringAppletDimensions!: Array<ConfigDimension>;
 
   @query('#component-card')
   _withProfile!: any;
@@ -157,7 +163,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
           <nh-home
             style="display: flex; flex: 1;"
             id="nh-home"
-            @applet-installed=${(e: CustomEvent) => this.handleAppletInstalled(e)}
+            @applet-installed=${(e: CustomEvent) => {this.openConfigureAppletDimensionsDialog(); this.handleAppletInstalledNotYetConfigured(e)}}
           >
           </nh-home>
         </we-group-context>
@@ -194,7 +200,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
     } else {
       return html`
         <applet-not-installed
-          @applet-installed=${(e: CustomEvent) => this.handleAppletInstalled(e)}
+          @applet-installed=${(e: CustomEvent) => {this.openConfigureAppletDimensionsDialog(); this.handleAppletInstalledNotYetConfigured(e)}}
           style="display: flex; flex: 1;"
           .appletInstanceId=${this._selectedAppletInstanceId}
         >
@@ -409,18 +415,47 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
     this._navigationMode = NavigationMode.Agnostic;
   }
 
-  handleAppletInstalled(e: CustomEvent) {
-    this._selectedWeGroupId = e.detail.weGroupId;
+  async openConfigureAppletDimensionsDialog() {
+    this._configureAppletDimensionsDialog.dialog.showDialog()
+}
+
+  async handleAppletInstalledNotYetConfigured(e: CustomEvent) {
     this._selectedAppletInstanceId = e.detail.appletEntryHash;
     const appletInstanceInfo = this._matrixStore.getAppletInstanceInfo(
       e.detail.appletEntryHash,
     );
     const applet = appletInstanceInfo?.applet;
+
+    const config = await this._matrixStore.queryAppletGui(applet!.devhubHappReleaseHash)
+    if(!config?.appletConfig?.dimensions) throw new Error("No applet dimensions found");
+
+    this._currentlyConfiguringAppletEh = e.detail.appletEntryHash;
+    this._currentlyConfiguringAppletDimensions = config.appletConfig.dimensions;
+  
+  }
+
+  async handleAppletInstalledAndDimensionsConfigured() {
+    this._selectedAppletInstanceId = this._currentlyConfiguringAppletEh
+    const appletInstanceInfo = this._matrixStore.getAppletInstanceInfo(this._currentlyConfiguringAppletEh);
     this._appletName = appletInstanceInfo?.appInfo.installed_app_id;
     this._dashboardMode = DashboardMode.AppletGroupInstanceRendering;
     this._navigationMode = NavigationMode.GroupCentric;
 
     this.requestUpdate();
+    await this.updateComplete;
+
+    this.dispatchEvent(
+      new CustomEvent("trigger-alert", {
+        detail: { 
+          title: "Applet Installed",
+          msg: "You can now use your applet, and any assessments made in it will show up on your dashboard.",
+          type: "success",
+          closable: true,
+        },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   goHome() {
@@ -446,6 +481,11 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
         id="create-nh-dialog"
         .openDialogButton=${this._createNHDialogButton}
       ></create-nh-dialog>
+      <configure-applet-dimensions-dialog
+        .existingDimensions=${this._currentlyConfiguringAppletDimensions}
+        .handleSubmit=${this.handleAppletInstalledAndDimensionsConfigured.bind(this)}
+        id="configure-applet-dimensions-dialog"
+      ></configure-applet-dimensions-dialog>
 
       <div
         class="row"
@@ -530,9 +570,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
           <div
             class="dashboard-content"
             style="flex: 1; width: 100%; display: flex;"
-            @applet-installed=${(e: CustomEvent) => {
-              this.handleAppletInstalled(e);
-            }}
+            @applet-installed=${(e: CustomEvent) => {this.openConfigureAppletDimensionsDialog(); this.handleAppletInstalledNotYetConfigured(e)}}
           >
             ${this.renderDashboardContent()}
           </div>
@@ -544,6 +582,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
   static elementDefinitions = {
     'sidebar-button': SidebarButton,
     'create-nh-dialog': CreateNeighbourhoodDialog,
+    'configure-applet-dimensions-dialog': ConfigureAppletDimensions,
     'home-screen': HomeScreen,
     'nh-tooltip': NHTooltip,
     'we-group-context': WeGroupContext,
