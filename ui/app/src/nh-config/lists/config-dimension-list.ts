@@ -6,6 +6,7 @@ import { ConfigDimension, ConfigMethod, RangeKind } from "@neighbourhoods/client
 import { NHButton, NHCard, NHCheckbox, NHComponent, NHTooltip } from "@neighbourhoods/design-system-components";
 import { capitalize } from "../../elements/components/helpers/functions";
 import { FieldDefinition, FieldDefinitions, Table, TableStore } from "@adaburrows/table-web-component";
+import { rangeKindEqual } from "../../utils";
 
 type InputDimensionTableRecord = {
   ['dimension-name']: string,
@@ -25,6 +26,7 @@ class ExtendedTable extends Table { // Allows nh-checkbox to be rendered
   static elementDefinitions = {
     "nh-checkbox": NHCheckbox,
     "nh-tooltip": NHTooltip,
+    "nh-button": NHButton,
   }
 }
 
@@ -43,6 +45,16 @@ function showRowNotSelected(row: HTMLElement) {
 }
 function rowDimensionName(row: HTMLElement) {
   return (row.querySelector('td.dimension-name') as HTMLElement)?.textContent || ""
+}
+
+// Helpers for filtering/matching dimensions with methods
+function matchesMethodInputDimension(dimension: SelectableDimension, method: ConfigMethod) {
+  return method.input_dimensions.some(d => dimension.name == d.name && (dimension.range.name == d.range.name) && rangeKindEqual(dimension.range.kind, d.range.kind))
+}
+function matchesMethodOutputDimension(dimension: SelectableDimension, method: ConfigMethod) {
+  return method.output_dimension.name == dimension.name 
+    && method.output_dimension.range.name == dimension.range.name 
+    && rangeKindEqual(method.output_dimension.range.kind, dimension.range.kind)
 }
 
 export default class ConfigDimensionList extends NHComponent {
@@ -65,19 +77,19 @@ export default class ConfigDimensionList extends NHComponent {
             dimension.selected = true; // By default select all dimensions for creation
             const range = dimension.range
             const linkedMethods = this.dimensionType == 'input'
-              ? this.configMethods.filter(method => method.input_dimensions.some(d => dimension.name == d.name && dimension.range.name == d.range.name))
-              : this.configMethods.filter(method => method.output_dimension.name == dimension.name && method.output_dimension.range.name == dimension.range.name)
-            // TODO: test deepequal for above, rather than just names.
+              ? this.configMethods.filter(method => matchesMethodInputDimension(dimension, method))
+              : this.configMethods.filter((method) => matchesMethodOutputDimension(dimension, method))
 
-            const [[rangeType, rangeValues]] : any = Object.entries(range?.kind as RangeKind);
             const method = linkedMethods[0];
+            const inputDimension: SelectableDimension | false = this.dimensionType == 'output' && method.input_dimensions[0]
+            const [[rangeType, rangeValues]] = Object.entries(range?.kind as RangeKind);
             return {
               ['dimension-name']: capitalize(dimension.name),
               ['range-type']: rangeType,
               ['range-min']: rangeValues?.min,
               ['range-max']: rangeValues?.max,
               // For output dimensions
-              // ['input-dimension-name']: (inputDimension as any)?.name || '',
+              ['input-dimension-name']: (inputDimension as SelectableDimension)?.name || '',
               ['method-operation']: typeof method?.program == 'object' ? Object.keys(method.program)[0] : '',
               ['select']: true,
             }
