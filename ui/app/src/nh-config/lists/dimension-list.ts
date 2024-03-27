@@ -137,8 +137,8 @@ export default class DimensionList extends NHComponent {
       : {
         'dimension-name': new FieldDefinition<DimensionTableRecord>({heading: 'Name'}),
         'input-dimension-name': new FieldDefinition<DimensionTableRecord>({heading: 'Input Dimension'}),
-        'range-type': new FieldDefinition<DimensionTableRecord>({heading: 'Operation'}),
-        'method-operation': new FieldDefinition<DimensionTableRecord>({heading: 'Type'}),
+        'range-type': new FieldDefinition<DimensionTableRecord>({heading: 'Type'}),
+        'method-operation': new FieldDefinition<DimensionTableRecord>({heading: 'Operation'}),
         'range-min': new FieldDefinition<DimensionTableRecord>({heading: 'Min'}),
         'range-max': new FieldDefinition<DimensionTableRecord>({heading: 'Max'}) }
 
