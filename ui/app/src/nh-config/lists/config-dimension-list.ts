@@ -28,6 +28,8 @@ class ExtendedTable extends Table { // Allows nh-checkbox to be rendered
   }
 }
 
+type SelectableDimension = ConfigDimension & {selected?: boolean};
+
 // Helpers for reaching into table DOM and adding/removing selected state
 function showRowSelected(row: HTMLElement) {
   row.style.outline = "2px solid #5DC389";
@@ -50,7 +52,7 @@ export default class ConfigDimensionList extends NHComponent {
 
   @query('wc-table') _table!: Table;
 
-  @property() configDimensions!: Array<ConfigDimension & {selected?: boolean}>;
+  @property() configDimensions!: Array<SelectableDimension>;
 
   @property() configMethods!: Array<ConfigMethod>;
 
@@ -59,7 +61,7 @@ export default class ConfigDimensionList extends NHComponent {
       try {
         const tableRecords = this.configDimensions
           .reverse()
-          .map((dimension: ConfigDimension & {selected?: boolean}) => {
+          .map((dimension: SelectableDimension) => {
             dimension.selected = true; // By default select all dimensions for creation
             const range = dimension.range
             const linkedMethods = this.dimensionType == 'input'
@@ -103,7 +105,7 @@ export default class ConfigDimensionList extends NHComponent {
       const rowIndex = rows
         .map(rowDimensionName)
         .findIndex((rowDimensionName: string) => rowDimensionName == dimensionOfRow);
-      const dimensionToSelect = this.configDimensions[rowIndex] as ConfigDimension & {selected?: boolean};
+      const dimensionToSelect = this.configDimensions[rowIndex] as SelectableDimension;
       if (!dimensionToSelect) throw new Error('Could not select config dimension');
       dimensionToSelect.selected = !(dimensionToSelect.selected as boolean) as boolean
 
