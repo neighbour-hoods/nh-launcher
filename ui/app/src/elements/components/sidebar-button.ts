@@ -27,7 +27,7 @@ export class SidebarButton extends ScopedRegistryHost(LitElement) {
   render() {
     return this.tooltipText
       ? html`
-        <nh-tooltip .text=${this.tooltipText} class="right">
+        <nh-tooltip .text=${this.tooltipText} class="right no-icon">
           <img slot="hoverable" class="icon" src="${this.logoSrc}" @click=${this.handleClick} />
         </nh-tooltip>
       `

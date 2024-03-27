@@ -541,7 +541,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
             ${this.renderPrimaryNavigation()}
             <div class="user-profile-menu">
               <nh-tooltip
-              class="right"
+              class="right no-icon"
                 .text="${"Your Profile"}"
               >
                 <button slot="hoverable" class="user-profile" type="button" @click=${() => {this.toggleUserMenu()}}></button>
