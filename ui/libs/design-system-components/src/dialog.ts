@@ -12,7 +12,7 @@ import SlButton from '@shoelace-style/shoelace/dist/components/button/button.js'
 export enum DialogType {
   createNeighbourhood = 'create-neighbourhood',
   leaveNeighbourhood = 'leave-neighbourhood',
-  widgetConfig = 'widget-config',
+  dimensionConfig = 'dimension-config',
   confirmation = 'confirmation',
   appletInstall = 'applet-install',
   appletUninstall = 'applet-uninstall',
@@ -97,10 +97,10 @@ export default class NHDialog extends NHComponent {
         secondary: 'Cancel',
       }
     
-      case DialogType.widgetConfig:
+      case DialogType.dimensionConfig:
       return {
-        primary: 'Configure',
-        secondary: 'Return',
+        primary: 'Add Dimensions',
+        secondary: 'Configure Manually',
       }
 
       case DialogType.appletInstall:
