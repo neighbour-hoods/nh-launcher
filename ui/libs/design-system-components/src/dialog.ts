@@ -99,8 +99,8 @@ export default class NHDialog extends NHComponent {
     
       case DialogType.widgetConfig:
       return {
-        primary: 'Save',
-        secondary: '',
+        primary: 'Configure',
+        secondary: 'Return',
       }
 
       case DialogType.appletInstall:
