@@ -17,10 +17,11 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
         id="dialog"
         .dialogType=${"widget-config"}
         .size=${"large"}
-        .title="Configure Applet Dimensions"
+        .title=${"Configuring Dimensions"}
         .handleOk=${this.handleSubmit}
       >
         <div slot="inner-content" class="dialog-container">
+          <h1>Add Applet's Dimensions</h1>
           ${ this.config 
               ? html`
                       <config-dimension-list
@@ -58,6 +59,12 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
           width: 100%;
         }
 
+        h1 {
+          color: white;
+          margin: 0 auto;
+          font-size: calc(1px * var(--nh-font-size-4xl));
+        }
+        
         .dialog-container {
           display: flex;
           width: 100%;
