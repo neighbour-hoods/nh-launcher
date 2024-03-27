@@ -15,7 +15,7 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
     return html`
       <nh-dialog
         id="dialog"
-        .dialogType=${"widget-config"}
+        .dialogType=${"dimension-config"}
         .size=${"large"}
         .title=${"Configuring Dimensions"}
         .handleOk=${this.handleSubmit}
