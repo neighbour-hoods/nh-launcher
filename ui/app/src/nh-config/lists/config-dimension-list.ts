@@ -1,14 +1,11 @@
-import { capitalize } from './../../elements/components/helpers/functions';
 import { html, css, PropertyValueMap, CSSResult } from "lit";
-import { property, state } from "lit/decorators.js";
+import { property, query, state } from "lit/decorators.js";
 
-import { EntryHash, encodeHashToBase64 } from "@holochain/client";
-import { ConfigDimension, ConfigMethod, Dimension,  Method,  Range, RangeKind, SensemakerStore } from "@neighbourhoods/client";
+import { ConfigDimension, ConfigMethod, RangeKind } from "@neighbourhoods/client";
 
-import { NHButton, NHCard, NHComponent } from "@neighbourhoods/design-system-components";
+import { NHButton, NHCard, NHCheckbox, NHComponent } from "@neighbourhoods/design-system-components";
 import { capitalize } from "../../elements/components/helpers/functions";
 import { FieldDefinition, FieldDefinitions, Table, TableStore } from "@adaburrows/table-web-component";
-import { EntryRecord } from "@holochain-open-dev/utils";
 
 type InputDimensionTableRecord = {
   ['dimension-name']: string,
@@ -24,15 +21,34 @@ type OutputDimensionTableRecord = InputDimensionTableRecord & {
 
 type DimensionTableRecord = InputDimensionTableRecord | OutputDimensionTableRecord;
 
-export default class ConfigDimensionList extends NHComponent {
+class ExtendedTable extends Table { // Allows nh-checkbox to be rendered
+  static elementDefinitions = {
+    "nh-checkbox": NHCheckbox,
+  }
+}
 
+// Helpers for reaching into table DOM and adding/removing selected state
+function showRowSelected(row: HTMLElement) {
+  row.style.outline = "2px solid #5DC389";
+  row.style.borderRadius = "8px";
+  (row.querySelector('.select') as HTMLElement)!.style.backgroundColor = "#5DC389";
+}
+function showRowNotSelected(row: HTMLElement) {
+  row.style.outline = "";
+  row.style.borderRadius = "";
+  (row.querySelector('.select') as HTMLElement)!.style.backgroundColor = "transparent";
+}
+
+export default class ConfigDimensionList extends NHComponent {
   @property() dimensionType: "input" | "output" = "input";
   
   @state() tableStore!: TableStore<DimensionTableRecord>;
 
+  @query('wc-table') _table!: Table;
+
   @property() configDimensions!: Array<ConfigDimension>;
 
-  @property() configMethods!: Array<ConfigMethod>;
+  @property() configMethods!: Array<ConfigMethod & {selected?: boolean}>;
 
   protected updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     if(changedProperties.has('configDimensions') && !!this.configDimensions && !!this.configMethods) {  
@@ -56,6 +72,7 @@ export default class ConfigDimensionList extends NHComponent {
               // For output dimensions
               // ['input-dimension-name']: (inputDimension as any)?.name || '',
               ['method-operation']: typeof method?.program == 'object' ? Object.keys(method.program)[0] : '',
+              ['select']: true,
             }
           });
         this.tableStore.records = tableRecords;
@@ -64,7 +81,18 @@ export default class ConfigDimensionList extends NHComponent {
         console.log('Error mapping dimensions and ranges to table values: ', error)
       }
     }
-    
+    if(changedProperties.has('configDimensions') && !!this._table?.renderRoot?.children?.[1]) { // Actual html table element
+      const table = this._table?.renderRoot?.children?.[1];
+      const rows = [...table.querySelectorAll('tr')].slice(1);
+      rows.forEach(showRowSelected)
+    }
+  }
+  
+  handleRowSelection(e: CustomEvent) {
+    const row = (e.target as HTMLElement).closest("tr") as HTMLElement;
+    ((e.target as NHCheckbox).value)
+      ?  showRowSelected(row)
+      : showRowNotSelected(row)
   }
 
   async connectedCallback() {
@@ -75,14 +103,20 @@ export default class ConfigDimensionList extends NHComponent {
         'dimension-name': new FieldDefinition<DimensionTableRecord>({heading: 'Name'}),
         'range-type': new FieldDefinition<DimensionTableRecord>({heading: 'Type'}),
         'range-min': new FieldDefinition<DimensionTableRecord>({heading: 'Min'}),
-        'range-max': new FieldDefinition<DimensionTableRecord>({heading: 'Max'}) }
+        'range-max': new FieldDefinition<DimensionTableRecord>({heading: 'Max'}),
+        'select': new FieldDefinition<DimensionTableRecord>({heading: 'Select',
+          decorator: (value) => html`<nh-checkbox class="checkbox-only" @change=${this.handleRowSelection} .label=${""} .value=${!!value}></nh-checkbox>`}),
+      }
       : {
         'dimension-name': new FieldDefinition<DimensionTableRecord>({heading: 'Name'}),
         // 'input-dimension-name': new FieldDefinition<DimensionTableRecord>({heading: 'Input Dimension'}),
-        'range-type': new FieldDefinition<DimensionTableRecord>({heading: 'Operation'}),
-        'method-operation': new FieldDefinition<DimensionTableRecord>({heading: 'Type'}),
+        'range-type': new FieldDefinition<DimensionTableRecord>({heading: 'Type'}),
+        'method-operation': new FieldDefinition<DimensionTableRecord>({heading: 'Operation'}),
         'range-min': new FieldDefinition<DimensionTableRecord>({heading: 'Min'}),
-        'range-max': new FieldDefinition<DimensionTableRecord>({heading: 'Max'}) }
+        'range-max': new FieldDefinition<DimensionTableRecord>({heading: 'Max'}),
+        'select': new FieldDefinition<DimensionTableRecord>({heading: 'Select',
+        decorator: (value) => html`<nh-checkbox class="checkbox-only" @change=${this.handleRowSelection} .label=${""} .value=${!!value}></nh-checkbox>`})
+      }
 
     this.tableStore = new TableStore<DimensionTableRecord>({
       tableId: 'dimensions-' + this.dimensionType,
@@ -93,7 +127,6 @@ export default class ConfigDimensionList extends NHComponent {
   }
   
   render() {
-    console.log('this.tableStore.records :>> ', this.tableStore.records);
     return html`
       <div class="content">
         <div class="title-bar">
@@ -112,7 +145,7 @@ export default class ConfigDimensionList extends NHComponent {
   static elementDefinitions = {
     "nh-button": NHButton,
     "nh-card": NHCard,
-    'wc-table': Table,
+    'wc-table': ExtendedTable,
   }
 
   static styles: CSSResult[] = [
@@ -126,6 +159,7 @@ export default class ConfigDimensionList extends NHComponent {
 
       h1 {
         display: flex;
+        font-size: calc(1px * var(--nh-font-size-2xl));
         margin-right: calc(1px * var(--nh-spacing-xl));
       }
 
@@ -149,6 +183,8 @@ export default class ConfigDimensionList extends NHComponent {
         --table-dimensions-input-row-even-background-color: var(--nh-theme-bg-element); 
         --table-dimensions-output-row-even-background-color: var(--nh-theme-bg-element); 
 
+        --table-dimensions-input-select-width: 2rem;
+        --table-dimensions-output-select-width: 2rem;
         --table-dimensions-input-cell-height: 58px;
         --table-dimensions-output-cell-height: 58px;
 
