@@ -44,9 +44,9 @@ export default class NHCheckbox extends NHComponent {
         [this.size]: this.size,
         'disabled': !!this.disabled
       })}">
-            <label
+          ${ this.label && this.label !== '' ? html`<label
               for=${this.name}
-            >${this.label}</label>
+            >${this.label}</label>` : null }
 
           ${ this.required
             ? html`<label
@@ -136,6 +136,16 @@ export default class NHCheckbox extends NHComponent {
         font-size: 80%;
         flex-direction: initial;
         padding: calc(1px * var(--nh-spacing-sm));
+      }
+
+      :host(.checkbox-only) .field.checkbox {
+        width: auto;
+        justify-content: center;
+        padding: 0;
+      }
+      :host(.checkbox-only) sl-checkbox {
+        margin-right: 47%;
+        margin-bottom: .5rem;
       }
 
       .field.small.checkbox {
