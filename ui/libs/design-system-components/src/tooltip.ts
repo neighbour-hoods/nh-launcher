@@ -77,6 +77,13 @@ export default class NHTooltip extends NHComponent {
         width: 150%;
       }
 
+      :host(.super-extend) .tooltip .content { 
+        width: 40rem;
+        right: 140%;
+        padding: 8px;
+        top: -1rem;
+      }
+
       .tooltip .content::after {
         content: " ";
         position: absolute;
@@ -110,7 +117,7 @@ export default class NHTooltip extends NHComponent {
         transform: rotate(90deg);
       }
 
-      :host(.left) .tooltip .content svg, :host(.right) .tooltip .content svg {
+      :host(.no-icon) .tooltip .content svg {
         display: none;
       }
       

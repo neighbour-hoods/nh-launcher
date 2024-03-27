@@ -129,10 +129,10 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
         ${appletInstanceInfos ? this.renderAppletInstanceList(appletInstanceInfos) : html``}
 
         <nav id="sensemaker-buttons">
-          <nh-tooltip class="left" .text=${"Add Applet"}>
+          <nh-tooltip class="left no-icon" .text=${"Add Applet"}>
             <button slot="hoverable" class="applet-add" @click=${async () => {this._dashboardMode = DashboardMode.WeGroupHome; (await this._neighbourhoodHome).showLibrary();}}></button>
           </nh-tooltip>
-          <nh-tooltip class="left" .text=${"Dashboard"}>
+          <nh-tooltip class="left no-icon" .text=${"Dashboard"}>
             <button
               slot="hoverable"
               class="dashboard-icon"
@@ -277,7 +277,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
           </div>`
         : html`<div id="placeholder"></div>`}
 
-      <nh-tooltip class="right" .text=${"Add Neighbourhood"}>
+      <nh-tooltip class="right no-icon" .text=${"Add Neighbourhood"}>
         <button slot="hoverable" id="open-create-nh-dialog" class="group-add"></button>
       </nh-tooltip> `;
   }
@@ -503,7 +503,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
             })}"
           ></div>
           <div class="column top-left-corner">
-            <nh-tooltip .text=${"Home"} class="right">
+            <nh-tooltip .text=${"Home"} class="right no-icon">
               <div slot="hoverable" style="width: 72px; height: 72px;">
                 <sidebar-button
                   id="nh-logo"
