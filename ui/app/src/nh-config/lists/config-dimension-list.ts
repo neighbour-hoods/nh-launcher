@@ -38,6 +38,9 @@ function showRowNotSelected(row: HTMLElement) {
   row.style.borderRadius = "";
   (row.querySelector('.select') as HTMLElement)!.style.backgroundColor = "transparent";
 }
+function rowDimensionName(row: HTMLElement) {
+  return (row.querySelector('td.dimension-name') as HTMLElement)?.textContent || ""
+}
 
 export default class ConfigDimensionList extends NHComponent {
   @property() dimensionType: "input" | "output" = "input";
@@ -46,16 +49,17 @@ export default class ConfigDimensionList extends NHComponent {
 
   @query('wc-table') _table!: Table;
 
-  @property() configDimensions!: Array<ConfigDimension>;
+  @property() configDimensions!: Array<ConfigDimension & {selected?: boolean}>;
 
-  @property() configMethods!: Array<ConfigMethod & {selected?: boolean}>;
+  @property() configMethods!: Array<ConfigMethod>;
 
   protected updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     if(changedProperties.has('configDimensions') && !!this.configDimensions && !!this.configMethods) {  
       try {
         const tableRecords = this.configDimensions
           .reverse()
-          .map((dimension: ConfigDimension) => {
+          .map((dimension: ConfigDimension & {selected?: boolean}) => {
+            dimension.selected = true; // By default select all dimensions for creation
             const range = dimension.range
             const linkedMethods = this.dimensionType == 'input'
               ? this.configMethods.filter(method => method.input_dimensions.some(d => dimension.name == d.name && dimension.range.name == d.range.name))
@@ -89,10 +93,26 @@ export default class ConfigDimensionList extends NHComponent {
   }
   
   handleRowSelection(e: CustomEvent) {
-    const row = (e.target as HTMLElement).closest("tr") as HTMLElement;
-    ((e.target as NHCheckbox).value)
-      ?  showRowSelected(row)
-      : showRowNotSelected(row)
+    try {
+      if(!this.configDimensions) throw new Error('Do not have config dimensions loaded')
+      const row = (e.target as HTMLElement).closest("tr") as HTMLElement;
+      const dimensionOfRow = rowDimensionName(row);
+      const rows = [...((e.target as HTMLElement).closest("table") as HTMLElement).querySelectorAll("tr")].slice(1);
+      
+      const rowIndex = rows
+        .map(rowDimensionName)
+        .findIndex((rowDimensionName: string) => rowDimensionName == dimensionOfRow);
+      const dimensionToSelect = this.configDimensions[rowIndex] as ConfigDimension & {selected?: boolean};
+      if (!dimensionToSelect) throw new Error('Could not select config dimension');
+      dimensionToSelect.selected = !(dimensionToSelect.selected as boolean) as boolean
+
+      ((e.target as NHCheckbox).value)
+        ?  showRowSelected(row)
+        : showRowNotSelected(row)
+      
+    } catch (error) {
+      console.error('Could not perform row selection logic: ', error)
+    } 
   }
 
   async connectedCallback() {
@@ -105,7 +125,7 @@ export default class ConfigDimensionList extends NHComponent {
         'range-min': new FieldDefinition<DimensionTableRecord>({heading: 'Min'}),
         'range-max': new FieldDefinition<DimensionTableRecord>({heading: 'Max'}),
         'select': new FieldDefinition<DimensionTableRecord>({heading: 'Select',
-          decorator: (value) => html`<nh-checkbox class="checkbox-only" @change=${this.handleRowSelection} .label=${""} .value=${!!value}></nh-checkbox>`}),
+          decorator: (value) => html`<nh-checkbox class="checkbox-only" @change=${(e) => this.handleRowSelection(e)} .label=${""} .value=${!!value}></nh-checkbox>`}),
       }
       : {
         'dimension-name': new FieldDefinition<DimensionTableRecord>({heading: 'Name'}),
@@ -115,7 +135,7 @@ export default class ConfigDimensionList extends NHComponent {
         'range-min': new FieldDefinition<DimensionTableRecord>({heading: 'Min'}),
         'range-max': new FieldDefinition<DimensionTableRecord>({heading: 'Max'}),
         'select': new FieldDefinition<DimensionTableRecord>({heading: 'Select',
-        decorator: (value) => html`<nh-checkbox class="checkbox-only" @change=${this.handleRowSelection} .label=${""} .value=${!!value}></nh-checkbox>`})
+        decorator: (value) => html`<nh-checkbox class="checkbox-only" @change=${(e) => this.handleRowSelection(e)} .label=${""} .value=${!!value}></nh-checkbox>`})
       }
 
     this.tableStore = new TableStore<DimensionTableRecord>({
