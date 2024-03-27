@@ -33,8 +33,6 @@ export default class DimensionList extends NHComponent {
 
   @state() tableStore!: TableStore<DimensionTableRecord>;
 
-  @property() existingDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
-
   @state() private _dimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
 
   @state() private _rangeEntries!: Array<Range & { range_eh: EntryHash }>;
@@ -66,9 +64,7 @@ export default class DimensionList extends NHComponent {
   }
 
   async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
-    if(this.existingDimensionEntries) { 
-      console.log('this.existingDimensionEntries :>> ', this.existingDimensionEntries);
-    } else if (!!this.sensemakerStore) { // We need to fetch all global dimensions
+    if (!!this.sensemakerStore) { // We need to fetch all global dimensions
       try {
         await this.fetchDimensionEntries();
         if(!this._dimensionEntries) return
