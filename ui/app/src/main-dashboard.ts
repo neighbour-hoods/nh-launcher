@@ -1,8 +1,8 @@
 import { ConfigureAppletDimensions } from './elements/dialogs/configure-applet-dimensions-dialog';
 import { consume } from '@lit/context';
 import { state, query, queryAsync, property } from 'lit/decorators.js';
-import { DnaHash, EntryHash, encodeHashToBase64 } from '@holochain/client';
-import { html, css, CSSResult, unsafeCSS, LitElement } from 'lit';
+import { DnaHash, EntryHash, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
+import { html, css, CSSResult, unsafeCSS, LitElement, PropertyValueMap } from 'lit';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import { classMap } from 'lit/directives/class-map.js';
 import { matrixContext } from './context';
@@ -79,7 +79,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
   
   @query('configure-applet-dimensions-dialog') _configureAppletDimensionsDialog!: ConfigureAppletDimensions;
   @state() private _currentlyConfiguringAppletEh!: EntryHash;
-  @state() private _currentlyConfiguringAppletDimensions!: Array<ConfigDimension>;
+  @state() private _currentlyConfiguringAppletConfig!: AppletConfigInput;
 
   @query('#component-card')
   _withProfile!: any;
@@ -87,15 +87,19 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
   @state()
   userProfileMenuVisible: boolean = false;
 
-  private _appletName: string | undefined;
-  
-  @state() userProfileMenuVisible: boolean = false;
-
-  async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
-    // Cache appInfo here to prevent cachedAppInfo issue (sensemaker.0 cell could not be found)
-    this._selectedWeGroupId && this._matrixStore?.sensemakerStore(this._selectedWeGroupId).subscribe(s => {(s as SensemakerStore).client.appInfo(); console.log("Cached appInfo!")});
-    
+  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    this._currentlyConfiguringAppletEh = decodeHashFromBase64("uhCEkw2cmIiwsA6Ep9HjQouX35_5IsGmdDmgiamKId69get3HJQYk");
   }
+  async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
+      if(changedProperties.has('_selectedAppletInstanceId') && !!this._selectedWeGroupId && !!this._selectedAppletInstanceId) {
+        const appletInstanceInfo = this._matrixStore.getAppletInstanceInfo(this._selectedAppletInstanceId!);
+        const applet = appletInstanceInfo?.applet;
+        
+        const config = await this._matrixStore.queryAppletGui(applet!.devhubHappReleaseHash)
+        this._currentlyConfiguringAppletConfig = config.appletConfig;
+        this.openConfigureAppletDimensionsDialog()
+      }
+    }
 
   async refreshProfileCard(weGroupId: DnaHash) {
     if(!this._withProfile?.agentProfile?.value) {
@@ -417,7 +421,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
 
   async openConfigureAppletDimensionsDialog() {
     this._configureAppletDimensionsDialog.dialog.showDialog()
-}
+  }
 
   async handleAppletInstalledNotYetConfigured(e: CustomEvent) {
     this._selectedAppletInstanceId = e.detail.appletEntryHash;
@@ -428,16 +432,13 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
 
     const config = await this._matrixStore.queryAppletGui(applet!.devhubHappReleaseHash)
     if(!config?.appletConfig?.dimensions) throw new Error("No applet dimensions found");
-
     this._currentlyConfiguringAppletEh = e.detail.appletEntryHash;
-    this._currentlyConfiguringAppletDimensions = config.appletConfig.dimensions;
+    this._currentlyConfiguringAppletConfig = config.appletConfig
   
   }
 
   async handleAppletInstalledAndDimensionsConfigured() {
     this._selectedAppletInstanceId = this._currentlyConfiguringAppletEh
-    const appletInstanceInfo = this._matrixStore.getAppletInstanceInfo(this._currentlyConfiguringAppletEh);
-    this._appletName = appletInstanceInfo?.appInfo.installed_app_id;
     this._dashboardMode = DashboardMode.AppletGroupInstanceRendering;
     this._navigationMode = NavigationMode.GroupCentric;
 
@@ -482,7 +483,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
         .openDialogButton=${this._createNHDialogButton}
       ></create-nh-dialog>
       <configure-applet-dimensions-dialog
-        .existingDimensions=${this._currentlyConfiguringAppletDimensions}
+        .config=${this._currentlyConfiguringAppletConfig}
         .handleSubmit=${this.handleAppletInstalledAndDimensionsConfigured.bind(this)}
         id="configure-applet-dimensions-dialog"
       ></configure-applet-dimensions-dialog>
