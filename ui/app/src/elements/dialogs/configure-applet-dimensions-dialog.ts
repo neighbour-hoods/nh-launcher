@@ -3,7 +3,7 @@ import { property, query, state } from "lit/decorators.js";
 
 import { NHComponentShoelace, NHDialog, NHForm } from "@neighbourhoods/design-system-components";
 import { ConfigDimensionList } from "../../nh-config";
-import { AppletConfigInput, Dimension, SensemakerStore } from "@neighbourhoods/client";
+import { AppletConfigInput, Dimension } from "@neighbourhoods/client";
 import { DnaHash, EntryHash } from "@holochain/client";
 import { StoreSubscriber } from "lit-svelte-stores";
 import { MatrixStore } from "../../matrix-store";
@@ -27,6 +27,7 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
   @query('nh-dialog') dialog!: NHDialog;
 
   @state() private _existingDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
+  @state() private _existingRangeEntries!: Array<Range & { range_eh: EntryHash }>;
 
   render() {
     return html`
@@ -45,6 +46,8 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
                         id="applet-input-dimension-list"
                         .dimensionType=${'input'}
                         .configDimensions=${(this.config as AppletConfigInput)!.dimensions!.filter(dimension => !dimension.computed)}
+                        .existingDimensions=${this._existingDimensionEntries}
+                        .existingRanges=${this._existingRangeEntries}
                         .configMethods=${(this.config as AppletConfigInput)!.methods}
                       >
                       </config-dimension-list>
@@ -52,6 +55,8 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
                         id="applet-output-dimension-list"
                         .dimensionType=${'output'}
                         .configDimensions=${(this.config as AppletConfigInput)!.dimensions!.filter(dimension => dimension.computed)}
+                        .existingDimensions=${this._existingDimensionEntries}
+                        .existingRanges=${this._existingRangeEntries}
                         .configMethods=${(this.config as AppletConfigInput)!.methods}
                       >
                       </config-dimension-list>
@@ -63,11 +68,41 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
     `;
   }
 
-  async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
-    await this.fetchDimensionEntries();
+  async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
+    if(changedProperties.has("handleSubmit")) { // By now we have a Sensemaker store value
+      if(!this._sensemakerStore?.value) return;
+      await this.fetchDimensionEntries();
+    }
+    if(changedProperties.has("_existingDimensionEntries") && this._existingDimensionEntries?.length > 0) {
+      await this.fetchRangeEntriesFromHashes(this._existingDimensionEntries.map((dimension: Dimension) => dimension.range_eh));
+    }
+  }
+
+  async fetchRangeEntriesFromHashes(rangeEhs: EntryHash[]) {
+    let response;
+    try {
+      response = await Promise.all(rangeEhs.map(eH => this._sensemakerStore.value?.getRange(eH)))
+    } catch (error) {
+      console.log('Error fetching range details: ', error);
+    }
+    this._existingRangeEntries = response.map((entryRecord) => ({...entryRecord.entry, range_eh: entryRecord.entryHash})) as Array<Range & { range_eh: EntryHash }>;
   }
 
   async fetchDimensionEntries() {
+    try {
+      const entryRecords = await this._sensemakerStore.value?.getDimensions();
+      this._existingDimensionEntries = entryRecords!.map(entryRecord => {
+        return {
+          ...entryRecord.entry,
+          dimension_eh: entryRecord.entryHash
+        }
+      })
+    } catch (error) {
+      console.log('Error fetching dimension details: ', error);
+    }
+  }
+
+  async fetchRangeEntries() {
     try {
       const entryRecords = await this._sensemakerStore.value?.getDimensions();
       this._existingDimensionEntries = entryRecords!.map(entryRecord => {
