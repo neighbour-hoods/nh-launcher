@@ -482,11 +482,21 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
         id="create-nh-dialog"
         .openDialogButton=${this._createNHDialogButton}
       ></create-nh-dialog>
-      <configure-applet-dimensions-dialog
-        .config=${this._currentlyConfiguringAppletConfig}
-        .handleSubmit=${this.handleAppletInstalledAndDimensionsConfigured.bind(this)}
-        id="configure-applet-dimensions-dialog"
-      ></configure-applet-dimensions-dialog>
+      
+      ${this._selectedWeGroupId
+        ? html`<we-group-context .weGroupId=${this._selectedWeGroupId}>
+        <configure-applet-dimensions-dialog
+            @configure-dimensions-manually=${() =>{
+              this._dashboardMode = DashboardMode.DashboardOverview;
+              debugger;
+            }}
+            .config=${this._currentlyConfiguringAppletConfig}
+            .handleSubmit=${this.handleAppletInstalledAndDimensionsConfigured.bind(this)}
+            id="configure-applet-dimensions-dialog"
+        ></configure-applet-dimensions-dialog>
+      </we-group-context>`
+        : null
+      }
 
       <div
         class="row"
