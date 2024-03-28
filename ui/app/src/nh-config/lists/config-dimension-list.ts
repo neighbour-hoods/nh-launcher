@@ -1,12 +1,14 @@
-import { html, css, PropertyValueMap, CSSResult } from "lit";
+import { html, css, PropertyValueMap, CSSResult, TemplateResult } from "lit";
 import { property, query, state } from "lit/decorators.js";
 
-import { ConfigDimension, ConfigMethod, RangeKind } from "@neighbourhoods/client";
+import { ConfigDimension, ConfigMethod, Dimension, RangeKind, Range } from "@neighbourhoods/client";
 
 import { NHButton, NHCard, NHCheckbox, NHComponent, NHTooltip } from "@neighbourhoods/design-system-components";
 import { capitalize } from "../../elements/components/helpers/functions";
 import { FieldDefinition, FieldDefinitions, Table, TableStore } from "@adaburrows/table-web-component";
 import { rangeKindEqual } from "../../utils";
+import { EntryHash } from "@holochain/client";
+import { compareUint8Arrays } from "@neighbourhoods/app-loader";
 
 type InputDimensionTableRecord = {
   ['dimension-name']: string,
@@ -53,8 +55,8 @@ function matchesMethodInputDimension(dimension: SelectableDimension, method: Con
 }
 function matchesMethodOutputDimension(dimension: SelectableDimension, method: ConfigMethod) {
   return method.output_dimension.name == dimension.name 
-    && method.output_dimension.range.name == dimension.range.name 
-    && rangeKindEqual(method.output_dimension.range.kind, dimension.range.kind)
+  && method.output_dimension.range.name == dimension.range.name 
+  && rangeKindEqual(method.output_dimension.range.kind, dimension.range.kind)
 }
 
 export default class ConfigDimensionList extends NHComponent {
@@ -65,6 +67,11 @@ export default class ConfigDimensionList extends NHComponent {
   @query('wc-table') _table!: Table;
 
   @property() configDimensions!: Array<SelectableDimension>;
+
+  @property() configDimensionClashes: typeof this.configDimensions = [];
+
+  @property() existingDimensions!: Array<Dimension & { dimension_eh: EntryHash }>;
+  @property() existingRanges!: Array<Range & { range_eh: EntryHash }>;
 
   @property() configMethods!: Array<ConfigMethod>;
 
@@ -95,19 +102,45 @@ export default class ConfigDimensionList extends NHComponent {
             }
           });
         this.tableStore.records = tableRecords;
+
+        if(this.configDimensionClashes.length == 0 && typeof this.existingDimensions !== 'undefined' && typeof this.existingRanges !== 'undefined' && this.existingDimensions.length > 0 && this.existingRanges.length > 0) {
+          this.configDimensionClashes = this.configDimensions.filter((dimension) => this.inboundDimensionClashesWithExistingDimension(dimension))
+        }
         this.requestUpdate()
       } catch (error) {
         console.log('Error mapping dimensions and ranges to table values: ', error)
       }
     }
+
     if(changedProperties.has('configDimensions') && !!this._table?.renderRoot?.children?.[1]) { // Actual html table element
       const table = this._table?.renderRoot?.children?.[1];
       const rows = [...table.querySelectorAll('tr')].slice(1);
       rows.forEach(showRowSelected)
     }
+
+    if(changedProperties.has('configDimensionClashes') && typeof changedProperties.get('configDimensionClashes') !== 'undefined') {  
+    }
   }
   
-  handleRowSelection(e: CustomEvent) {
+  private findRangeForDimension(dimension: Dimension & { dimension_eh: EntryHash }): Range | null {
+    if(!this.existingRanges || this.existingRanges?.length === 0) return null;
+    return this.existingRanges.find(range => compareUint8Arrays(range.range_eh, dimension.range_eh)) as Range & { range_eh: EntryHash } || null
+  }
+
+  private existingDimensionRangeMatchesConfigDimensionRange(existingDimension: Dimension & { dimension_eh: EntryHash }, newDimension: SelectableDimension) {
+    const foundRange = this.findRangeForDimension(existingDimension);
+
+    return foundRange?.name == newDimension.range.name
+      || rangeKindEqual(newDimension.range.kind, foundRange!.kind)
+  }
+
+  private inboundDimensionClashesWithExistingDimension(configDimension: SelectableDimension): boolean {
+    if(!configDimension.range?.name || !this.existingDimensions) return false;
+    
+    return this.existingDimensions.some((existingDimension) => this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension))
+  } 
+
+  private handleRowSelection(e: CustomEvent) {
     try {
       if(!this.configDimensions) throw new Error('Do not have config dimensions loaded')
       const row = (e.target as HTMLElement).closest("tr") as HTMLElement;
@@ -179,7 +212,7 @@ export default class ConfigDimensionList extends NHComponent {
     });
   }
   
-  render() {
+  render() : TemplateResult {
     return html`
       <div class="content">
         <div class="title-bar">
@@ -193,7 +226,6 @@ export default class ConfigDimensionList extends NHComponent {
       </div>
     `;
   }
-
 
   static elementDefinitions = {
     "nh-button": NHButton,
