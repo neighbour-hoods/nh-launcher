@@ -32,13 +32,34 @@ class ExtendedTable extends Table { // Allows nh-checkbox to be rendered
   }
 }
 
-type SelectableDimension = ConfigDimension & {selected?: boolean};
+type SelectableDimension = ConfigDimension & {selected?: boolean, clashes?: Array<Dimension & { dimension_eh: EntryHash }>};
 
 // Helpers for reaching into table DOM and adding/removing selected state
-function showRowSelected(row: HTMLElement) {
+function showRowSelected(row: HTMLElement, isClash: boolean = false) {
+
+  // TODO: separate out into classes and toggle them instead of adding to style object
   row.style.outline = "2px solid #5DC389";
+  row.style.borderRadius = isClash ? "16px" : "8px";
+  row.style.position = isClash ? "relative" : "initial";
+  row.style.top = isClash ? "-.25rem" : "initial";
+  row.style.left = isClash ? ".5rem" : "initial";
+  const selectCell = (row.querySelector('.select') as HTMLElement);
+  const nameCell = (row.querySelector('.dimension-name') as HTMLElement);
+  selectCell!.style.backgroundColor = "#5DC389";
+  if(isClash) { // Style differently so that association with 
+    row!.style.outlineOffset = "-8px";
+    nameCell.style.width = "8rem";
+    row.querySelectorAll("td").forEach(cell => {
+      cell.style.backgroundColor = "transparent";
+      cell.style.paddingRight = "24px";
+    })
+  }
+
+}
+function showRowSelectedWarning(row: HTMLElement) {
+  row.style.outline = "2px solid #ffcf74";
   row.style.borderRadius = "8px";
-  (row.querySelector('.select') as HTMLElement)!.style.backgroundColor = "#5DC389";
+  (row.querySelector('.select') as HTMLElement)!.style.backgroundColor = "#ffcf74";
 }
 function showRowNotSelected(row: HTMLElement) {
   row.style.outline = "";
@@ -66,59 +87,90 @@ export default class ConfigDimensionList extends NHComponent {
 
   @query('wc-table') _table!: Table;
 
-  @property() configDimensions!: Array<SelectableDimension>;
+  @property() configDimensions!: Array<SelectableDimension & {dimension_eh?: EntryHash, clash?: boolean}>;
 
-  @property() configDimensionClashes: typeof this.configDimensions = [];
+  @property() configDimensionClashes: Array<SelectableDimension & {dimension_eh?: EntryHash}> = [];
 
   @property() existingDimensions!: Array<Dimension & { dimension_eh: EntryHash }>;
   @property() existingRanges!: Array<Range & { range_eh: EntryHash }>;
 
   @property() configMethods!: Array<ConfigMethod>;
 
+  // Map to field values and update selected state of in memory config dimensions
+  toTableRecord = (dimension: SelectableDimension & {clash?: boolean}) => {
+    dimension.selected = typeof dimension?.clashes == 'undefined' ? false : true; // By default select all dimensions for creation
+
+    const range = dimension.range
+    const linkedMethods = this.dimensionType == 'input'
+      ? this.configMethods.filter(method => matchesMethodInputDimension(dimension, method))
+      : this.configMethods.filter((method) => matchesMethodOutputDimension(dimension, method))
+
+    const method = linkedMethods[0];
+    const inputDimension: SelectableDimension | false = this.dimensionType == 'output' && method.input_dimensions[0]
+    const [[rangeType, rangeValues]] = Object.entries(range?.kind as RangeKind);
+    return {
+      ['dimension-name']: capitalize(dimension.name),
+      ['range-type']: rangeType,
+      ['range-min']: rangeValues?.min,
+      ['range-max']: rangeValues?.max,
+      // For output dimensions
+      ['input-dimension-name']: (inputDimension as SelectableDimension)?.name || '',
+      ['method-operation']: typeof method?.program == 'object' ? Object.keys(method.program)[0] : '',
+      ['select']: !!dimension.selected,
+      ['clash']: !dimension.clash,
+    }
+  }
+
   protected updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    // Logic for detecting clashes between incoming config dimensions and existing config dimensions, 
+    // then updating table records with rows for existing dimensions underneath each clashing config dimensions
     if(changedProperties.has('configDimensions') && !!this.configDimensions && !!this.configMethods) {  
       try {
-        const tableRecords = this.configDimensions
-          .reverse()
-          .map((dimension: SelectableDimension) => {
-            dimension.selected = true; // By default select all dimensions for creation
-            const range = dimension.range
-            const linkedMethods = this.dimensionType == 'input'
-              ? this.configMethods.filter(method => matchesMethodInputDimension(dimension, method))
-              : this.configMethods.filter((method) => matchesMethodOutputDimension(dimension, method))
-
-            const method = linkedMethods[0];
-            const inputDimension: SelectableDimension | false = this.dimensionType == 'output' && method.input_dimensions[0]
-            const [[rangeType, rangeValues]] = Object.entries(range?.kind as RangeKind);
-            return {
-              ['dimension-name']: capitalize(dimension.name),
-              ['range-type']: rangeType,
-              ['range-min']: rangeValues?.min,
-              ['range-max']: rangeValues?.max,
-              // For output dimensions
-              ['input-dimension-name']: (inputDimension as SelectableDimension)?.name || '',
-              ['method-operation']: typeof method?.program == 'object' ? Object.keys(method.program)[0] : '',
-              ['select']: true,
-            }
-          });
-        this.tableStore.records = tableRecords;
+        const newTableRecords = [] as any;
 
         if(this.configDimensionClashes.length == 0 && typeof this.existingDimensions !== 'undefined' && typeof this.existingRanges !== 'undefined' && this.existingDimensions.length > 0 && this.existingRanges.length > 0) {
-          this.configDimensionClashes = this.configDimensions.filter((dimension) => this.inboundDimensionClashesWithExistingDimension(dimension))
+          // Add config dimensions that have clashes with existing dimensions to an array in local state
+          this.configDimensionClashes = this.configDimensions.filter((configDimension) => {
+            // Find the existing dimension entries for those clashing config dimensions
+            const existingDimensionClashes : Array<Dimension & { dimension_eh: EntryHash }> = this.filterExistingDimensionsByInboundClash(configDimension);
+
+            // If there exists a filtered list, add that as a property on the config dimension so we can add it below in the table 
+            if(existingDimensionClashes.length > 0) {
+              configDimension.clashes = existingDimensionClashes
+              // As a side effect, add the dimension entry hash to the config dimension, so that we can pair them with the existing entry
+              configDimension.clashes.forEach(existingDimensionClash => configDimension.dimension_eh = existingDimensionClash.dimension_eh);
+              return true
+            }
+            return false
+          })
+          // Now add the properties need to make the clashes their own table records.
+
         }
-        this.requestUpdate()
+        this.configDimensions.forEach((configDimension)=> {
+          newTableRecords.push(configDimension as any); // First add the incoming config dimension
+          // Iterate through the clashes and add them so they appear underneath, and have a property 'clash' to indicate they already exist
+          const range = configDimension.range;
+          for(let clashingDimension of configDimension.clashes as Array<Dimension & { dimension_eh: EntryHash,  clashes?: Array<Dimension & { dimension_eh: EntryHash }> }>) {
+              newTableRecords.push({...(clashingDimension as any), clash: true, clashes: undefined, range, selected: true } as any)
+            }
+        })
+        // Update the table records so we have clashes underneath incoming config dimensions
+        this.tableStore.records = (newTableRecords.length > 0 ? newTableRecords : this.configDimensions) // If not new clashing table records just use all config dimensions
+          .reverse()
+          .map((r) => this.toTableRecord(r));
+
+        this.requestUpdate('configDimensionClashes')
       } catch (error) {
         console.log('Error mapping dimensions and ranges to table values: ', error)
       }
     }
 
-    if(changedProperties.has('configDimensions') && !!this._table?.renderRoot?.children?.[1]) { // Actual html table element
+    // Logic for dom manipulation of rows based on selected and incoming/outgoing state as determined above
+    if(changedProperties.has('configDimensionClashes') && this.configDimensionClashes.length > 0 && !(this.configDimensions.some((configDimension: any) => configDimension?.clash))) {  
       const table = this._table?.renderRoot?.children?.[1];
-      const rows = [...table.querySelectorAll('tr')].slice(1);
-      rows.forEach(showRowSelected)
-    }
-
-    if(changedProperties.has('configDimensionClashes') && typeof changedProperties.get('configDimensionClashes') !== 'undefined') {  
+      if(typeof table == 'undefined') return
+      const rows = [...table.querySelectorAll('tr')].slice(1); // Omit the header row
+      rows.forEach((row, idx) => {console.log(this.tableStore.records[idx]); this.tableStore.records[idx]['select'] ? showRowSelected(row,  this.tableStore.records[idx]['clash']) : showRowSelectedWarning(row)})
     }
   }
   
@@ -134,10 +186,10 @@ export default class ConfigDimensionList extends NHComponent {
       || rangeKindEqual(newDimension.range.kind, foundRange!.kind)
   }
 
-  private inboundDimensionClashesWithExistingDimension(configDimension: SelectableDimension): boolean {
-    if(!configDimension.range?.name || !this.existingDimensions) return false;
-    
-    return this.existingDimensions.some((existingDimension) => this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension))
+  private filterExistingDimensionsByInboundClash(configDimension: SelectableDimension): Array<Dimension & { dimension_eh: EntryHash }> {
+    if(!configDimension.range?.name || !this.existingDimensions) return [];
+    // TODO: alter the following if clashing only by range values and not name needs to be flagged
+    return this.existingDimensions.filter((existingDimension) => existingDimension.name == configDimension.name && this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension))
   } 
 
   private handleRowSelection(e: CustomEvent) {
@@ -150,12 +202,13 @@ export default class ConfigDimensionList extends NHComponent {
       const rowIndex = rows
         .map(rowDimensionName)
         .findIndex((rowDimensionName: string) => rowDimensionName == dimensionOfRow);
+        console.log('this.tableStore.records[rowIndex] :>> ', this.tableStore.records[rowIndex]);
       const dimensionToSelect = this.configDimensions[rowIndex] as SelectableDimension;
       if (!dimensionToSelect) throw new Error('Could not select config dimension');
       dimensionToSelect.selected = !(dimensionToSelect.selected as boolean) as boolean
 
       ((e.target as NHCheckbox).value)
-        ?  showRowSelected(row)
+        ? showRowSelected(row)
         : showRowNotSelected(row)
       
     } catch (error) {
@@ -173,13 +226,19 @@ export default class ConfigDimensionList extends NHComponent {
         'range-min': new FieldDefinition<DimensionTableRecord>({heading: 'Min'}),
         'range-max': new FieldDefinition<DimensionTableRecord>({heading: 'Max'}),
         'select': new FieldDefinition<DimensionTableRecord>({heading: 'Select',
-          decorator: (value) => html`<nh-checkbox class="checkbox-only" @change=${(e) => this.handleRowSelection(e)} .label=${""} .value=${!!value}></nh-checkbox>`}),
-
-        'info': new FieldDefinition<DimensionTableRecord>({heading: '',
-        decorator: (value) => html`<nh-tooltip class="tooltip-info">
-          <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        decorator: (value) => html`<nh-checkbox class="checkbox-only" @change=${(e) => this.handleRowSelection(e)} .label=${""} .value=${!!value}></nh-checkbox>`}),
+        
+        'clash': new FieldDefinition<DimensionTableRecord>({heading: '',
+        decorator: (existsClash) => existsClash ? null : html`
+          <nh-tooltip
+            class="tooltip-info left super-extend"
+            .variant=${"warning"}
+            .text=${"Are you sure you want to add this dimension? There is already a configured dimensions with the same NAME/RANGE. If you wish to use it, check its box."}
+          >
+          <svg slot="hoverable" style="cursor:pointer; margin-top: 12px;" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M2 12C2 6.47715 6.47715 2 12 2C17.5229 2 22 6.47715 22 12C22 17.5229 17.5229 22 12 22C6.47715 22 2 17.5229 2 12ZM4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12ZM12.7071 15.2929C13.0976 15.6834 13.0976 16.3166 12.7071 16.7071C12.3166 17.0976 11.6834 17.0976 11.2929 16.7071C10.9024 16.3166 10.9024 15.6834 11.2929 15.2929C11.6834 14.9024 12.3166 14.9024 12.7071 15.2929ZM11 8C11 7.44771 11.4477 7 12 7C12.5523 7 13 7.44772 13 8V13C13 13.5523 12.5523 14 12 14C11.4477 14 11 13.5523 11 13V8Z" fill="currentColor"/>
-          </svg></nh-tooltip>`})
+          </svg>
+        </nh-tooltip>`})
       }
       : {
         'dimension-name': new FieldDefinition<DimensionTableRecord>({heading: 'Name'}),
@@ -191,8 +250,8 @@ export default class ConfigDimensionList extends NHComponent {
         'select': new FieldDefinition<DimensionTableRecord>({heading: 'Select',
         decorator: (value) => html`<nh-checkbox class="checkbox-only" @change=${(e) => this.handleRowSelection(e)} .label=${""} .value=${!!value}></nh-checkbox>`}),
         
-        'info': new FieldDefinition<DimensionTableRecord>({heading: '',
-        decorator: (value) => html`
+        'clash': new FieldDefinition<DimensionTableRecord>({heading: '',
+        decorator: (existsClash) => existsClash ? null : html`
           <nh-tooltip
             class="tooltip-info left super-extend"
             .variant=${"warning"}
@@ -240,6 +299,9 @@ export default class ConfigDimensionList extends NHComponent {
         display: flex;
         justify-content: flex-end;
         align-items: center;
+        line-height: 1rem;
+        height: 1rem;
+        padding-left: .5rem;
       }
 
       h1 {
@@ -268,10 +330,63 @@ export default class ConfigDimensionList extends NHComponent {
         --table-dimensions-input-row-even-background-color: var(--nh-theme-bg-element); 
         --table-dimensions-output-row-even-background-color: var(--nh-theme-bg-element); 
 
-        --table-dimensions-input-select-width: 2rem;
-        --table-dimensions-output-select-width: 2rem;
-        --table-dimensions-input-info-width: 2rem;
-        --table-dimensions-output-info-width: 2rem;
+        --table-dimensions-input-select-width: 48px;
+        --table-dimensions-output-select-width: 48px;
+        --table-dimensions-input-select-min-width: 48px;
+        --table-dimensions-output-select-min-width: 48px;
+        --table-dimensions-input-select-max-width: 48px;
+        --table-dimensions-output-select-max-width: 48px;
+        
+        
+        --table-dimensions-output-input-dimension-name-min-width: 3rem;
+        --table-dimensions-output-input-dimension-name-width: 3rem;
+        --table-dimensions-output-input-dimension-name-max-width: 3rem;
+        --table-dimensions-output-method-operation-min-width: 3rem;
+        --table-dimensions-output-method-operation-width: 3rem;
+        --table-dimensions-output-method-operation-max-width: 3rem;
+        
+        --table-dimensions-input-dimension-name-min-width: 32vw;
+        --table-dimensions-input-dimension-name-width: 32vw;
+        --table-dimensions-input-dimension-name-max-width: 32vw;
+        --table-dimensions-output-dimension-name-min-width: 32vw;
+        --table-dimensions-output-dimension-name-width: 32vw;
+        --table-dimensions-output-dimension-name-max-width: 32vw;
+
+        --table-dimensions-input-range-type-width: 2.5rem;
+        --table-dimensions-output-range-type-width: 2.5rem; 
+        --table-dimensions-input-range-type-min-width: 2.5rem;
+        --table-dimensions-output-range-type-min-width: 2.5rem;
+        --table-dimensions-input-range-type-max-width: 2.5rem;
+        --table-dimensions-output-range-type-max-width: 2.5rem;
+
+        --table-dimensions-input-range-min-min-width: 2rem;
+        --table-dimensions-input-range-min-max-width: 2rem;
+        --table-dimensions-input-range-min-width: 2rem;
+        --table-dimensions-output-range-min-min-width: 2rem;
+        --table-dimensions-output-range-min-max-width: 2rem;
+        --table-dimensions-output-range-min-width: 2rem;
+
+        --table-dimensions-input-range-max-min-width: 2rem;
+        --table-dimensions-input-range-max-max-width: 2rem;
+        --table-dimensions-input-range-max-width: 2rem;
+        --table-dimensions-output-range-max-min-width: 2rem;
+        --table-dimensions-output-range-max-max-width: 2rem;
+        --table-dimensions-output-range-max-width: 2rem;
+
+        --table-dimensions-input-info-width: 48px;
+        --table-dimensions-output-info-width: 48px;
+        --table-dimensions-input-info-min-width: 48px;
+        --table-dimensions-output-info-min-width: 48px;
+        --table-dimensions-input-info-max-width: 48px;
+        --table-dimensions-output-info-max-width: 48px;
+
+        --table-dimensions-input-clash-width: 48px;
+        --table-dimensions-output-clash-width: 48px;
+        --table-dimensions-input-clash-min-width: 48px;
+        --table-dimensions-output-clash-min-width: 48px;
+        --table-dimensions-input-clash-max-width: 48px;
+        --table-dimensions-output-clash-max-width: 48px;
+
         --table-dimensions-input-cell-height: 58px;
         --table-dimensions-output-cell-height: 58px;
 

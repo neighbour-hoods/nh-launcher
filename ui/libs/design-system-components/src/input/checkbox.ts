@@ -138,14 +138,22 @@ export default class NHCheckbox extends NHComponent {
         padding: calc(1px * var(--nh-spacing-sm));
       }
 
+      :host(.checkbox-only){
+        width: 48px;
+        height: 48px;
+        display: grid;
+        margin: 0px auto;
+        place-content: center;
+      }
       :host(.checkbox-only) .field.checkbox {
-        width: auto;
         justify-content: center;
         padding: 0;
+        width: fit-content;
+        margin-right: 4px;
+        margin-bottom: 4px;
       }
       :host(.checkbox-only) sl-checkbox {
-        margin-right: 47%;
-        margin-bottom: .5rem;
+        margin-right: 100%;
       }
 
       .field.small.checkbox {
