@@ -39,7 +39,6 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
         .handleOk=${this.handleSubmit}
       >
         <div slot="inner-content" class="dialog-container">
-          <h1>Add Applet's Dimensions</h1>
           ${ this.config 
               ? html`
                       <config-dimension-list
@@ -138,8 +137,12 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
         .dialog-container {
           display: flex;
           width: 100%;
+          max-height: 85vh;
           flex-direction: column;
           align-items: flex-start;
+          overflow-x: hidden;
+          overflow-y: auto;
+          padding-bottom: 4rem;
         }
 
         h2 {
