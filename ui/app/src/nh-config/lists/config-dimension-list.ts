@@ -108,17 +108,6 @@ export default class ConfigDimensionList extends NHComponent {
     const method = linkedMethods[0];
     const inputDimension: SelectableDimension | false = this.dimensionType == 'output' && method.input_dimensions[0]
     const [[rangeType, rangeValues]] = Object.entries(range?.kind as RangeKind);
-    console.log('row', {
-      ['dimension-name']: capitalize(dimension.name),
-      ['range-type']: rangeType,
-      ['range-min']: rangeValues?.min,
-      ['range-max']: rangeValues?.max,
-      // For output dimensions
-      ['input-dimension-name']: (inputDimension as SelectableDimension)?.name || '',
-      ['method-operation']: typeof method?.program == 'object' ? Object.keys(method.program)[0] : '',
-      ['select']: !!dimension.selected,
-      ['clash']: !dimension.clash,
-    })
     return {
       ['dimension-name']: capitalize(dimension.name),
       ['range-type']: rangeType,
@@ -181,7 +170,7 @@ export default class ConfigDimensionList extends NHComponent {
       const table = this._table?.renderRoot?.children?.[1];
       if(typeof table == 'undefined') return
       const rows = [...table.querySelectorAll('tr')].slice(1); // Omit the header row
-      rows.forEach((row, idx) => {console.log(this.tableStore.records[idx]); this.tableStore.records[idx]['select'] ? showRowSelected(row,  this.tableStore.records[idx]['clash']) : showRowSelectedWarning(row)})
+      rows.forEach((row, idx) => {this.tableStore.records[idx]['select'] ? showRowSelected(row,  this.tableStore.records[idx]['clash']) : showRowSelectedWarning(row)})
     }
   }
   
@@ -209,7 +198,7 @@ export default class ConfigDimensionList extends NHComponent {
       const row = (e.target as HTMLElement).closest("tr") as HTMLElement;
       const dimensionOfRow = rowDimensionName(row);
       const rows = [...((e.target as HTMLElement).closest("table") as HTMLElement).querySelectorAll("tr")].slice(1);
-      
+      // TODO: just use index of row
       const rowIndex = rows
         .map(rowDimensionName)
         .findIndex((rowDimensionName: string) => rowDimensionName == dimensionOfRow);
