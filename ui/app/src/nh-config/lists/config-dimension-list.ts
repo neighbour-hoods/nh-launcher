@@ -202,10 +202,19 @@ export default class ConfigDimensionList extends NHComponent {
       const rowIndex = rows
         .map(rowDimensionName)
         .findIndex((rowDimensionName: string) => rowDimensionName == dimensionOfRow);
-        console.log('this.tableStore.records[rowIndex] :>> ', this.tableStore.records[rowIndex]);
-      const dimensionToSelect = this.configDimensions[rowIndex] as SelectableDimension;
+        
+      const dimensionToSelect = this.configDimensions[rowIndex] as SelectableDimension  & {dimension_eh?: EntryHash, clash?: boolean};
       if (!dimensionToSelect) throw new Error('Could not select config dimension');
       dimensionToSelect.selected = !(dimensionToSelect.selected as boolean) as boolean
+      if(!dimensionToSelect?.clash) { // Handled by adding this to a list of dimensions to create in the parent component's state
+        this.dispatchEvent(
+          new CustomEvent("config-dimension-selected", {
+            detail: { dimension: dimensionToSelect },
+            bubbles: true,
+            composed: true,
+          })
+        );
+      }
 
       ((e.target as NHCheckbox).value)
         ? showRowSelected(row)
