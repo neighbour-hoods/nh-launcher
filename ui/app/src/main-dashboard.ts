@@ -34,7 +34,7 @@ import NHTooltip from '@neighbourhoods/design-system-components/tooltip';
 import NHDialog from '@neighbourhoods/design-system-components/dialog';
 import NHProfileCard from '@neighbourhoods/design-system-components/profile/profile-card';
 import { b64images } from '@neighbourhoods/design-system-styles';
-import { ConfigDimension } from '@neighbourhoods/client';
+import { ConfigPage } from './nh-config/types';
 
 export class MainDashboard extends ScopedRegistryHost(LitElement) {
   @consume({ context: matrixContext , subscribe: true })
@@ -51,7 +51,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
   _allWeGroupInfos = new StoreSubscriber(this, () => this._matrixStore.weGroupInfos());
 
   @query('#sensemaker-dashboard')
-  _sensemakerDashboard;
+  _sensemakerDashboard!: NHGlobalConfig;
   @queryAsync('#nh-home')
   _neighbourhoodHome;
 
@@ -488,7 +488,8 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
         <configure-applet-dimensions-dialog
             @configure-dimensions-manually=${() =>{
               this._dashboardMode = DashboardMode.DashboardOverview;
-              debugger;
+              this._sensemakerDashboard.page = ConfigPage.Dimensions
+              this._sensemakerDashboard.requestUpdate()
             }}
             .config=${this._currentlyConfiguringAppletConfig}
             .handleSubmit=${this.handleAppletInstalledAndDimensionsConfigured.bind(this)}

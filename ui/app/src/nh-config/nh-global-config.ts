@@ -77,7 +77,7 @@ export default class NHGlobalConfig extends NHComponent {
 
   @state() _nhName!: string;
 
-  @state() _page?: ConfigPage = ConfigPage.DashboardOverview;
+  @state() page?: ConfigPage = ConfigPage.DashboardOverview;
 
   @query('nh-menu') _menu?: NHMenu;
 
@@ -129,7 +129,7 @@ export default class NHGlobalConfig extends NHComponent {
   }
 
   renderPage() : TemplateResult {
-    switch (this._page) {
+    switch (this.page) {
       case ConfigPage.DashboardOverview:
         return html`<dashboard-overview .loaded=${this.loaded} .sensemakerStore=${this._sensemakerStore.value} .resourceDefEntries=${this._resourceDefEntries}></dashboard-overview>`;
       case ConfigPage.Dimensions:
@@ -181,7 +181,7 @@ export default class NHGlobalConfig extends NHComponent {
           ? html`<nh-menu
           @sub-nav-item-selected=${(e: CustomEvent) => {
             const [mainMenuItemName, mainMenuItemIndex, subMenuItemIndex] = e.detail.itemId.split(/\-/);
-            this._page = this.choosePageFromSubMenuItemId(mainMenuItemName, mainMenuItemIndex);
+            this.page = this.choosePageFromSubMenuItemId(mainMenuItemName, mainMenuItemIndex);
             if (!(['Sensemaker'].includes(mainMenuItemName))) {
               this.selectedResourceDef = undefined;
               return;
@@ -207,14 +207,14 @@ export default class NHGlobalConfig extends NHComponent {
                         const subMenuIdx = this._menu.selectedMenuItemId.split('-', 2)
                         this.selectedResourceDef = this._resourceDefEntries[+subMenuIdx];
                       } 
-                        this._page = ConfigPage.DashboardOverview
+                        this.page = ConfigPage.DashboardOverview
                       }
                   },
                 {
                   label: 'Dimensions',
                   subSectionMembers: [],
                   callback: () => {
-                    this._page = ConfigPage.Dimensions;
+                    this.page = ConfigPage.Dimensions;
                   },
                 },
                 {
@@ -223,13 +223,13 @@ export default class NHGlobalConfig extends NHComponent {
                   callback: () => {
                     this.selectedResourceDef = this._resourceDefEntries[0];
                     if(this?._menu) this!._menu!.selectedMenuItemId = "Sensemaker-2-0"; // pick the first resource as a default
-                    this._page = ConfigPage.Widgets
+                    this.page = ConfigPage.Widgets
                   },
                 },
                 {
                   label: 'Contexts',
                   subSectionMembers: [],
-                  callback: () => (this._page = undefined),
+                  callback: () => (this.page = undefined),
                 },
               ],
             },
@@ -239,17 +239,17 @@ export default class NHGlobalConfig extends NHComponent {
                 {
                   label: 'Members',
                   subSectionMembers: [],
-                  callback: () => (this._page = undefined),
+                  callback: () => (this.page = undefined),
                 },
                 {
                   label: 'Invites',
                   subSectionMembers: [],
-                  callback: () => (this._page = undefined),
+                  callback: () => (this.page = undefined),
                 },
                 {
                   label: 'Roles',
                   subSectionMembers: [],
-                  callback: () => (this._page = undefined),
+                  callback: () => (this.page = undefined),
                 },
               ],
             }]))()

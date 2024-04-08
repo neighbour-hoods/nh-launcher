@@ -27,6 +27,7 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
 
   @query('nh-dialog') dialog!: NHDialog;
 
+  @state() private dimensionsCreated: boolean = false;
   @state() private _configDimensionsToCreate: Array<ConfigDimension & { range_eh?: EntryHash }> = [];
   @state() private _existingDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
   @state() private _existingRangeEntries!: Array<Range & { range_eh: EntryHash }>;
@@ -47,7 +48,7 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
       console.log('({name: dimension.name, computed: dimension.computed, range_eh: (dimension!.range_eh) :>> ', ({name: dimension.name, computed: dimension.computed, range_eh: (dimension!.range_eh)}));
         return async () => await this._sensemakerStore.value?.createDimension(({name: dimension.name, computed: dimension.computed, range_eh: (dimension!.range_eh)} as Dimension))
     }))
-    console.log('config dimensions created')
+    this.dimensionsCreated = true;
   }
 
   render() {
@@ -63,12 +64,21 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
           const alreadyInList = this._configDimensionsToCreate.find(dimension => dimension.name == newDimension.name && rangeKindEqual(dimension.range.kind, newDimension.range.kind))
           if(!alreadyInList) this._configDimensionsToCreate.push(e.detail.dimension);
         }}
+        .handleClose=${() => {
+          if(!this.dimensionsCreated) this.dispatchEvent(
+            new CustomEvent("configure-dimensions-manually", {
+              bubbles: true,
+              composed: true,
+            })
+          );
+        }}
         .handleOk=${() => {
           try {
             this.createRangesOfCheckedDimensions()
             console.log('this._configDimensionsToCreate :>> ', this._configDimensionsToCreate);
             this.createCheckedDimensions()
             this.handleSubmit();
+            this._configDimensionsToCreate = [];
           } catch (error) {
             console.error("Could not create dimensions from config: ", error)
           }
