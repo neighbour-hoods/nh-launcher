@@ -36,16 +36,17 @@ type SelectableDimension = ConfigDimension & {selected?: boolean, clashes?: Arra
 
 // Helpers for reaching into table DOM and adding/removing selected state
 function showRowSelected(row: HTMLElement, isClash: boolean = false) {
+  row.dataset.clash = "true"; // Used for filtering out these rows from the checkbox handling login 
 
   // TODO: separate out into classes and toggle them instead of adding to style object
-  row.style.outline = "2px solid #5DC389";
+  row.style.outline = "2px solid rgb(93, 195, 137)";
   row.style.borderRadius = isClash ? "16px" : "8px";
   row.style.position = isClash ? "relative" : "initial";
   row.style.top = isClash ? "-.25rem" : "initial";
   row.style.left = isClash ? ".5rem" : "initial";
   const selectCell = (row.querySelector('.select') as HTMLElement);
   const nameCell = (row.querySelector('.dimension-name') as HTMLElement);
-  selectCell!.style.backgroundColor = "#5DC389";
+  selectCell!.style.backgroundColor = "rgb(93, 195, 137)";
   if(isClash) { // Style differently so that association with 
     row!.style.outlineOffset = "-8px";
     nameCell.style.width = "8rem";
@@ -65,9 +66,6 @@ function showRowNotSelected(row: HTMLElement) {
   row.style.outline = "";
   row.style.borderRadius = "";
   (row.querySelector('.select') as HTMLElement)!.style.backgroundColor = "transparent";
-}
-function rowDimensionName(row: HTMLElement) {
-  return (row.querySelector('td.dimension-name') as HTMLElement)?.textContent || ""
 }
 
 // Helpers for filtering/matching dimensions with methods
@@ -98,7 +96,7 @@ export default class ConfigDimensionList extends NHComponent {
 
   // Map to field values and update selected state of in memory config dimensions
   toTableRecord = (dimension: SelectableDimension & {clash?: boolean}) => {
-    dimension.selected = typeof dimension?.clashes == 'undefined' ? false : true; // By default select all dimensions for creation
+    dimension.selected = !!(typeof dimension?.clashes == 'undefined'); // By default select all dimensions for creation
 
     const range = dimension.range
     const linkedMethods = this.dimensionType == 'input'
@@ -116,8 +114,8 @@ export default class ConfigDimensionList extends NHComponent {
       // For output dimensions
       ['input-dimension-name']: (inputDimension as SelectableDimension)?.name || '',
       ['method-operation']: typeof method?.program == 'object' ? Object.keys(method.program)[0] : '',
-      ['select']: !!dimension.selected,
-      ['clash']: !dimension.clash,
+      ['select']: dimension.selected,
+      ['clash']: dimension.clash,
     }
   }
 
@@ -148,6 +146,7 @@ export default class ConfigDimensionList extends NHComponent {
         }
         this.configDimensions.forEach((configDimension)=> {
           newTableRecords.push(configDimension as any); // First add the incoming config dimension
+          if(!configDimension?.clashes) return;
           // Iterate through the clashes and add them so they appear underneath, and have a property 'clash' to indicate they already exist
           const range = configDimension.range;
           for(let clashingDimension of configDimension.clashes as Array<Dimension & { dimension_eh: EntryHash,  clashes?: Array<Dimension & { dimension_eh: EntryHash }> }>) {
@@ -156,7 +155,6 @@ export default class ConfigDimensionList extends NHComponent {
         })
         // Update the table records so we have clashes underneath incoming config dimensions
         this.tableStore.records = (newTableRecords.length > 0 ? newTableRecords : this.configDimensions) // If not new clashing table records just use all config dimensions
-          .reverse()
           .map((r) => this.toTableRecord(r));
 
         this.requestUpdate('configDimensionClashes')
@@ -196,15 +194,23 @@ export default class ConfigDimensionList extends NHComponent {
     try {
       if(!this.configDimensions) throw new Error('Do not have config dimensions loaded')
       const row = (e.target as HTMLElement).closest("tr") as HTMLElement;
-      const dimensionOfRow = rowDimensionName(row);
-      const rows = [...((e.target as HTMLElement).closest("table") as HTMLElement).querySelectorAll("tr")].slice(1);
-      // TODO: just use index of row
-      const rowIndex = rows
-        .map(rowDimensionName)
-        .findIndex((rowDimensionName: string) => rowDimensionName == dimensionOfRow);
-        
-      const dimensionToSelect = this.configDimensions[rowIndex] as SelectableDimension  & {dimension_eh?: EntryHash, clash?: boolean};
+      const allRows = [...((e.target as HTMLElement).closest("table") as HTMLElement).querySelectorAll("tr")].slice(1) // Excluding the header rows;
+      const configDimensionRows = allRows
+        .filter(row => row.dataset.clash !== "true") // Which are not clashes
+      
+      const allRowsIndex = allRows.findIndex(r => r == row);
+      const configRowsIndex = configDimensionRows.findIndex(r => r == row); // Get this specific row's index as it would be in this.configDimensions
+      const dimensionToSelect = this.configDimensions[configRowsIndex] as SelectableDimension  & {dimension_eh?: EntryHash, clash?: boolean};
       if (!dimensionToSelect) throw new Error('Could not select config dimension');
+
+      dimensionToSelect.clashes?.forEach((clash, idx) => {
+        const rowToDeselect = allRows[allRowsIndex + (idx + 1)]; 
+        rowToDeselect.style.outline = "";
+        const cb = rowToDeselect.querySelector("td.select nh-checkbox") as NHCheckbox
+        if(!cb) return;
+        cb.value = false;
+        cb.disabled = true; // TODO: determing what happens here to show it is still a clash
+      })
       dimensionToSelect.selected = !(dimensionToSelect.selected as boolean) as boolean
       if(!dimensionToSelect?.clash) { // Handled by adding this to a list of dimensions to create in the parent component's state
         this.dispatchEvent(

@@ -11,6 +11,8 @@ import { consume } from "@lit/context";
 import { matrixContext, weGroupContext } from "../../context";
 import { rangeKindEqual } from "../../utils";
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(() => r(null), ms));
+
 export class ConfigureAppletDimensions extends NHComponentShoelace {
   @consume({ context: matrixContext , subscribe: true })
   @property({attribute: false}) _matrixStore!: MatrixStore;
@@ -32,23 +34,20 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
   @state() private _existingDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
   @state() private _existingRangeEntries!: Array<Range & { range_eh: EntryHash }>;
 
-  createRangesOfCheckedDimensions() {
-    serializeAsyncActions(this._configDimensionsToCreate.map((dimension: ConfigDimension)=> {
-        return async () => {
-          const rangeEntryHash = await this._sensemakerStore.value?.createRange(dimension.range);
-          (dimension as any).range_eh = rangeEntryHash;
+  async createRangesOfCheckedDimensions() {
+    for(let dim of this._configDimensionsToCreate) {
+          const rangeEntryHash = await this._sensemakerStore.value?.createRange(dim.range);
           // Assign entry hash to config dimensions ready for creation of dimensions
-          return Promise.resolve(rangeEntryHash)
+          dim.range_eh = rangeEntryHash;
         }
-    }))
     console.log('ranges created for config dimensions')
   }
+
   createCheckedDimensions() {
     serializeAsyncActions(this._configDimensionsToCreate.map((dimension: (ConfigDimension & { range_eh?: EntryHash })) => {
-      console.log('({name: dimension.name, computed: dimension.computed, range_eh: (dimension!.range_eh) :>> ', ({name: dimension.name, computed: dimension.computed, range_eh: (dimension!.range_eh)}));
-        return async () => await this._sensemakerStore.value?.createDimension(({name: dimension.name, computed: dimension.computed, range_eh: (dimension!.range_eh)} as Dimension))
+      if(!(dimension.range_eh)) throw new Error("Could not find created range for dimension");
+      return async () => {return this._sensemakerStore.value?.createDimension(({name: dimension.name, computed: dimension.computed, range_eh: (dimension!.range_eh)} as Dimension))}
     }))
-    this.dimensionsCreated = true;
   }
 
   render() {
@@ -72,16 +71,25 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
             })
           );
         }}
-        .handleOk=${() => {
+        .handleOk=${async () => {
           try {
-            this.createRangesOfCheckedDimensions()
-            console.log('this._configDimensionsToCreate :>> ', this._configDimensionsToCreate);
+            await this.createRangesOfCheckedDimensions()
+            await sleep(100);
+          } catch (error) {
+            console.error("Could not create ranges from config: ", error)
+          }
+          try {
             this.createCheckedDimensions()
-            this.handleSubmit();
             this._configDimensionsToCreate = [];
+            this.dimensionsCreated = true;
+            await sleep(100);
+            this.requestUpdate();
+            await this.updateComplete;
           } catch (error) {
             console.error("Could not create dimensions from config: ", error)
           }
+
+          this.handleSubmit();
         }}
       >
         <div slot="inner-content" class="dialog-container">

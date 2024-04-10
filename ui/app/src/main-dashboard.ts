@@ -84,15 +84,18 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
   @query('#component-card')
   _withProfile!: any;
 
-  @state()
-  userProfileMenuVisible: boolean = false;
+  @state() haveCreatedDimensions: boolean = false;
+  @state() userProfileMenuVisible: boolean = false;
 
-  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    this._currentlyConfiguringAppletEh = decodeHashFromBase64("uhCEkw2cmIiwsA6Ep9HjQouX35_5IsGmdDmgiamKId69get3HJQYk");
-  }
   async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
       if(changedProperties.has('_selectedAppletInstanceId') && !!this._selectedWeGroupId && !!this._selectedAppletInstanceId) {
+        if(this.haveCreatedDimensions) {
+          this.haveCreatedDimensions = false;
+          // No need to reassign applet info to local state
+          return;
+        }
         const appletInstanceInfo = this._matrixStore.getAppletInstanceInfo(this._selectedAppletInstanceId!);
+        if(typeof appletInstanceInfo == 'undefined') return;
         const applet = appletInstanceInfo?.applet;
         
         const config = await this._matrixStore.queryAppletGui(applet!.devhubHappReleaseHash)
@@ -425,6 +428,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
 
   async handleAppletInstalledNotYetConfigured(e: CustomEvent) {
     this._selectedAppletInstanceId = e.detail.appletEntryHash;
+    console.log('e.detail.appletEntryHash :>> ', e.detail.appletEntryHash);
     const appletInstanceInfo = this._matrixStore.getAppletInstanceInfo(
       e.detail.appletEntryHash,
     );
@@ -438,7 +442,9 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
   }
 
   async handleAppletInstalledAndDimensionsConfigured() {
+    debugger;
     this._selectedAppletInstanceId = this._currentlyConfiguringAppletEh
+    this.haveCreatedDimensions = true;
     this._dashboardMode = DashboardMode.AppletGroupInstanceRendering;
     this._navigationMode = NavigationMode.GroupCentric;
 
@@ -488,8 +494,10 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
         <configure-applet-dimensions-dialog
             @configure-dimensions-manually=${() =>{
               this._dashboardMode = DashboardMode.DashboardOverview;
-              this._sensemakerDashboard.page = ConfigPage.Dimensions
-              this._sensemakerDashboard.requestUpdate()
+              if(this._sensemakerDashboard !== null) {
+                this._sensemakerDashboard.page = ConfigPage.Dimensions
+                this._sensemakerDashboard.requestUpdate()
+              }
             }}
             .config=${this._currentlyConfiguringAppletConfig}
             .handleSubmit=${this.handleAppletInstalledAndDimensionsConfigured.bind(this)}
