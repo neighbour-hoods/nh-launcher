@@ -100,7 +100,6 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
         
         const config = await this._matrixStore.queryAppletGui(applet!.devhubHappReleaseHash)
         this._currentlyConfiguringAppletConfig = config.appletConfig;
-        this.openConfigureAppletDimensionsDialog()
       }
     }
 
@@ -428,7 +427,6 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
 
   async handleAppletInstalledNotYetConfigured(e: CustomEvent) {
     this._selectedAppletInstanceId = e.detail.appletEntryHash;
-    console.log('e.detail.appletEntryHash :>> ', e.detail.appletEntryHash);
     const appletInstanceInfo = this._matrixStore.getAppletInstanceInfo(
       e.detail.appletEntryHash,
     );
@@ -442,7 +440,6 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
   }
 
   async handleAppletInstalledAndDimensionsConfigured() {
-    debugger;
     this._selectedAppletInstanceId = this._currentlyConfiguringAppletEh
     this.haveCreatedDimensions = true;
     this._dashboardMode = DashboardMode.AppletGroupInstanceRendering;
@@ -590,7 +587,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
           <div
             class="dashboard-content"
             style="flex: 1; width: 100%; display: flex;"
-            @applet-installed=${(e: CustomEvent) => {this.openConfigureAppletDimensionsDialog(); this.handleAppletInstalledNotYetConfigured(e)}}
+            @applet-installed=${async (e: CustomEvent) => {await this.handleAppletInstalledNotYetConfigured(e); await this.openConfigureAppletDimensionsDialog(); }}
           >
             ${this.renderDashboardContent()}
           </div>
