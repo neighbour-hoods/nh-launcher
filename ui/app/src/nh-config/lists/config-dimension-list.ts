@@ -384,9 +384,9 @@ export default class ConfigDimensionList extends NHComponent {
         --table-dimensions-input-range-max-min-width: 2.5rem;
         --table-dimensions-input-range-max-max-width: 2.5rem;
         --table-dimensions-input-range-max-width: 2.5rem;
-        --table-dimensions-output-range-max-min-width: 2.5rem;
-        --table-dimensions-output-range-max-max-width: 2.5rem;
-        --table-dimensions-output-range-max-width: 2.5rem;
+        --table-dimensions-output-range-max-min-width: 4rem;
+        --table-dimensions-output-range-max-max-width: 4rem;
+        --table-dimensions-output-range-max-width: 4rem;
 
         --table-dimensions-input-info-width: 0.25rem;
         --table-dimensions-output-info-width: 0.25rem;

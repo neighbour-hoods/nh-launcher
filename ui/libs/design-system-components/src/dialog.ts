@@ -274,7 +274,10 @@ export default class NHDialog extends NHComponent {
         padding: calc(1px * var(--nh-spacing-md));
         align-items: flex-start;
       }
-
+      #main::part(body) {
+        overflow: auto !important;
+      }
+      
       #main::part(title) {
         text-transform: uppercase;
         font-weight: var(--nh-font-weights-body-bold);
