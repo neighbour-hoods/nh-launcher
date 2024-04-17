@@ -111,7 +111,7 @@ export function createOutputAssessmentWidgetDelegate(
           dimension_ehs: [dimensionEh],
         });
       } catch (error) {
-        console.warn('Could not get assessments for resource - if there are no dimensions configured you may need to handle that in your delegate creation code');
+        console.warn('Could not retrieve assessments for the specified resources and dimensions.');
         return
       }
       return assessment || getLatest(assessments)
@@ -159,7 +159,7 @@ export function createInputAssessmentWidgetDelegate(
           dimension_ehs: [dimensionEh],
         });
       } catch (error) {
-        console.warn('Could not get assessments for resource - if there are no dimensions configured you may need to handle that in your delegate creation code');
+        console.warn('Could not retrieve assessments for the specified resources and dimensions.');
         return
       }
       return assessment || getLatest(assessments as Record<string, Assessment[]>)
