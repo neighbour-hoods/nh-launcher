@@ -36,7 +36,7 @@
     "clean": "pnpm clean:sandbox; pnpm clean:build",
     "clean:happ": "rm workdir/we.happ; rm workdir/we.webhapp",
     "clean:dnas": "rimraf --glob dnas/**/workdir/*.dna",
-    "clean:dist": "rimraf --glob **/dist",
+    "clean:dist": "rimraf --glob '**/dist/*'",
     "clean:modules": "rimraf --glob **/node_modules",
     "clean:ui": "pnpm clean:dist; pnpm clean:modules",
     "clean:build": "rimraf target; pnpm clean:dnas; pnpm clean:happ; pnpm clean:ui; exit 0",
