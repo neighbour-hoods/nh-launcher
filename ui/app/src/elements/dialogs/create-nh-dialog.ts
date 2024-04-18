@@ -1,12 +1,11 @@
 import { html, css, CSSResult} from "lit";
-import { state, property } from "lit/decorators.js";
+import { state, property, query } from "lit/decorators.js";
 
 import { consume } from "@lit/context";
-import { SlInput, SlTooltip} from '@scoped-elements/shoelace';
 
 import { matrixContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
-import { NHComponentShoelace, NHDialog, NHSelectAvatar } from "@neighbourhoods/design-system-components";
+import { NHComponentShoelace, NHDialog, NHSelectAvatar, NHTextInput, NHTooltip } from "@neighbourhoods/design-system-components";
 import { b64images } from "@neighbourhoods/design-system-styles";
 import { InferType, object, string } from "yup";
 
@@ -24,16 +23,22 @@ export class CreateNeighbourhoodDialog extends NHComponentShoelace {
 
   _neighbourhood: InferType<typeof this._neighbourhoodSchema> = { name: "", image: "" };
 
-  @property()
-  openDialogButton!: HTMLElement;
-  @property()
-  _primaryButtonDisabled: boolean = false;
-  @state()
-  _avatarTooltip: string = "NH Image";
+  @property() openDialogButton!: HTMLElement;
 
-  reset() {
+  @state() _avatarTooltip: string = "NH Image";
+
+  @query("nh-text-input") _nhInput;
+  @query("nh-select-avatar") _nhAvatarSelect;
+  @state() validName: boolean = true; // Emulates 'touched = false' initial state
+
+  async reset() {
     this._neighbourhood.name = "";
     this._neighbourhood.image = "";
+    this.validName = true;
+    this._nhInput._input.value = "";
+    this._nhAvatarSelect.value = "";
+    await this._nhInput.requestUpdate()
+    await this._nhInput.updateComplete;
   }
 
   private async onSubmit(e: any) {
@@ -44,11 +49,16 @@ export class CreateNeighbourhoodDialog extends NHComponentShoelace {
     }
     this._neighbourhoodSchema.validate(this._neighbourhood)
       .then(async valid => {
-        if(!valid) throw new Error("Neighbourhood input data invalid");
+        if(!valid) {
+          throw new Error("Neighbourhood input data invalid");
+        }
 
         this.dispatchEvent(new CustomEvent("creating-we", {})); // required to display loading screen in the dashboard
         const weId = await this._matrixStore.createWeGroup(this._neighbourhood.name!, this._neighbourhood.image!);
 
+        await this.reset();
+        await this.requestUpdate();
+        await this.updateComplete;
         this.dispatchEvent(
           new CustomEvent("we-added", {
             detail: weId,
@@ -56,24 +66,23 @@ export class CreateNeighbourhoodDialog extends NHComponentShoelace {
             composed: true,
           })
         );
-        this.reset();
-        this.requestUpdate();
       })
       .catch((err) => {
-        this._primaryButtonDisabled = true;
         const dialog = (root.querySelector("nh-dialog") as any).renderRoot.querySelector('sl-dialog');
-        dialog.show() // Stop dialog from closing
-
+        dialog.show() // Stop dialog from closing)
+        this.dispatchEvent(
+          new CustomEvent("trigger-alert", {
+            detail: { 
+              title: "Invalid Input",
+              msg: "Try filling out the form again!",
+              type: "danger",
+              closable: true,
+            },
+            bubbles: true,
+            composed: true,
+          })
+        );
         console.log("Error validating profile for field: ", err.path);
-
-        const errorDOM = root.querySelectorAll("label[name=" + err.path + "]")
-        if(errorDOM.length == 0) return;
-        const asterisk : any = errorDOM[0];
-        asterisk.style.visibility = 'visible';
-        asterisk.style.opacity = '1';
-        const slInput : any = asterisk.previousElementSibling;
-        slInput.setCustomValidity(err.message)
-        slInput.reportValidity()
       })
   }
 
@@ -84,12 +93,14 @@ export class CreateNeighbourhoodDialog extends NHComponentShoelace {
         dialogType="create-neighbourhood"
         title="Create Neighbourhood"
         .handleOk=${this.onSubmit.bind(this)}
+        .handleClose=${this.reset.bind(this)}
         openButtonRef=${this.openDialogButton}
         .primaryButtonDisabled=${!this._neighbourhoodSchema.isValidSync(this._neighbourhood)}
       >
         <div slot="inner-content" class="row">
-          <sl-tooltip content=${this._avatarTooltip} placement="bottom">
+          <nh-tooltip class="right" .visible=${true} .variant=${"primary"} .text=${this._avatarTooltip}>
             <nh-select-avatar
+              slot="hoverable".validate
               id="select-avatar"
               .shape=${'circle'}
               .label=${""}
@@ -97,46 +108,60 @@ export class CreateNeighbourhoodDialog extends NHComponentShoelace {
               .defaultValue=${NH_DEFAULT_LOGO}
               @avatar-selected=${(e) => {this._avatarTooltip = "Clear"; this._neighbourhood.image = e.detail.avatar; this.requestUpdate(); }}
             ></nh-select-avatar>
-          </sl-tooltip>
+          </nh-tooltip>
 
-          <sl-input
-            type="text"
-            id="name-field"
-            name="name"
-            size="medium"
-            placeholder="Name"
-            @sl-input=${(e) => { this._neighbourhood.name = e.target.value; this.requestUpdate(); }}
-            value=${this._neighbourhood.name}
-            style="margin-left: 16px"
-            required
-          ></sl-input>
-          <label class="error" for="name" name="name">*</label>
+          <nh-tooltip .visible=${!this.validName} .text=${"Your Neighbourhood name should be at least 3 characters"} .variant=${"danger"}>
+            <nh-text-input
+              slot="hoverable"
+              .errored=${!this.validName}
+              .size=${"medium"}
+              .label=${"Neighbourhood Name"}
+              .name=${"neighbourhood-name"}
+              .placeholder=${"Enter a name"}
+              .required=${true}
+              .value=${this._neighbourhood.name}
+              @change=${(e: CustomEvent) => this.handleNameChange(e)}
+            ></nh-text-input>
+          </nh-tooltip>
         </div>
       </nh-dialog>
     `;
   }
 
-  static get elementDefinitions() {
-    return {
-      "nh-select-avatar": NHSelectAvatar,
-      "sl-tooltip": SlTooltip,
-      "sl-input": SlInput,
-      'nh-dialog' : NHDialog
-    };
+  private nameIsValid() : boolean {
+    let isValid;
+    try {
+      isValid = !!(this._neighbourhoodSchema.validateSyncAt("name", {"name": this._neighbourhood.name}));
+    } catch (error) {
+      isValid = false;
+    }
+    return isValid
   }
+
+  private async handleNameChange(e) {
+    this._neighbourhood.name = e.target.value;
+    this.validName = await this.nameIsValid()
+    this.requestUpdate();
+  }
+
+  static elementDefinitions = {
+    "nh-select-avatar": NHSelectAvatar,
+    "nh-tooltip": NHTooltip,
+    "nh-text-input": NHTextInput,
+    'nh-dialog' : NHDialog
+  }
+
   static styles : CSSResult[] = [
       super.styles as CSSResult,
       css`
-        label {
-          visibility: hidden;
-          opacity: 0;
-          display: flex;
-          align-self: self-start;
-          padding: 0 8px;
-          flex: 1;
-          flex-grow: 0;
-          flex-basis: 8px;
-          color: var(--nh-theme-error-default);
+        .row {
+          min-height: 9rem;
+          align-items: flex-start;
+          justify-content: space-around;
+        }
+
+        nh-tooltip:first-of-type {
+          margin: 2.75rem 1.5rem auto 1rem;
         }
       `,
     ];

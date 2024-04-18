@@ -144,7 +144,7 @@ export default class NHDialog extends NHComponentShoelace {
             .size=${"md"}
             .variant=${this.dialogType.match(/uninstall|leave/) ? "danger" : "primary"}
             @click=${this.onOkClicked}
-            ?disabled=${this.primaryButtonDisabled}
+            .disabled=${this.primaryButtonDisabled}
             >${this.chooseButtonText().primary}
           </nh-button>
         </slot>
@@ -195,7 +195,7 @@ export default class NHDialog extends NHComponentShoelace {
       result = await this.handleClose();
     } else { result = { preventDefault: false }}
     // TODO: stop this from closing when result.preventDefault is true
-    if(result && !(result.preventDefault)) this.hideDialog();
+    if(result && !(result?.preventDefault)) this.hideDialog();
   }
 
   onOkClicked = () => {
