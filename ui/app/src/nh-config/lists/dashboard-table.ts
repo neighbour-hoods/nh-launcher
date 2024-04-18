@@ -8,8 +8,7 @@ import {
   Table,
 } from '@adaburrows/table-web-component';
 
-import { SlAlert, SlSkeleton } from '@scoped-elements/shoelace';
-import { NHComponent } from '@neighbourhoods/design-system-components';
+import { NHComponent, NHSkeleton } from '@neighbourhoods/design-system-components';
 import { AgentPubKeyB64, encodeHashToBase64 } from '@holochain/client';
 import { AssessmentTableRecord, AssessmentTableType } from '../types';
 import { generateHeaderHTML } from '../../elements/components/helpers/functions';
@@ -138,29 +137,15 @@ export class DashboardTable extends NHComponent {
   render(): TemplateResult {
     return !this.loading && this.contextFieldDefs
       ? html`<wc-table .tableStore=${this.tableStore}></wc-table>
-      ${!this.loading && this.showSkeleton
-        ? html`
-        <div class="skeleton-main-container">
-              ${Array.from(Array(24)).map(
-                () => html`<sl-skeleton effect="sheen" class="skeleton-part"></sl-skeleton>`,
-              )}
-        </div>`
-        : null
-      }`
-      : html`<div class="skeleton-main-container" data-columns=${this.columns}>
-      ${Array.from(Array(this.columns)).map(
-        () => html`<sl-skeleton effect="pulse" class="skeleton-part-header"></sl-skeleton>`,
-      )}
-      ${Array.from(Array(this.columns * 5)).map(
-        () => html`<sl-skeleton effect="pulse" class="skeleton-part"></sl-skeleton>`,
-      )}
-    </div>`;
+        ${!this.loading && this.showSkeleton
+          ? html`<nh-skeleton type=${"dashboard-basic-grid"}></nh-skeleton>` : null
+        }`
+      : html`<nh-skeleton type=${"dashboard-table-full"} .columns=${this.columns}></nh-skeleton>`;
   }
 
   static elementDefinitions = {
     'wc-table': BlockRendererTable,
-    'sl-alert': SlAlert,
-    'sl-skeleton': SlSkeleton,
+    'nh-skeleton': NHSkeleton,
   };
 
   static styles = css`
@@ -252,42 +237,6 @@ export class DashboardTable extends NHComponent {
     .alert::part(base) {
       height: 8rem;
       width: 100%;
-    }
-
-    .skeleton-main-container {
-      width: 100%;
-      display: grid;
-      grid-template-columns: minmax(26.5%, 255px) minmax(26.5%, 255px) repeat(2, minmax(24.5%, 175px));
-      gap: calc(1px * var(--nh-spacing-sm));
-      margin: calc(1px * var(--nh-spacing-sm));
-      grid-template-rows: 86px repeat(8, 4rem);
-    }
-    .skeleton-main-container[data-columns="3"] {
-      grid-template-columns: 204px 204px repeat(1, 140px);
-    }
-    .skeleton-main-container[data-columns="4"] {
-      grid-template-columns: 204px 204px repeat(2, 140px);
-    }
-    .skeleton-main-container[data-columns="5"] {
-      grid-template-columns: 204px 204px repeat(3, 140px);
-    }
-    .skeleton-main-container[data-columns="6"] {
-      grid-template-columns: 204px 204px repeat(4, 140px);
-    }
-    .skeleton-part-header {
-      --color: rgb(37, 31, 40);
-      --sheen-color: rgb(37, 31, 40);
-    }
-    .skeleton-part {
-      --color: var(--nh-theme-bg-surface);
-      --sheen-color: var(--nh-theme-bg-surface);
-    }
-    .skeleton-part-header::part(indicator), .skeleton-part::part(indicator) {
-      border-radius: calc(1px * var(--nh-radii-base));
-      opacity: 1;
-    }
-    .skeleton-part-header::part(indicator) {
-      border: 1px solid rgb(125, 112, 135);
     }
   `;
 }

@@ -10,7 +10,6 @@ import { matrixContext } from "./context";
 import { MainDashboard } from "./main-dashboard";
 import { connectHolochainApp } from "@neighbourhoods/app-loader";
 import { NHAlert } from "@neighbourhoods/design-system-components";
-import { SlAlert } from "@scoped-elements/shoelace";
 
 @customElement('we-app')
 export class WeApp extends ScopedRegistryHost(LitElement) {
@@ -75,7 +74,7 @@ export class WeApp extends ScopedRegistryHost(LitElement) {
         await this.updateComplete;
 
         const newAlert = this._alert?.cloneNode(true) as NHAlert;
-        const newSlAlert = this._alert.alert?.cloneNode(true) as SlAlert;
+        const newSlAlert = this._alert.alert?.cloneNode(true);
         newAlert.title = title;
         newAlert.description = msg;
         newSlAlert.variant = type;

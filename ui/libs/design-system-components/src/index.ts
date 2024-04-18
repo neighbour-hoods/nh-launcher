@@ -13,6 +13,7 @@ import NHSelectAvatar from './select-avatar'
 import NHTabButton from './tab-button'
 import NHTooltip from './tooltip'
 import NHForm from './form/form'
+import NHSkeleton from './skeleton'
 
 export * from './ancestors/base'
 export * from './ancestors/base-form'
@@ -34,5 +35,6 @@ export {
   NHSlide,
   NHTabButton,
   NHTooltip,
-  NHForm
+  NHForm,
+  NHSkeleton
 }

@@ -9,9 +9,9 @@ import {
   NHButton,
   NHComponent,
   NHPageHeaderCard,
+  NHSkeleton,
 } from '@neighbourhoods/design-system-components';
 import TabbedContextTables from '../lists/tabbed-context-tables';
-import NHDashboardSkeleton from './nh-dashboard-skeleton';
 import { property, state } from 'lit/decorators.js';
 import { b64images } from '@neighbourhoods/design-system-styles';
 import { SensemakerStore, AppletConfig } from '@neighbourhoods/client';
@@ -95,8 +95,8 @@ export default class NHDashBoardOverview extends NHComponent {
           </nh-button>
         </nh-page-header-card>
 
-        ${!this.loaded || this.loadedState == LoadingState.NoAppletSensemakerData
-          ? html`<nh-dashboard-skeleton></nh-dashboard-skeleton>`
+        ${  !this.loaded || this.loadedState == LoadingState.NoAppletSensemakerData
+          ? html`<nh-skeleton type=${"dashboard-basic-grid"}></nh-skeleton>`
           : html` <tabbed-context-tables
                     .resourceDefEntries=${this.resourceDefEntries}
                     .selectedAppletInstanceId=${this.currentAppletInstanceId}
@@ -111,7 +111,7 @@ export default class NHDashBoardOverview extends NHComponent {
   static elementDefinitions = {
     'nh-button': NHButton,
     'nh-page-header-card': NHPageHeaderCard,
-    'nh-dashboard-skeleton': NHDashboardSkeleton,
+    'nh-skeleton': NHSkeleton,
     'tabbed-context-tables': TabbedContextTables
   };
 
@@ -163,6 +163,12 @@ export default class NHDashBoardOverview extends NHComponent {
       :host {
         display: flex;
         width: 100%;
+      }
+
+      nh-skeleton {
+        grid-column: 1/-1;
+        grid-row: auto;
+        min-height: 50vh
       }
 
       div.container {
