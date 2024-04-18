@@ -7,7 +7,6 @@ import { MatrixStore } from "../../matrix-store";
 import { matrixContext } from "../../context";
 import { AppInfo } from "@holochain/client";
 import { Snackbar } from "@scoped-elements/material-web";
-import { SlTooltip } from "@scoped-elements/shoelace";
 import { SensemakerStore } from "@neighbourhoods/client";
 import { AppletInstanceInfo } from "../../types";
 

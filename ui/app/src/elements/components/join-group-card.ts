@@ -14,7 +14,6 @@ import { property, query, state } from 'lit/decorators.js';
 import { HoloHashMap } from '@holochain-open-dev/utils';
 import { AsyncStatus } from '@holochain-open-dev/stores';
 import { CreateNeighbourhoodDialog } from '../dialogs/create-nh-dialog';
-import { SlTooltip } from '@scoped-elements/shoelace';
 import { ActionHash, encodeHashToBase64 } from '@holochain/client';
 import { NHButton, NHButtonGroup, NHCard, NHComponent } from '@neighbourhoods/design-system-components';
 import { generateHashHTML } from './helpers/functions';
