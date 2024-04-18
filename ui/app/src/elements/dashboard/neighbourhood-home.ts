@@ -5,9 +5,8 @@ import { get } from "svelte/store";
 import { matrixContext, weGroupContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 
-import {  property, state } from "lit/decorators.js";
-import { NHButton, NHCard, NHComponentShoelace, NHDialog, NHPageHeaderCard } from '@neighbourhoods/design-system-components';
-import { SlSkeleton, SlTooltip } from "@scoped-elements/shoelace";
+import { property, state } from "lit/decorators.js";
+import { NHButton, NHCard, NHComponentShoelace, NHDialog, NHPageHeaderCard, NHSkeleton } from '@neighbourhoods/design-system-components';
 import { InvitationsBlock } from "../components/invitations-block";
 import { AppletLibrary } from "../components/applet-library";
 import { StoreSubscriber, subscribe } from "lit-svelte-stores";
@@ -169,7 +168,7 @@ export class NeighbourhoodHome extends NHComponentShoelace {
       "profile-prompt": ProfilePrompt,
       "invitations-block": InvitationsBlock,
       "neighbourhood-settings": NeighbourhoodSettings,
-      "sl-skeleton": SlSkeleton,
+      "nh-skeleton": NHSkeleton,
       'applet-not-installed': AppletNotInstalled,
   }
 

@@ -16,12 +16,9 @@ import { matrixContext, weGroupContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 import { sharedStyles } from "../../sharedStyles";
 import { property, query, state } from "lit/decorators.js";
-import { CreateNeighbourhoodDialog } from "../dialogs/create-nh-dialog";
-import { SlTooltip } from "@scoped-elements/shoelace";
 import { DnaHash, EntryHash } from "@holochain/client";
 import { b64images } from "@neighbourhoods/design-system-styles";
 import { NHButton } from "@neighbourhoods/design-system-components";
-import { UninstallApplet } from "../dialogs/uninstall-applet";
 import { AppletListItem } from "./applet-list-item";
 import { UninstalledAppletInstanceInfo } from "../../types";
 

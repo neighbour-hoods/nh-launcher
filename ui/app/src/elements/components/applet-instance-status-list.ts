@@ -17,7 +17,6 @@ import { MatrixStore } from "../../matrix-store";
 import { sharedStyles } from "../../sharedStyles";
 import { property, query, state } from "lit/decorators.js";
 import { CreateNeighbourhoodDialog } from "../dialogs/create-nh-dialog";
-import { SlTooltip } from "@scoped-elements/shoelace";
 import { ActionHash, DnaHash, AppInfo } from "@holochain/client";
 import { getStatus } from "@neighbourhoods/app-loader";
 import { FederateAppletDialog } from "../dialogs/federate-applet-dialog";

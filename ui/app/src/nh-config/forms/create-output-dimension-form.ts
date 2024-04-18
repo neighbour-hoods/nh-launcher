@@ -305,7 +305,6 @@ export default class CreateOutputDimensionMethod extends NHBaseForm {
   }
 
   render() {
-    console.log('this.submitBtn :>> ', this.submitBtn);
     return html`
     ${this.inputDimensions && this.inputDimensions.length > 0 ? html`<form>
         <nh-tooltip .visible=${this.shouldShowValidationErrorForField('name')} .text=${this.getErrorMessage('name')} .variant=${"danger"}>

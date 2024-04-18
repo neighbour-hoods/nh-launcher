@@ -1,14 +1,5 @@
-
-
-
-
-
-
-
-import { consume } from "@lit/context";
 import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
 import { css, html, LitElement } from "lit";
-import { SlTooltip, SlSkeleton } from "@scoped-elements/shoelace";
 
 import { property, query } from "lit/decorators.js";
 import { NHTooltip } from "@neighbourhoods/design-system-components";
