@@ -101,7 +101,8 @@ export class CreateNeighbourhoodDialog extends NHComponentShoelace {
             id="select-avatar"
             .defaultTooltip=${"NH Image"}
             .shape=${'circle'}
-            .label=${""}
+            .label=${"Image"}
+            .size=${"lg"}
             .value=${this._neighbourhood.image}
             .defaultValue=${NH_DEFAULT_LOGO}
           ></nh-select-avatar>
@@ -152,12 +153,8 @@ export class CreateNeighbourhoodDialog extends NHComponentShoelace {
       css`
         .row {
           min-height: 9rem;
-          align-items: flex-start;
+          align-items: center;
           justify-content: space-around;
-        }
-
-        nh-tooltip:first-of-type {
-          margin: 2.75rem 1.5rem auto 1rem;
         }
       `,
     ];

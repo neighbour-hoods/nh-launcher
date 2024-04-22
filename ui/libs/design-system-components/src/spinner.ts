@@ -34,7 +34,7 @@ export default class NHSpinner extends NHComponentShoelace {
       }
 
       .page-spinner {
-        position: static;
+        position: absolute;
         left: calc(50vw - 2.5rem);
         top: calc(50vh - 2.5rem);
         font-size: 5rem;

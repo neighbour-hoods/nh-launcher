@@ -6,7 +6,7 @@ import { matrixContext, weGroupContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 
 import { property, state } from "lit/decorators.js";
-import { NHButton, NHCard, NHComponentShoelace, NHDialog, NHPageHeaderCard, NHSkeleton } from '@neighbourhoods/design-system-components';
+import { NHButton, NHCard, NHComponentShoelace, NHDialog, NHPageHeaderCard, NHSkeleton, NHSpinner } from '@neighbourhoods/design-system-components';
 import { InvitationsBlock } from "../components/invitations-block";
 import { AppletLibrary } from "../components/applet-library";
 import { StoreSubscriber, subscribe } from "lit-svelte-stores";
@@ -146,13 +146,14 @@ export class NeighbourhoodHome extends NHComponentShoelace {
           <profile-prompt .profilesStore=${this._profilesStore.value} .neighbourhoodInfo=${this._neighbourhoodInfo.value}>
           </profile-prompt>
         </main>`
-      : html`Loading`
+      : html`<nh-spinner type=${"page"}></nh-spinner>`
   }
 
   static elementDefinitions = {
       'nh-page-header-card': NHPageHeaderCard,
       "nh-button": NHButton,
       "nh-card": NHCard,
+      "nh-spinner": NHSpinner,
       'nh-dialog': NHDialog,
       "applet-library": AppletLibrary,
       "profile-prompt": ProfilePrompt,
