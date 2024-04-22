@@ -1,9 +1,9 @@
 import { css, CSSResult, html } from 'lit';
-import { customElement, property, query, state } from 'lit/decorators.js';
+import { property, query, state } from 'lit/decorators.js';
 import { NHButton, NHCard, NHComponentShoelace, NHForm, NHSelectAvatar, NHTextInput } from '@neighbourhoods/design-system-components';
-import { Profile, ProfilesStore, profilesStoreContext } from '@holochain-open-dev/profiles';
+import { Profile, ProfilesStore } from '@holochain-open-dev/profiles';
 import { StoreSubscriber } from '@holochain-open-dev/stores';
-import { object, string, number, date, InferType } from 'yup';
+import { object, string } from 'yup';
 import { isDataURL } from '../helpers/functions';
 
 export class NHCreateProfile extends NHComponentShoelace {
