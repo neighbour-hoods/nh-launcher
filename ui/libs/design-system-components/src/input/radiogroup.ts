@@ -219,6 +219,7 @@ export default class NHRadioGroup extends NHComponent {
         flex-grow: 0;
         flex-basis: 8px;
         color: var(--nh-theme-error-default);
+        line-height: 1rem;
       }
 
       /* Error state */

@@ -330,6 +330,7 @@ export default class NHSelect extends NHComponentShoelace {
         flex-grow: 0;
         flex-basis: 8px;
         color: var(--nh-theme-error-default);
+        line-height: 1rem;
       }
 
       /* Sizes */

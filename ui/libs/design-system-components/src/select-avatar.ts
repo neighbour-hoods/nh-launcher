@@ -174,6 +174,7 @@ export default class NHSelectAvatar extends NHComponent {
         flex-grow: 0;
         flex-basis: 8px;
         color: var(--nh-theme-error-default);
+        line-height: 1rem;
       }
 
       /* Typo */

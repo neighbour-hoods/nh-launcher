@@ -9,6 +9,7 @@ customElements.define("nh-text-input", NHTextInput);
 
 export interface TextInputProps {
   placeholder: string;
+  defaultValue: string;
   errored: boolean;
   required: boolean;
   size: "medium" | "large";
@@ -26,6 +27,7 @@ const meta: Meta<TextInputProps> = {
   },
   render: (args) => html`<nh-text-input
     .placeholder=${args.placeholder}
+    .defaultValue=${args.defaultValue}
     .required=${args.required}
     .errored=${args.errored}
     .size=${args.size}
@@ -40,6 +42,14 @@ export const Default: Story = {
   args: {
     placeholder: "Type here",
     size: "medium"
+  },
+};
+
+export const DefaultValue: Story = {
+  args: {
+    placeholder: "Type here",
+    size: "medium",
+    defaultValue: "testing!",
   },
 };
 

@@ -9,6 +9,7 @@ customElements.define('nh-checkbox', NHCheckbox)
 
 export interface CheckboxProps {
   size: "small" | "medium" | "large";
+  defaultValue?: boolean;
 }
 
 const meta: Meta<CheckboxProps> = {
@@ -22,6 +23,7 @@ const meta: Meta<CheckboxProps> = {
   },
   render: (args) => html`<nh-checkbox
     .size=${args.size}
+    .defaultValue=${args.defaultValue}
   ></nh-checkbox>`,
 };
 
@@ -39,12 +41,19 @@ export const Small: Story = {
     size: "small"
   },
 };
+export const DefaultValue: Story = {
+  args: {
+    size: "medium",
+    defaultValue: true
+  },
+};
 
 export const WithTooltip: Story = {
   render: (args) => html` <nh-tooltip .visible=${true} .variant=${"primary"} .text=${"Info about your field"}>
     <nh-checkbox
     slot="hoverable"
     .size=${args.size}
+    .defaultValue=${args.defaultValue}
     ></nh-checkbox>
   </nh-tooltip>
   `,
@@ -60,6 +69,7 @@ export const WithTooltipRequired: Story = {
     slot="hoverable"
     .required=${true}
     .size=${args.size}
+    .defaultValue=${args.defaultValue}
     ></nh-checkbox>
   </nh-tooltip>
   `,
@@ -77,6 +87,7 @@ export const RequiredErrored: Story = {
     class="untouched"
     slot="hoverable"
     .size=${args.size}
+    .defaultValue=${args.defaultValue}
     ></nh-checkbox>
   </nh-tooltip>
   `,
