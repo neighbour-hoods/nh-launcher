@@ -23,6 +23,7 @@ import {
   NHForm,
   NHPageHeaderCard,
   NHResourceAssessmentTray,
+  NHSpinner,
   NHTooltip,
 } from '@neighbourhoods/design-system-components';
 
@@ -278,7 +279,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                     : null
                 }
                 ${this.loading 
-                  ? html`<sl-spinner class="icon-spinner"></sl-spinner>`
+                  ? html`<nh-spinner type=${"icon"}></nh-spinner>`
                   : this.editingConfig || !this._fetchedConfig
                     ? html` <assessment-container .editMode=${true}
                               id="placeholder"
@@ -299,7 +300,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 }}>
                   ${
                   this.editingConfig
-                  ? html`<sl-spinner class="icon-spinner"></sl-spinner>`
+                  ? html`<nh-spinner type=${"icon"}></nh-spinner>`
                   : html`
                     <nh-tooltip .variant=${this.editingConfig ? "warning" : "success"} text="To add a widget, click the plus icon." class="right">
                       <img slot="hoverable" class="add-assessment-icon" src=${`data:image/svg+xml;base64,${b64images.icons.plus}`} alt=${"Add a widget"} />
@@ -681,7 +682,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     'nh-page-header-card': NHPageHeaderCard,
     'nh-tooltip': NHTooltip,
     'sl-details': SlDetails,
-    'sl-spinner': SlSpinner,
+    'nh-spinner': NHSpinner,
     'nh-alert': NHAlert,
     'assessment-widget-tray': NHResourceAssessmentTray,
     'input-assessment-renderer': InputAssessmentRenderer,
@@ -795,14 +796,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
       .add-assessment-icon:hover {
         background-color: var(--nh-theme-accent-emphasis);
         cursor: pointer;
-      }
-
-      .icon-spinner {
-        font-size: 1.75rem;
-        --speed: 10000ms;
-        --track-width: 4px;
-        --indicator-color: var(--nh-theme-accent-emphasis);
-        margin: 3px
       }
 
       @media (min-width: 1350px) {

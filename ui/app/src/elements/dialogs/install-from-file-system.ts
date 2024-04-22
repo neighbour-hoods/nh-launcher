@@ -9,9 +9,8 @@ import { provideAllApplets } from "../../matrix-helpers";
 import { matrixContext, weGroupContext } from '../../context';
 import { DnaHash, EntryHash } from '@holochain/client';
 import { fakeSeededEntryHash } from '../../utils';
-import { SlSpinner } from '@scoped-elements/shoelace';
-import { NHButton, NHDialog, NHForm } from '@neighbourhoods/design-system-components';
-import { array, object, string } from 'yup';
+import { NHButton, NHDialog, NHForm, NHSpinner } from '@neighbourhoods/design-system-components';
+import { object, string } from 'yup';
 
 export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
   @consume({ context: matrixContext , subscribe: true })
@@ -202,7 +201,7 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
 
   render() {
     return this.loading
-      ? html`<sl-spinner style="position: absolute; left: calc(50% - 2.5rem); top: calc(50vh - 2.5rem); font-size: 5rem; --track-width: 12px; --track-color: var(--nh-theme-accent-default); --indicator-color: var(--nh-theme-accent-subtle);"></sl-spinner>`
+      ? html`<nh-spinner type=${"page"}></nh-spinner>`
       : html`
         <button id="open-applet-dialog-button" style="opacity:0" type="button"></button>
         <nh-dialog
@@ -232,7 +231,7 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
     'nh-button': NHButton,
     'nh-dialog': NHDialog,
     'nh-form': NHForm,
-    "sl-spinner": SlSpinner,
+    "nh-spinner": NHSpinner,
   }
 
   static get styles() {
