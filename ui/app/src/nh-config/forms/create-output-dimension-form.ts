@@ -1,7 +1,6 @@
 import { EntryHash, EntryHashB64, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
-import { NHButton, NHCard, NHBaseForm, NHTooltip, NHSelect, NHTextInput } from '@neighbourhoods/design-system-components';
+import { NHButton, NHCard, NHBaseForm, NHTooltip, NHSelect, NHTextInput, NHRadioGroup } from '@neighbourhoods/design-system-components';
 import { html, css, CSSResult, PropertyValueMap } from 'lit';
-import { SlCheckbox, SlInput, SlRadio, SlRadioGroup } from '@scoped-elements/shoelace';
 import { object, string, boolean, number, ObjectSchema } from 'yup';
 import {
   Dimension,
@@ -196,20 +195,22 @@ export default class CreateOutputDimensionMethod extends NHBaseForm {
   }
 
   handleInputChange(e: Event) {
-    super.handleInputChange(e);
     // Change handler overloads
-    const inputValue = (e.target as any).value;
-    if ((e.target as any).name === 'name') {
+    super.handleInputChange(e);
+
+    const target = e.target as any;
+    const inputValue = target.value;
+    if(target.tagName == "NH-RADIO-GROUP") {
+      this._model.program = target.value.toUpperCase();
+      this.computeOutputDimensionRange();
+    } else if (target.name === 'name') {
       this._model.method_name = `${inputValue}-method`;
       // Later the name will be removed from the method entry type
-    } else if ((e.target as any).name === 'input_dimension') {
+    } else if (target.name === 'input_dimension') {
       const { inputRange } = this.getInputDimensionAndRangeForOutput(inputValue);
       if(!inputRange) return;
       this.inputRange = { name: inputRange.name, kind: inputRange.kind, range_eh: inputRange.range_eh} as Range & {range_eh: EntryHash};
       this._rangeNumberType = Object.keys(inputRange.kind)[0] as keyof RangeKindInteger | keyof RangeKindFloat
-      this.computeOutputDimensionRange();
-      //@ts-ignore
-    } else if ((e.target?.parentElement as any).dataset?.name === 'program') {
       this.computeOutputDimensionRange();
     }
   }
@@ -347,15 +348,14 @@ export default class CreateOutputDimensionMethod extends NHBaseForm {
             
         <div class="field radio">
           <div class="row">
-            <sl-radio-group
-              @sl-change=${this.handleInputChange}
-              label=${'Select an option'}
-              data-name="program"
-              value=${this._model.program}
+            <nh-radio-group
+              @change=${(e) => this.handleInputChange(e)}
+              .defaultValue=${"Sum"}
+              .label=${'Select an option'}
+              .value=${this._model.program}
+              .options=${["AVG", "SUM"]}
             >
-              <sl-radio .checked=${this._model.program == 'AVG'} value="AVG">AVG</sl-radio>
-              <sl-radio .checked=${this._model.program == 'SUM'} value="SUM">SUM</sl-radio>
-            </sl-radio-group>
+            </nh-radio-group>
           </div>
         </div>
       </form>`
@@ -381,14 +381,11 @@ export default class CreateOutputDimensionMethod extends NHBaseForm {
   static elementDefinitions = {
     'nh-button': NHButton,
     'nh-card': NHCard,
-    'sl-input': SlInput,
-    'sl-radio': SlRadio,
     'nh-alert': NHAlert,
     'nh-select': NHSelect,
     "nh-text-input": NHTextInput,
     "nh-tooltip": NHTooltip,
-    'sl-radio-group': SlRadioGroup,
-    'sl-checkbox': SlCheckbox,
+    'nh-radio-group': NHRadioGroup,
   };
 
   static get styles() {
