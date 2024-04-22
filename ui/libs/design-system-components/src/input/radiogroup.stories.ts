@@ -12,6 +12,7 @@ export interface RadioGroupProps {
   required: boolean;
   size: "medium" | "large";
   direction: "horizontal" | "vertical";
+  defaultValue?: string;
 }
 
 const meta: Meta<RadioGroupProps> = {
@@ -29,6 +30,7 @@ const meta: Meta<RadioGroupProps> = {
     .errored=${args.errored}
     .size=${args.size}
     .direction=${args.direction}
+    .defaultValue=${args.defaultValue}
   ></nh-radio-group>`,
 };
 
@@ -40,6 +42,14 @@ export const Default: Story = {
   args: {
     size: "medium",
     direction: "horizontal",
+  },
+};
+
+export const DefaultValue: Story = {
+  args: {
+    size: "medium",
+    direction: "horizontal",
+    defaultValue: "Crackers",
   },
 };
 
