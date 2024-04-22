@@ -13,6 +13,7 @@ export interface SelectAvatarProps {
   label: string;
   size: "sm" | "md" | "lg";
   customPlaceholder?: string;
+  defaultTooltip?: string;
 }
 
 const meta: Meta<SelectAvatarProps> = {
@@ -26,6 +27,7 @@ const meta: Meta<SelectAvatarProps> = {
     .size=${args.size}
     .label=${args.label}
     .customPlaceholder=${args?.customPlaceholder}
+    .defaultTooltip=${args?.defaultTooltip}
     .required=${args.required}
     .errored=${args.errored}
   >
@@ -112,5 +114,17 @@ export const RequiredErrored: Story = {
     required: true,
     errored: true,
     customPlaceholder: b64images.icons.backCaret
+  },
+};
+
+export const DefaultTooltip: Story = {
+  args: {
+    name: 'Avatar',
+    shape: 'rounded',
+    label: 'Avatar',
+    required: true,
+    errored: true,
+    customPlaceholder: b64images.icons.backCaret,
+    defaultTooltip: "NH Image"
   },
 };

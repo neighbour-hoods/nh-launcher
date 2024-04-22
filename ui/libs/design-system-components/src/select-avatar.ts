@@ -18,6 +18,7 @@ export default class NHSelectAvatar extends NHComponent {
   @property() required : boolean = false;
 
   @property() customPlaceholder!: string;
+  @property() defaultTooltip: string = "Select Image";
   @state() value!: string | undefined;
 
   @query("#avatar-file-picker") _avatarFilePicker!: any;
@@ -94,30 +95,31 @@ export default class NHSelectAvatar extends NHComponent {
           </div>`
         : null}
       <div class="row">
+        <nh-tooltip .text=${!!this.value ? "Clear" : this.defaultTooltip || "Select Image"} .visible=${true} class="right" .variant=${"primary"}>
       ${this.value
         ? html`<span
-            @click=${() => {
-              this.value = undefined;
-            }}
-          >
-            <nh-tooltip .text=${"Clear"} .variant=${"neutral"}>
-              <sl-avatar style="--sl-border-radius-medium: 1rem; --sl-border-radius-circle: ${
-                this.shape == "circle" ? "100%" : ""
-              }"
-                slot="hoverable"
-                name=${this.name}
-                image=${this.value}
-                .shape=${this.shape}
-              ></sl-avatar
-            ></nh-tooltip>
-          </span>`
+                  slot="hoverable"
+                  @click=${() => {
+                    this.value = undefined;
+                  }}
+                >
+                <sl-avatar style="--sl-border-radius-medium: 1rem; --sl-border-radius-circle: ${
+                    this.shape == "circle" ? "100%" : ""
+                  }"
+                    name=${this.name}
+                    image=${this.value}
+                    .shape=${this.shape}
+                  ></sl-avatar>
+                </span>`
         : html`<nh-button
-            .size=${this.size}
-            .disabled=${this.disabled}
-            .variant=${"icon"}
-            .iconImageB64=${this.customPlaceholder || "PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTUiIHZpZXdCb3g9IjAgMCA1NiA1NSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeD0iMC41IiB3aWR0aD0iNTUiIGhlaWdodD0iNTUiIHJ4PSIyNy41IiBmaWxsPSIjNDMzQTRBIi8+CjxtYXNrIGlkPSJtYXNrMF8xMTMzXzk1NDAiIHN0eWxlPSJtYXNrLXR5cGU6YWxwaGEiIG1hc2tVbml0cz0idXNlclNwYWNlT25Vc2UiIHg9IjAiIHk9IjAiIHdpZHRoPSI1NiIgaGVpZ2h0PSI1NSI+CjxyZWN0IHg9IjAuNSIgd2lkdGg9IjU1IiBoZWlnaHQ9IjU1IiByeD0iMjcuNSIgZmlsbD0iIzQzM0E0QSIvPgo8L21hc2s+CjxnIG1hc2s9InVybCgjbWFzazBfMTEzM185NTQwKSI+CjxyZWN0IHg9IjAuNDE2NTA0IiB3aWR0aD0iNTUiIGhlaWdodD0iNTUiIHJ4PSIyNy41IiBmaWxsPSIjMjUxRjI4Ii8+CjxyZWN0IHg9Ii0xMS41IiB5PSIzNS4wODM1IiB3aWR0aD0iNzguODMzMyIgaGVpZ2h0PSI3OC44MzMzIiByeD0iMzkuNDE2NyIgZmlsbD0iI0ExNzlGRiIvPgo8cmVjdCB4PSIxNC4xNjY1IiB5PSI5LjQxNjUiIHdpZHRoPSIyNy41IiBoZWlnaHQ9IjI3LjUiIHJ4PSIxMy43NSIgZmlsbD0iI0ExNzlGRiIvPgo8L2c+Cjwvc3ZnPgo="}
-            @click=${() => this._avatarFilePicker.click()}
-          ></nh-button>`}
+                slot="hoverable"
+                .size=${this.size}
+                .disabled=${this.disabled}
+                .variant=${"icon"}
+                .iconImageB64=${this.customPlaceholder || "PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTUiIHZpZXdCb3g9IjAgMCA1NiA1NSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeD0iMC41IiB3aWR0aD0iNTUiIGhlaWdodD0iNTUiIHJ4PSIyNy41IiBmaWxsPSIjNDMzQTRBIi8+CjxtYXNrIGlkPSJtYXNrMF8xMTMzXzk1NDAiIHN0eWxlPSJtYXNrLXR5cGU6YWxwaGEiIG1hc2tVbml0cz0idXNlclNwYWNlT25Vc2UiIHg9IjAiIHk9IjAiIHdpZHRoPSI1NiIgaGVpZ2h0PSI1NSI+CjxyZWN0IHg9IjAuNSIgd2lkdGg9IjU1IiBoZWlnaHQ9IjU1IiByeD0iMjcuNSIgZmlsbD0iIzQzM0E0QSIvPgo8L21hc2s+CjxnIG1hc2s9InVybCgjbWFzazBfMTEzM185NTQwKSI+CjxyZWN0IHg9IjAuNDE2NTA0IiB3aWR0aD0iNTUiIGhlaWdodD0iNTUiIHJ4PSIyNy41IiBmaWxsPSIjMjUxRjI4Ii8+CjxyZWN0IHg9Ii0xMS41IiB5PSIzNS4wODM1IiB3aWR0aD0iNzguODMzMyIgaGVpZ2h0PSI3OC44MzMzIiByeD0iMzkuNDE2NyIgZmlsbD0iI0ExNzlGRiIvPgo8cmVjdCB4PSIxNC4xNjY1IiB5PSI5LjQxNjUiIHdpZHRoPSIyNy41IiBoZWlnaHQ9IjI3LjUiIHJ4PSIxMy43NSIgZmlsbD0iI0ExNzlGRiIvPgo8L2c+Cjwvc3ZnPgo="}
+                @click=${() => this._avatarFilePicker.click()}
+              ></nh-button>`}
+          </nh-tooltip>
         </div>
       </div>
     `;
