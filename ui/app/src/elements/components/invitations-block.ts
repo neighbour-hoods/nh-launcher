@@ -70,6 +70,7 @@ export class InvitationsBlock extends NHComponentShoelace {
               <nh-text-input
                 id="pubkey-field"
                 .name="pubkey-field"
+                .label=${""}
                 .size=${"small"}
                 .placeholder=${"Public Key"}
                 .required=${true}
