@@ -40,7 +40,7 @@ export default class NHPageHeaderCard extends NHComponent {
     
     .container {
       display: flex;
-      justify-content: flex-start;
+      justify-content: space-between;
       align-items: center;
       color: var(--nh-theme-fg-default);
       border-radius: calc(1px * var(--nh-radii-md));

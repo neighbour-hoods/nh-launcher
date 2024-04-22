@@ -50,11 +50,11 @@ export default class NHTabButton extends NHComponent {
         font-family: var(--nh-font-families-body);
         letter-spacing: var(--nh-letter-spacing-buttons);
       }
-      button:focus {
-      }
+      
       button:hover {
         background-color: var(--nh-theme-bg-detail);
         color: var(--nh-theme-accent-emphasis);
+        cursor: pointer;
       }
 
       /* Tab hover effect */

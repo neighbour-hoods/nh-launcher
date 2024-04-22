@@ -1,7 +1,8 @@
-import { css, CSSResult, html, TemplateResult } from "lit";
+import { css, CSSResult, html, TemplateResult, unsafeCSS } from "lit";
 import {property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { NHComponent } from './ancestors/base';
+import { b64images } from "@neighbourhoods/design-system-styles";
 
 export default class NHPagination extends NHComponent {
   @property()
@@ -106,6 +107,7 @@ export default class NHPagination extends NHComponent {
 
       ul {
         display: flex;
+        display: flex;
         gap: calc(1px * var(--nh-spacing-xs));
       }
 
@@ -143,13 +145,15 @@ export default class NHPagination extends NHComponent {
         background-color: transparent;
       }
       a.arrow-link:hover {
-        background-color: var(--nh-theme-bg-surface);
+        outline: 3px solid var(--nh-theme-accent-emphasis);
       }
       a.arrow-link:not(.hidden) {
-        background-image: url(icons/next-arrow.png);
+        margin-left: .25rem;
+        background-image: url('data:image/svg+xml;base64,${unsafeCSS(b64images.icons.forwardArrow)}');
       }
       a.arrow-link.hidden {
-        background-image: url(icons/back-arrow.png);
+        margin-right: .25rem;
+        background-image: url('data:image/svg+xml;base64,${unsafeCSS(b64images.icons.backCaret)}');
       }
       .hidden {
         visibility: hidden;
@@ -161,13 +165,11 @@ export default class NHPagination extends NHComponent {
         transform: rotate(180deg);
       }
       .pagination-number.active {
-
         --nh-theme-accent-default: #A179FF;
         background-color: var(--nh-theme-accent-default);
       }
-
-      .pagination-number:hover:not(.active) {
-        background-color: var(--nh-theme-bg-surface);
+      .pagination-number:hover:not(.active, .arrow-link) {
+        background-color: var(--nh-theme-accent-emphasis);
       }
     `,
   ];
