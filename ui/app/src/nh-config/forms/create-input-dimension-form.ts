@@ -135,7 +135,7 @@ export default class CreateDimension extends NHComponent {
               options: ['Whole', 'Decimal'],
               name: "number_type",
               id: "number-type",
-              defaultValue: "",
+              defaultValue: "Whole",
               size: "medium",
               required: true,
               direction: 'vertical',
