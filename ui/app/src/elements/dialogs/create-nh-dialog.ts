@@ -25,8 +25,6 @@ export class CreateNeighbourhoodDialog extends NHComponentShoelace {
 
   @property() openDialogButton!: HTMLElement;
 
-  @state() _avatarTooltip: string = "NH Image";
-
   @query("nh-text-input") _nhInput;
   @query("nh-select-avatar") _nhAvatarSelect;
   @state() validName: boolean = true; // Emulates 'touched = false' initial state
@@ -98,17 +96,15 @@ export class CreateNeighbourhoodDialog extends NHComponentShoelace {
         .primaryButtonDisabled=${!this._neighbourhoodSchema.isValidSync(this._neighbourhood)}
       >
         <div slot="inner-content" class="row">
-          <nh-tooltip class="right" .visible=${true} .variant=${"primary"} .text=${this._avatarTooltip}>
-            <nh-select-avatar
-              slot="hoverable".validate
-              id="select-avatar"
-              .shape=${'circle'}
-              .label=${""}
-              .value=${this._neighbourhood.image}
-              .defaultValue=${NH_DEFAULT_LOGO}
-              @avatar-selected=${(e) => {this._avatarTooltip = "Clear"; this._neighbourhood.image = e.detail.avatar; this.requestUpdate(); }}
-            ></nh-select-avatar>
-          </nh-tooltip>
+          <nh-select-avatar
+            slot="hoverable"
+            id="select-avatar"
+            .defaultTooltip=${"NH Image"}
+            .shape=${'circle'}
+            .label=${""}
+            .value=${this._neighbourhood.image}
+            .defaultValue=${NH_DEFAULT_LOGO}
+          ></nh-select-avatar>
 
           <nh-tooltip .visible=${!this.validName} .text=${"Your Neighbourhood name should be at least 3 characters"} .variant=${"danger"}>
             <nh-text-input
