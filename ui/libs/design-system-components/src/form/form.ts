@@ -3,17 +3,18 @@ import { NHBaseForm } from '../ancestors/base-form';
 import { css, CSSResult, html, PropertyValueMap, TemplateResult } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
 import { ObjectSchema } from 'yup';
-import NHSelect, { OptionConfig } from '../input/select';
+import NHSelectAvatar from '../select-avatar';
 import NHButton from '../button';
 import NHTooltip from '../tooltip';
 import NHCard from '../card';
-import { NHTextInput, NHCheckbox, NHTextArea } from '../input';
-import NHRadioGroup from '../input/radiogroup';
+import NHSelect, { OptionConfig } from '../input/select';
+import { NHTextInput, NHCheckbox, NHTextArea, NHRadioGroup } from '../input';
 import NHAlert from '../alert';
+
 
 // Define the interface for the field configuration
 interface BaseFieldConfig {
-  type: 'text' | 'select' | 'checkbox' | 'radio-group'| 'textarea' | 'file';
+  type: 'text' | 'select' | 'checkbox' | 'radio-group'| 'textarea' | 'file'| 'image';
   name: string;
   id?: string;
   size?: 'small' | 'medium' | 'large';
@@ -50,18 +51,23 @@ interface FileUploadFieldConfig extends BaseFieldConfig {
   type: 'file';
   extension: string;
 }
+// Define the interface for image upload field configuration
+interface ImageploadFieldConfig extends BaseFieldConfig {
+  shape: "circle" | "square"
+  customPlaceholder?: string;
+}
 
 // Use a type union for the FieldConfig/Field types
-type FieldConfig = BaseFieldConfig | SelectFieldConfig | RadioGroupFieldConfig | CheckboxFieldConfig | FileUploadFieldConfig;
+type FieldConfig = BaseFieldConfig | SelectFieldConfig | RadioGroupFieldConfig | CheckboxFieldConfig | FileUploadFieldConfig| ImageploadFieldConfig;
 
-type NHField = NHTextInput | NHRadioGroup | NHCheckbox | NHSelect;
+type NHField = NHTextInput | NHRadioGroup | NHCheckbox | NHSelect| NHSelectAvatar;
 
 // Define the interface for the form configuration
 interface FormConfig {
   rows: number[]; // Defines the layout
   fields: FieldConfig[][]; // One sub-array per row, must mirror the `rows` array form
   schema: ObjectSchema<any> | ((model: object) => ObjectSchema<any>);
-  progressiveValidation?: boolean;
+  progressiveValidation?: boolean; // TODO: decide whether to implement this or remove it as an option
   
   // Optional use of custom submit button
   submitBtnRef?: NHButton;
@@ -447,6 +453,33 @@ export default class NHForm extends NHBaseForm {
             </div>
           </nh-tooltip>
             `;
+
+      case "image":
+        const avatarConfig = fieldConfig as ImageploadFieldConfig; 
+        return html`
+          <nh-tooltip
+            .variant=${'danger'}
+            .visible=${this.shouldShowValidationErrorForField(avatarConfig.name)}
+            .text=${this.getErrorMessage(avatarConfig.name)}
+          >
+            <div
+              slot="hoverable"
+              class="file-upload${classMap({
+                errored: !!this.shouldShowValidationErrorForField(avatarConfig.name)
+                })}"
+            >
+              <nh-select-avatar
+                .name=${avatarConfig.name}
+                .shape=${avatarConfig.shape}
+                .size=${avatarConfig.size}
+                .label=${avatarConfig.label}
+                .customPlaceholder=${avatarConfig?.customPlaceholder}
+                .required=${avatarConfig.required}
+                @change=${(e: Event) => this.handleInputChange(e)}
+              >
+              </nh-select-avatar>
+          </nh-tooltip>
+            `;
       default:
         return html``;
     }
@@ -459,6 +492,7 @@ export default class NHForm extends NHBaseForm {
     'nh-select': NHSelect,
     'nh-text-input': NHTextInput,
     'nh-textarea': NHTextArea,
+    'nh-select-avatar': NHSelectAvatar,
     'nh-radio-group': NHRadioGroup,
     'nh-tooltip': NHTooltip,
     'nh-alert': NHAlert,
@@ -495,6 +529,7 @@ export default class NHForm extends NHBaseForm {
           display: flex;
           flex: 1 1 100%;
           justify-content: center;
+          gap: 1rem;
         }
 
         .row-2 {
