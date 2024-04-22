@@ -26,6 +26,8 @@ export default class NHRadioGroup extends NHComponent {
 
   @state()
   value?: string = '';
+  @state()
+  defaultValue?: string = '';
   @query('input')
   _radioGroup!: SlRadioGroup;
 
@@ -63,10 +65,10 @@ export default class NHRadioGroup extends NHComponent {
             : null
           }
         </div>
-        <sl-radio-group @sl-change=${(e: CustomEvent) => this.handleInputChange(e)} data-name=${this.name} value=${this.value} id=${this.id}>
+        <sl-radio-group @sl-change=${(e: CustomEvent) => this.handleInputChange(e)} data-name=${this.name} value=${this.value || this.defaultValue || (this.options as string[])[0]} id=${this.id}>
           ${
-            this.options?.map((option: string) => 
-              html`<sl-radio .checked=${this.value == option} value=${option}>${option}</sl-radio>`
+            this.options?.map((option: string, i: number) =>
+              html`<sl-radio value=${option}>${option}</sl-radio>`
             )
           }
         </sl-radio-group>
@@ -75,7 +77,7 @@ export default class NHRadioGroup extends NHComponent {
   }
 
   reset() {
-    this.value = '';
+    this.value = this.defaultValue || '';
   }
 
   static elementDefinitions = {
