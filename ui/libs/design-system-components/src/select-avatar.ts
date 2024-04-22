@@ -3,8 +3,8 @@ import { property, query, state } from "lit/decorators.js";
 import { NHComponent } from "./ancestors/base";
 import { SlAvatar } from "@shoelace-style/shoelace";
 import NHButton from "./button";
-import { NHTooltip } from "./index";
 import { classMap } from "lit/directives/class-map.js";
+import NHTooltip from "./tooltip";
 
 export default class NHSelectAvatar extends NHComponent {
   @property() name : string = "avatar";
@@ -22,7 +22,7 @@ export default class NHSelectAvatar extends NHComponent {
 
   @query("#avatar-file-picker") _avatarFilePicker!: any;
 
-  onAvatarUploaded() {
+  async onAvatarUploaded() {
     if (this._avatarFilePicker.files && this._avatarFilePicker.files[0]) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -47,6 +47,22 @@ export default class NHSelectAvatar extends NHComponent {
     }
   }
 
+  async handleInputChange(e: Event) {
+    await this.onAvatarUploaded()
+    await this.updateComplete;
+    setTimeout(() => {
+      this.dispatchEvent(
+        new CustomEvent("change", {
+          detail: {
+            value: this.value
+          },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }, 100);
+  }
+
   render(): TemplateResult {
     return html` <div
       class="field ${classMap({
@@ -60,7 +76,7 @@ export default class NHSelectAvatar extends NHComponent {
         name="avatar"
         id="avatar-file-picker"
         style="display: none"
-        @change=${this.onAvatarUploaded}
+        @change=${this.handleInputChange}
       />
       ${this.label
         ? html`<div class="row">

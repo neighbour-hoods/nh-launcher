@@ -9,8 +9,10 @@ export interface SelectAvatarProps {
   name: string;
   shape: string;
   required: boolean;
+  errored: boolean;
   label: string;
-  defaultValue?: string;
+  size: "sm" | "md" | "lg";
+  customPlaceholder?: string;
 }
 
 const meta: Meta<SelectAvatarProps> = {
@@ -18,21 +20,16 @@ const meta: Meta<SelectAvatarProps> = {
   component: "nh-select-avatar",
   argTypes: {
   },
-  render: (args) => args?.defaultValue ? html`<nh-select-avatar
+  render: (args) => html`<nh-select-avatar
     .name=${args.name}
     .shape=${args.shape}
+    .size=${args.size}
     .label=${args.label}
-    .defaultValue=${args.defaultValue}
-    ?required=${true}
+    .customPlaceholder=${args?.customPlaceholder}
+    .required=${args.required}
+    .errored=${args.errored}
   >
   </nh-select-avatar>`
-  : html`<nh-select-avatar
-    .name=${args.name}
-    .shape=${args.shape}
-    .label=${args.label}
-    ?required=${true}
-  >
-  </nh-select-avatar>`,
 };
 
 export default meta;
@@ -41,37 +38,79 @@ type Story = StoryObj<SelectAvatarProps>;
 
 export const Circle: Story = {
   args: {
-    name: 'User Avatar',
+    name: 'Avatar',
     shape: 'circle',
-    label: 'User Avatar',
-    required: true,
+    label: 'Avatar',
+    required: false,
+    size: 'sm'
   },
 }
 
 export const Square: Story = {
   args: {
-    name: 'User Avatar',
+    name: 'Avatar',
     shape: 'square',
-    label: 'User Avatar',
-    required: true,
+    label: 'Avatar',
+    required: false,
+    size: 'sm'
   },
 }
 
 export const Rounded: Story = {
   args: {
-    name: 'User Avatar',
+    name: 'Avatar',
     shape: 'rounded',
-    label: 'User Avatar',
-    required: true,
+    label: 'Avatar',
+    required: false,
+    size: 'sm'
   },
 };
 
+export const Md: Story = {
+  args: {
+    name: 'Avatar',
+    shape: 'rounded',
+    label: 'Avatar',
+    required: false,
+    size: 'md'
+  },
+};
+export const Larg: Story = {
+  args: {
+    name: 'Avatar',
+    shape: 'rounded',
+    label: 'Avatar',
+    required: false,
+    size: 'lg'
+  },
+};
 export const DefaultValue: Story = {
   args: {
-    name: 'User Avatar',
+    name: 'Avatar',
     shape: 'rounded',
-    label: 'User Avatar',
+    label: 'Avatar',
+    required: false,
+    customPlaceholder: b64images.icons.backCaret
+  },
+};
+
+export const Required: Story = {
+  args: {
+    name: 'Avatar',
+    shape: 'rounded',
+    label: 'Avatar',
     required: true,
-    defaultValue: b64images.icons.backCaret
+    customPlaceholder: b64images.icons.backCaret
+  },
+};
+
+export const RequiredErrored: Story = {
+  args: {
+    name: 'Avatar',
+    shape: 'rounded',
+    label: 'Avatar',
+    required: true,
+    errored: true,
+    customPlaceholder: b64images.icons.backCaret
   },
 };
