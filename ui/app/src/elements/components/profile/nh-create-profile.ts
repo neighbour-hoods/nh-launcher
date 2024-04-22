@@ -30,18 +30,15 @@ export class NHCreateProfile extends NHComponentShoelace {
         }
       }
       await this.profilesStore!.client.createProfile(payload);
-      setTimeout(() => {
-        
-        this.dispatchEvent(
-          new CustomEvent('profile-created', {
-            detail: {
-              profile: payload,
-            },
-            bubbles: true,
-            composed: true,
-          }),
-        );
-      }, 100);
+      this.dispatchEvent(
+        new CustomEvent('profile-created', {
+          detail: {
+            profile: payload,
+          },
+          bubbles: true,
+          composed: true,
+        }),
+      );
     } catch (e) {
       this.dispatchEvent(
         new CustomEvent("trigger-alert", {
