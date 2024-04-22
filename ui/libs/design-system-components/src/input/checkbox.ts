@@ -19,7 +19,13 @@ export default class NHCheckbox extends NHComponent {
   errored: boolean = false;
 
   @state()
+  defaultValue?: boolean = false;
+  @state()
   value?: boolean = false;
+
+  protected firstUpdated(): void {
+    this.value = this.defaultValue || this.value;
+  }
 
   handleInputChange(e: Event) {
     this.value = !!(e.target as SlCheckbox).checked

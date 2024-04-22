@@ -1,5 +1,5 @@
 import { classMap } from 'lit/directives/class-map.js';
-import { css, CSSResult, html, TemplateResult } from 'lit';
+import { css, CSSResult, html, PropertyValueMap, TemplateResult } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
 import { SlTextarea } from '@shoelace-style/shoelace';
 import { NHComponent } from '../ancestors/base';
@@ -22,8 +22,14 @@ export default class NHTextArea extends NHComponent {
 
   @property()
   value?: string;
+  @property()
+  defaultValue?: string;
   @query('sl-textarea')
   _input!: HTMLInputElement;
+
+  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    this.value = this.defaultValue || "";
+  }
 
   handleInputChange(e: Event) {
     this.value = (e.target as SlTextarea).value

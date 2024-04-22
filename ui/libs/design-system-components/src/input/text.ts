@@ -1,6 +1,6 @@
 import { classMap } from 'lit/directives/class-map.js';
 import { css, CSSResult, html, TemplateResult } from 'lit';
-import { property, query, state } from 'lit/decorators.js';
+import { property, query } from 'lit/decorators.js';
 import { SlInput } from '@shoelace-style/shoelace';
 import { NHComponent } from '../ancestors/base';
 
@@ -22,8 +22,14 @@ export default class NHTextInput extends NHComponent {
 
   @property()
   value?: string = '';
+  @property()
+  defaultValue?: string = '';
   @query('input')
   _input!: HTMLInputElement;
+
+  protected firstUpdated(): void {
+    this.value = this.defaultValue || "";
+  }
 
   handleInputChange(e: Event) {
     this.value = (e.target as SlInput).value
