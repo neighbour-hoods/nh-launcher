@@ -1,5 +1,5 @@
 import { consume } from "@lit/context";
-import { html, css, CSSResult } from "lit";
+import { html, css, CSSResult, PropertyValueMap } from "lit";
 import { get } from "svelte/store";
 
 import { matrixContext, weGroupContext } from "../../context";
@@ -12,7 +12,6 @@ import { AppletLibrary } from "../components/applet-library";
 import { StoreSubscriber, subscribe } from "lit-svelte-stores";
 import { DnaHash, EntryHash } from "@holochain/client";
 import { NeighbourhoodSettings } from "./neighbourhood-settings";
-import { SensemakerStore, sensemakerStoreContext } from "@neighbourhoods/client";
 import { ProfilePrompt } from "../components/profile-prompt";
 import { AppletNotInstalled } from "./applet-not-installed";
 import { provideWeGroupInfo } from "../../matrix-helpers";
@@ -25,12 +24,8 @@ export class NeighbourhoodHome extends NHComponentShoelace {
   _profilesStore = new StoreSubscriber(
     this,
     () => this._matrixStore.profilesStore(this.weGroupId),
-    () => [this._matrixStore, this.weGroupId]
+    () => [this._matrixStore, this.weGroupId, this._profileCreated]
   );
-
-  @consume({ context: sensemakerStoreContext, subscribe: true })
-  @property({attribute: false})
-  _sensemakerStore!: SensemakerStore;
 
   @consume({ context: weGroupContext, subscribe: true })
   @property({attribute: false})
@@ -39,11 +34,11 @@ export class NeighbourhoodHome extends NHComponentShoelace {
   _neighbourhoodInfo = new StoreSubscriber(
     this,
     () => provideWeGroupInfo(this._matrixStore, this.weGroupId),
-    () => [this._matrixStore, this.weGroupId]
+    () => [this._matrixStore, this.weGroupId, this._profileCreated]
   );
 
-  @state()
-  private _showLibrary: boolean = false;
+  @state() private _showLibrary: boolean = false;
+  @state() private _profileCreated: boolean = false;
 
   @state()
   private _showInstallScreen: boolean = false;
@@ -58,25 +53,24 @@ export class NeighbourhoodHome extends NHComponentShoelace {
     this._showLibrary = true
   }
 
+  protected updated(_: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+      if(this._profilesStore?.value) {
+        this._profilesStore.value.myProfile.subscribe(task => {
+          if(task!.status == "pending") return;
+          this._profileCreated = !!((task as any).value);
+        })
+      }
+  }
+
   renderContent() {
     if (this._showInstallScreen) {
       return html`
-          ${this._installMode == "reinstall"
-            ? html`
               <applet-not-installed
                 .appletInstanceId=${this._installAppletId}
-                .mode=${"reinstall"}
+                .mode=${this._installMode}
                 @cancel-reinstall=${() => { this._showInstallScreen = false; this._installAppletId = undefined; }}>
               </applet-not-installed>
-              `
-            : html`
-              <applet-not-installed
-                .appletInstanceId=${this._installAppletId}
-                .mode=${"join"}
-                @cancel-reinstall=${() => { this._showInstallScreen = false; this._installAppletId = undefined; }}>
-              </applet-not-installed>
-            `
-          } `
+      `
     }
 
     return this._showLibrary
@@ -134,29 +128,25 @@ export class NeighbourhoodHome extends NHComponentShoelace {
     `
   }
 
-  refresh() {
+  handleProfileCreated() {
     this._neighbourhoodInfo.store = provideWeGroupInfo(this._matrixStore, this.weGroupId)
-    this.requestUpdate()
+    this._profileCreated = true;
   }
 
   render() {
-    const info = this._neighbourhoodInfo
-    if (!info.value) {
-      return html`<sl-skeleton effect="sheen" class="skeleton-part" style="width: 80%; height: 2rem; opacity: 0" ></sl-skeleton>` // TODO: fix this loading transition - it is currently quite jarring
-    } else if (!this._profilesStore.value?.myProfile || !get(this._profilesStore.value?.myProfile)) {
-      return this.renderProfilePrompt();
-    } else {
-      // XXX: I don't like this pattern
-      return subscribe(this._profilesStore.value?.myProfile, p => {
-        return p && p.status === 'complete' && p.value?.entry.nickname
-          ? this.renderContent()
-          : this.renderProfilePrompt()
-    })
-    }
+    return this._profileCreated
+      ? this.renderContent()
+      : this.renderProfilePrompt();
   }
 
   renderProfilePrompt() {
-    return html`<main @profile-created=${this.refresh}><profile-prompt .profilesStore=${this._profilesStore.value} .neighbourhoodInfo=${this._neighbourhoodInfo.value}></profile-prompt></main>`
+    return this._neighbourhoodInfo?.value
+      ? html`
+        <main @profile-created=${this.handleProfileCreated}>
+          <profile-prompt .profilesStore=${this._profilesStore.value} .neighbourhoodInfo=${this._neighbourhoodInfo.value}>
+          </profile-prompt>
+        </main>`
+      : html`Loading`
   }
 
   static elementDefinitions = {
@@ -168,7 +158,6 @@ export class NeighbourhoodHome extends NHComponentShoelace {
       "profile-prompt": ProfilePrompt,
       "invitations-block": InvitationsBlock,
       "neighbourhood-settings": NeighbourhoodSettings,
-      "nh-skeleton": NHSkeleton,
       'applet-not-installed': AppletNotInstalled,
   }
 
