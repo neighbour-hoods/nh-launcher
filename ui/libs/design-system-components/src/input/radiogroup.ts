@@ -1,5 +1,5 @@
 import { classMap } from 'lit/directives/class-map.js';
-import { css, CSSResult, html, TemplateResult } from 'lit';
+import { css, CSSResult, html, PropertyValueMap, TemplateResult } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
 import { SlInput, SlRadio, SlRadioGroup } from '@shoelace-style/shoelace';
 import { NHComponent } from '../ancestors/base';
@@ -12,7 +12,7 @@ export default class NHRadioGroup extends NHComponent {
   @property()
   label?: string = "Select your option:";
   @property()
-  options?: string[] = ["Cheese", "Crackers"];
+  options: string[] = ["Cheese", "Crackers"];
   @property()
   size: "medium" | "large" = "medium";
   @property()
@@ -25,11 +25,16 @@ export default class NHRadioGroup extends NHComponent {
   errored: boolean = false;
 
   @state()
-  value?: string = '';
-  @state()
   defaultValue?: string = '';
+  @state()
+  value?: string;
+
   @query('input')
   _radioGroup!: SlRadioGroup;
+
+  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    this.value = this.defaultValue || this.options[0] || "";
+  }
 
   handleInputChange(e: Event) {
     this.value = (e.target as SlRadioGroup).value
@@ -65,9 +70,9 @@ export default class NHRadioGroup extends NHComponent {
             : null
           }
         </div>
-        <sl-radio-group @sl-change=${(e: CustomEvent) => this.handleInputChange(e)} data-name=${this.name} value=${this.value || this.defaultValue || (this.options as string[])[0]} id=${this.id}>
+        <sl-radio-group @sl-change=${(e: CustomEvent) => this.handleInputChange(e)} data-name=${this.name} value=${this.value} id=${this.id}>
           ${
-            this.options?.map((option: string, i: number) =>
+            this.options?.map((option: string) =>
               html`<sl-radio value=${option}>${option}</sl-radio>`
             )
           }
