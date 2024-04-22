@@ -346,18 +346,14 @@ export default class CreateOutputDimensionMethod extends NHBaseForm {
           </nh-select>
         </nh-tooltip>
             
-        <div class="field radio">
-          <div class="row">
-            <nh-radio-group
-              @change=${(e) => this.handleInputChange(e)}
-              .defaultValue=${"Sum"}
-              .label=${'Select an option'}
-              .value=${this._model.program}
-              .options=${["AVG", "SUM"]}
-            >
-            </nh-radio-group>
-          </div>
-        </div>
+        <nh-radio-group
+          @change=${(e) => this.handleInputChange(e)}
+          .defaultValue=${"AVG"}
+          .label=${'Select an option'}
+          .value=${this._model.program}
+          .options=${["AVG", "SUM"]}
+        >
+        </nh-radio-group>
       </form>`
       : html`<nh-alert
               style="margin-top: 1rem;"
@@ -408,60 +404,11 @@ export default class CreateOutputDimensionMethod extends NHBaseForm {
           flex-direction: column
         }
 
-        .field {
-          display: flex;
-          flex-direction: column;
-          margin-bottom: calc(1px * var(--nh-spacing-md));
-          gap: calc(1px * var(--nh-spacing-lg));
-        }
-
-        .row {
-          display: flex;
-          justify-content:space-between;
-          align-items: center;
-        }
-        
         /* Bugfix for custom select */
         .tooltip-overflow {
           --select-height: calc(2 * 1.5px * var(--nh-spacing-3xl) - 3px); /* accounts for the label (2*) and borders (-3px) */
           overflow: inherit;
           max-height: var(--select-height);
-        }
-
-        /* Radio group */
-
-        .field.radio {
-          justify-content: center;  
-          padding-top: calc(1px * var(--nh-spacing-md));
-          margin-top: calc(1px * var(--nh-spacing-lg));
-        }
-
-        sl-radio-group, sl-radio-group::part(base) {
-          width: 100%;
-        }
-          
-        sl-radio-group::part(base) {
-          display: flex;
-          justify-content: space-around;
-          gap: calc(1px * var(--nh-spacing-md));
-        }
-
-        sl-radio:hover::part(control) {
-          background-color: var(--nh-theme-bg-detail); 
-        }
-
-        sl-radio::part(label) {
-          color: var(--nh-theme-fg-default);
-        }
-
-        sl-radio::part(control) {
-          color: var(--nh-theme-accent-default);
-          border-color: var(--nh-theme-accent-default);
-          background-color: transparent;
-        }
-
-        sl-radio {
-          margin-bottom: 0 !important;
         }
       `,
     ];
