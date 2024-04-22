@@ -54,7 +54,7 @@ export default class NHCheckbox extends NHComponent {
               for=${this.name}
               name=${this.name}
               data-name=${this.name}
-            >⁎</label>`
+            >*</label>`
             : null
           }
           <sl-checkbox .checked=${this.value} @sl-change=${(e: CustomEvent) => this.handleInputChange(e)} data-name=${this.name}></sl-checkbox>
@@ -165,6 +165,7 @@ export default class NHCheckbox extends NHComponent {
         flex-basis: 8px;
         padding-left: 4px;
         color: var(--nh-theme-error-default);
+        line-height: 1rem;
       }
 
       /* Error state */

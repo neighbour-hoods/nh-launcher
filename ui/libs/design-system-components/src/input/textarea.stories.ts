@@ -9,6 +9,7 @@ import { NHTooltip } from "..";
 
 export interface TextAreaProps {
   placeholder: string;
+  defaultValue: string;
   errored: boolean;
   required: boolean;
   size: "medium" | "large";
@@ -26,6 +27,7 @@ const meta: Meta<TextAreaProps> = {
   },
   render: (args) => html`<nh-textarea
     .placeholder=${args.placeholder}
+    .defaultValue=${args.defaultValue}
     .required=${args.required}
     .errored=${args.errored}
     .size=${args.size}
@@ -40,6 +42,14 @@ export const Default: Story = {
   args: {
     placeholder: "Type here",
     size: "medium"
+  },
+};
+
+export const DefaultValue: Story = {
+  args: {
+    placeholder: "Type here",
+    size: "medium",
+    defaultValue: "testing!",
   },
 };
 
