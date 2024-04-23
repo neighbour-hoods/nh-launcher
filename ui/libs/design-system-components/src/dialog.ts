@@ -218,6 +218,10 @@ export default class NHDialog extends NHComponent {
   static styles: CSSResult[] = [
     ...super.styles as CSSResult[],
     css`
+      :host sl-dialog::part(base) {
+        z-index: 100;
+      }
+
       #main::part(panel) {
         border-radius: calc(1px * var(--nh-radii-xl));
         background-color: var(--nh-theme-bg-surface); 
