@@ -9,7 +9,7 @@ import { MatrixStore } from "./matrix-store";
 import { matrixContext } from "./context";
 import { MainDashboard } from "./main-dashboard";
 import { connectHolochainApp } from "@neighbourhoods/app-loader";
-import { NHAlert } from "@neighbourhoods/design-system-components";
+import { NHAlert, NHSpinner } from "@neighbourhoods/design-system-components";
 
 @customElement('we-app')
 export class WeApp extends ScopedRegistryHost(LitElement) {
@@ -58,10 +58,7 @@ export class WeApp extends ScopedRegistryHost(LitElement) {
   }
 
   render() {
-    if (this.loading)
-      return html`<div class="row center-content" style="flex: 1;">
-        <mwc-circular-progress indeterminate></mwc-circular-progress>
-      </div>`;
+    if (this.loading) return html`<nh-spinner type=${"icon"}></nh-spinner>`;
 
     return html` <main-dashboard  
       @trigger-alert=${async (e: CustomEvent) =>{
@@ -90,6 +87,7 @@ export class WeApp extends ScopedRegistryHost(LitElement) {
 
   static elementDefinitions = {
       "main-dashboard": MainDashboard,
+      "nh-spinner": NHSpinner,
       'nh-alert': NHAlert
   }
 

@@ -24,7 +24,7 @@ import { AppletIconBadge } from './elements/components/applet-icon-badge';
 import { getStatus } from '@neighbourhoods/app-loader';
 import { AppletNotRunning } from './elements/dashboard/applet-not-running';
 import { IconDot } from './elements/components/icon-dot';
-import { NHAlert, NHButton, NHDialog, NHProfileCard, NHTooltip } from '@neighbourhoods/design-system-components';
+import { NHAlert, NHButton, NHDialog, NHProfileCard, NHSpinner, NHTooltip } from '@neighbourhoods/design-system-components';
 import { WithProfile } from './elements/components/profile/with-profile';
 import { b64images } from '@neighbourhoods/design-system-styles';
 import { provideMatrix } from './matrix-helpers.js';
@@ -163,11 +163,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
         </we-group-context>
       `;
     } else if (this._dashboardMode === DashboardMode.Loading) {
-      return html`
-        <div class="center-content" style="flex: 1;display: flex;">
-          <mwc-circular-progress indeterminate></mwc-circular-progress>
-        </div>
-      `;
+      return html`<nh-spinner type=${"page"}></nh-spinner>`;
     }
   }
 
@@ -534,31 +530,26 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
     `;
   }
 
-  static get elementDefinitions() {
-    return {
-      'mwc-fab': Fab,
-      'mwc-icon': Icon,
-      'mwc-snackbar': Snackbar,
-      'sidebar-button': SidebarButton,
-      'create-nh-dialog': CreateNeighbourhoodDialog,
-      'home-screen': HomeScreen,
-      'nh-tooltip': NHTooltip,
-      'we-group-context': WeGroupContext,
-      'nh-home': NeighbourhoodHome,
-      'nh-dialog': NHDialog,
-      'with-profile': WithProfile,
-      'nh-button': NHButton,
-      'nh-profile-card': NHProfileCard,
-      'nh-global-config': NHGlobalConfig,
-      'applet-instance-renderer': AppletInstanceRenderer,
-      'applet-not-installed': AppletNotInstalled,
-      'notification-dot': NotificationDot,
-      'icon-dot': IconDot,
-      'inactive-overlay': InactiveOverlay,
-      'applet-icon-badge': AppletIconBadge,
-      'mwc-circular-progress': CircularProgress,
-      'applet-not-running': AppletNotRunning,
-    };
+  static elementDefinitions = {
+    'sidebar-button': SidebarButton,
+    'create-nh-dialog': CreateNeighbourhoodDialog,
+    'home-screen': HomeScreen,
+    'nh-tooltip': NHTooltip,
+    'we-group-context': WeGroupContext,
+    'nh-home': NeighbourhoodHome,
+    'nh-dialog': NHDialog,
+    'with-profile': WithProfile,
+    'nh-button': NHButton,
+    'nh-profile-card': NHProfileCard,
+    'nh-global-config': NHGlobalConfig,
+    "nh-spinner": NHSpinner,
+    'applet-instance-renderer': AppletInstanceRenderer,
+    'applet-not-installed': AppletNotInstalled,
+    'notification-dot': NotificationDot,
+    'icon-dot': IconDot,
+    'inactive-overlay': InactiveOverlay,
+    'applet-icon-badge': AppletIconBadge,
+    'applet-not-running': AppletNotRunning,
   }
 
   static styles: CSSResult[] = [
