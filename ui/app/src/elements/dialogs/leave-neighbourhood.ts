@@ -1,13 +1,18 @@
 import { CSSResult, html } from "lit";
 import { property, query } from "lit/decorators.js";
 
-import { NHAlert, NHButton, NHCard, NHComponentShoelace, NHDialog } from "@neighbourhoods/design-system-components";
+import NHAlert from '@neighbourhoods/design-system-components/alert';
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHCard from '@neighbourhoods/design-system-components/card';
+import NHDialog from '@neighbourhoods/design-system-components/dialog';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+
 import { consume } from "@lit/context";
 import { DnaHash } from "@holochain/client";
 import { matrixContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 
-export class LeaveNeighbourhood extends NHComponentShoelace {
+export class LeaveNeighbourhood extends NHComponent {
   @consume({ context: matrixContext , subscribe: true })
   @property({attribute: false})
   _matrixStore!: MatrixStore;

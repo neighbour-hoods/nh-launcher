@@ -1,7 +1,8 @@
 import { classMap } from 'lit/directives/class-map.js';
 import { css, CSSResult, html, PropertyValueMap, TemplateResult } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
-import { SlInput, SlRadio, SlRadioGroup } from '@shoelace-style/shoelace';
+import '@shoelace-style/shoelace/dist/components/radio-group/radio-group.js';
+import '@shoelace-style/shoelace/dist/components/radio/radio.js';
 import { NHComponent } from '../ancestors/base';
 
 export default class NHRadioGroup extends NHComponent {
@@ -30,14 +31,14 @@ export default class NHRadioGroup extends NHComponent {
   value?: string;
 
   @query('input')
-  _radioGroup!: SlRadioGroup;
+  _radioGroup!: any;
 
   protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     this.value = this.defaultValue || this.options[0] || "";
   }
 
   handleInputChange(e: Event) {
-    this.value = (e.target as SlRadioGroup).value
+    this.value = (e.target as any).value
 
     this.dispatchEvent(
       new CustomEvent("change", {
@@ -83,12 +84,6 @@ export default class NHRadioGroup extends NHComponent {
 
   reset() {
     this.value = this.defaultValue || '';
-  }
-
-  static elementDefinitions = {
-    "sl-input": SlInput,
-    "sl-radio": SlRadio,
-    "sl-radio-group": SlRadioGroup,
   }
 
   static styles: CSSResult[] = [
@@ -178,7 +173,7 @@ export default class NHRadioGroup extends NHComponent {
 
       /* Typo */
 
-      input, label:not(.reqd),  sl-radio::part(label) {
+      label:not(.reqd),  sl-radio::part(label) {
         font-size: calc(1px * var(--nh-font-size-base));
         font-family: var(--nh-font-families-body);
         font-weight: var(--nh-font-weights-body-regular);

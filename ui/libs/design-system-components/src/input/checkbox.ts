@@ -1,7 +1,7 @@
 import { classMap } from 'lit/directives/class-map.js';
 import { css, CSSResult, html } from 'lit';
 import { property, state } from 'lit/decorators.js';
-import { SlCheckbox } from '@shoelace-style/shoelace';
+import '@shoelace-style/shoelace/dist/components/checkbox/checkbox.js';
 import { NHComponent } from '../ancestors/base';
 
 export default class NHCheckbox extends NHComponent {
@@ -28,7 +28,7 @@ export default class NHCheckbox extends NHComponent {
   }
 
   handleInputChange(e: Event) {
-    this.value = !!(e.target as SlCheckbox).checked
+    this.value = !!(e.target as any).checked
     this.dispatchEvent(
       new CustomEvent("change", {
         bubbles: true,
@@ -65,10 +65,6 @@ export default class NHCheckbox extends NHComponent {
 
   reset() {
     this.value = false;
-  }
-
-  static elementDefinitions = {
-    "sl-checkbox": SlCheckbox,
   }
 
   static styles: CSSResult[] = [

@@ -9,7 +9,8 @@ import { matrixContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 import { sharedStyles } from "../../sharedStyles";
 import { AppBlockRenderer } from "@neighbourhoods/app-loader";
-import { NHSpinner } from "@neighbourhoods/design-system-components";
+
+import NHSpinner from '@neighbourhoods/design-system-components/spinner';
 
 export class AppletInstanceRenderer extends ScopedRegistryHost(LitElement) {
 

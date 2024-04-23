@@ -7,10 +7,11 @@ import { MatrixStore } from "../../matrix-store";
 import { sharedStyles } from "../../sharedStyles";
 import { property, state } from "lit/decorators.js";
 import { DnaHash, EntryHash } from "@holochain/client";
-import { b64images } from "@neighbourhoods/design-system-styles";
-import { NHButton } from "@neighbourhoods/design-system-components";
 import { AppletListItem } from "./applet-list-item";
 import { UninstalledAppletInstanceInfo } from "../../types";
+
+import NHButton from '@neighbourhoods/design-system-components/button';
+import { b64images } from "@neighbourhoods/design-system-styles";
 
 export class UninstalledAppletInstanceList extends ScopedRegistryHost(LitElement) {
   @consume({ context: matrixContext , subscribe: true })

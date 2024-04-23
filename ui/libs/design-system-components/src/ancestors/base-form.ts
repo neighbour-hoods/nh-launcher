@@ -1,5 +1,4 @@
 import { CSSResult, LitElement, css } from 'lit';
-import { SlCheckbox, SlInput, SlRadio } from '@shoelace-style/shoelace';
 import { state } from 'lit/decorators.js';
 import { ValidationError, ObjectSchema } from 'yup';
 import { NHComponentShoelace } from './base';
@@ -37,7 +36,7 @@ export abstract class NHBaseForm extends NHComponentShoelace {
   
   protected handleInputChange(e: Event) {
     let name, value;
-    let target = e.target as SlInput | SlCheckbox | HTMLInputElement | SlRadio | HTMLOptionElement;
+    let target = e.target as any;
     if(target.tagName === 'SL-RADIO' || target.tagName === 'OPTION') {
       //@ts-ignore
       name = target.parentElement.name || target.parentElement.dataset.name
@@ -121,7 +120,7 @@ export abstract class NHBaseForm extends NHComponentShoelace {
   }
 
   protected resetUntouchedFields(): void {
-    ((this as LitElement).renderRoot.querySelectorAll('.untouched') as any)?.forEach((input: SlInput) => {
+    ((this as LitElement).renderRoot.querySelectorAll('.untouched') as any)?.forEach((input: any) => {
       input.classList.remove('untouched');
     })
   }
@@ -133,14 +132,14 @@ export abstract class NHBaseForm extends NHComponentShoelace {
   }
 
   highlightUntouchedFields() {
-    ((this as LitElement).renderRoot.querySelectorAll('nh-text-input, nh-radio-group, nh-select, nh-textarea') as any)?.forEach((input: SlInput) => {
+    ((this as LitElement).renderRoot.querySelectorAll('nh-text-input, nh-radio-group, nh-select, nh-textarea') as any)?.forEach((input: any) => {
       if(this.touched[input?.name || input!.dataset.name || ''] === false) input.classList.add('untouched');
       // Fields not in the model will fail escape early from the above
     })
   }
 
   enableAllFields() {
-    ((this as LitElement).renderRoot.querySelectorAll('sl-input, nh-radio-group, nh-select, nh-textarea') as any)?.forEach((input: SlInput) => {
+    ((this as LitElement).renderRoot.querySelectorAll('sl-input, nh-radio-group, nh-select, nh-textarea') as any)?.forEach((input: any) => {
       if(input.disabled = true) input.disabled = false;
     })
   }
@@ -166,3 +165,5 @@ export abstract class NHBaseForm extends NHComponentShoelace {
       }
   `];
 }
+
+export default NHBaseForm;

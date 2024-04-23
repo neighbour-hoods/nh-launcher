@@ -9,11 +9,14 @@ import { CreateNeighbourhoodDialog } from "../dialogs/create-nh-dialog";
 import { DnaHash, AppInfo } from "@holochain/client";
 import { getStatus } from "@neighbourhoods/app-loader";
 import { SensemakerStore, sensemakerStoreContext } from "@neighbourhoods/client";
-import { NHButton, NHComponent, NHDialog } from "@neighbourhoods/design-system-components";
-import { b64images } from "@neighbourhoods/design-system-styles";
 import { AppletListItem } from "./applet-list-item";
 import { UninstallApplet } from "../dialogs/uninstall-applet";
 import { AppletInstanceInfo } from "../../types";
+
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHDialog from '@neighbourhoods/design-system-components/dialog';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+import { b64images } from "@neighbourhoods/design-system-styles";
 
 export class AppletInstanceStatusList extends NHComponent {
   @consume({ context: sensemakerStoreContext, subscribe: true })

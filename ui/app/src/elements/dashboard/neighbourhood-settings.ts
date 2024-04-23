@@ -10,9 +10,12 @@ import { AppletInstanceStatusList } from "../components/applet-instance-status-l
 import { UninstalledAppletInstanceList } from "../components/uninstalled-applet-instance-list";
 import { JoinableAppletInstanceList } from "../components/joinable-applet-instance-list";
 import { SensemakerStore, sensemakerStoreContext } from "@neighbourhoods/client";
-import { NHButton, NHComponent, NHSpinner } from "@neighbourhoods/design-system-components";
 import { LeaveNeighbourhood } from "../dialogs/leave-neighbourhood";
 import { provideWeGroupInfo } from "../../matrix-helpers";
+
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHSpinner from '@neighbourhoods/design-system-components/spinner';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 
 export class NeighbourhoodSettings extends NHComponent {
   @consume({ context: matrixContext , subscribe: true })

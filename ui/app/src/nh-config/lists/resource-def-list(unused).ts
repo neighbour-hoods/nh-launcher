@@ -3,9 +3,11 @@ import { property, state } from "lit/decorators.js";
 
 import { ResourceDef, SensemakerStore } from "@neighbourhoods/client";
 
-import { NHButton, NHCard, NHCardList, NHComponent } from "@neighbourhoods/design-system-components";
-import { decodeHashFromBase64 } from "@holochain/client";
-import { NHButtonGroup } from "@neighbourhoods/design-system-components";
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHButtonGroup from '@neighbourhoods/design-system-components/button-group';
+import NHCard from '@neighbourhoods/design-system-components/card';
+import NHCardList from '@neighbourhoods/design-system-components/card-list';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 import { b64images } from "@neighbourhoods/design-system-styles";
 
 export default class ResourceDefList extends NHComponent {

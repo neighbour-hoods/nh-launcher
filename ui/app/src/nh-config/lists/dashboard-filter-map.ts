@@ -2,7 +2,6 @@ import {
   Assessment,
   AssessmentWidgetBlockConfig,
   AssessmentWidgetRenderer,
-  AssessmentWidgetRenderers,
   CulturalContext,
   Dimension,
   InputAssessmentWidgetDelegate,
@@ -26,7 +25,7 @@ import { cleanResourceNameForUI, generateHeaderHTML } from '../../elements/compo
 import { derived } from 'svelte/store';
 import { compareUint8Arrays, createInputAssessmentWidgetDelegate, InputAssessmentRenderer } from '../../../../libs/app-loader';
 import { appletInstanceInfosContext } from '../../context';
-import { NHComponent } from '@neighbourhoods/design-system-components';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 
 type DecoratorProps = {
   renderer: AssessmentWidgetRenderer,

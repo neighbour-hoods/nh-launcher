@@ -1,7 +1,7 @@
 import { classMap } from 'lit/directives/class-map.js';
 import { css, CSSResult, html, PropertyValueMap, TemplateResult } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
-import { SlTextarea } from '@shoelace-style/shoelace';
+import '@shoelace-style/shoelace/dist/components/textarea/textarea.js';
 import { NHComponent } from '../ancestors/base';
 
 export default class NHTextArea extends NHComponent {
@@ -32,7 +32,7 @@ export default class NHTextArea extends NHComponent {
   }
 
   handleInputChange(e: Event) {
-    this.value = (e.target as SlTextarea).value
+    this.value = (e.target as any).value
 
     this.dispatchEvent(
       new CustomEvent("change", {

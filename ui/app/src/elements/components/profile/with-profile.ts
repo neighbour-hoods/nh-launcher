@@ -1,18 +1,17 @@
-import { Profile, ProfilesSignal, ProfilesStore } from '@holochain-open-dev/profiles';
+import { Profile, ProfilesStore } from '@holochain-open-dev/profiles';
 import { css, CSSResult, html, PropertyValueMap } from 'lit';
-import { property, state } from 'lit/decorators.js';
-import { get, readable } from 'svelte/store';
+import { property } from 'lit/decorators.js';
+import { get } from 'svelte/store';
 import { EntryRecord } from '@holochain-open-dev/utils';
-import {
-  NHComponent,
-  NHProfileCard,
-  NHProfileIdenticon,
-} from '@neighbourhoods/design-system-components';
 import { consume } from '@lit/context';
 import { AsyncStatus, StoreSubscriber } from '@holochain-open-dev/stores';
 import { MatrixStore } from '../../../matrix-store';
 import { matrixContext, weGroupContext } from '../../../context';
-import { AgentPubKeyB64, AppSignal, DnaHash, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
+import { AgentPubKeyB64, DnaHash, decodeHashFromBase64 } from '@holochain/client';
+
+import NHProfileCard from '@neighbourhoods/design-system-components/profile/profile-card';
+import NHProfileIdenticon from '@neighbourhoods/design-system-components/profile/profile-identicon';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 
 export class WithProfile extends NHComponent {
   @consume({ context: matrixContext , subscribe: true })

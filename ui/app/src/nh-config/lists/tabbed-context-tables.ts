@@ -1,9 +1,17 @@
 import { consume } from '@lit/context';
-import { b64images } from '@neighbourhoods/design-system-styles';
 import { classMap } from 'lit/directives/class-map.js';
 import { cleanForUI } from '../../elements/components/helpers/functions';
 import { CSSResult, css, html } from 'lit';
-import { NHAlert, NHButton, NHButtonGroup, NHComponent, NHPageHeaderCard, NHTabButton, NHTooltip } from '@neighbourhoods/design-system-components';
+
+import NHAlert from '@neighbourhoods/design-system-components/alert';
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHButtonGroup from '@neighbourhoods/design-system-components/button-group';
+import NHPageHeaderCard from '@neighbourhoods/design-system-components/page-header-card';
+import NHTooltip from '@neighbourhoods/design-system-components/tooltip';
+import NHTabButton from '@neighbourhoods/design-system-components/tab-button';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+import { b64images } from '@neighbourhoods/design-system-styles';
+
 import { property, query } from 'lit/decorators.js';
 import NHContextSelector from '../nh-context-selector';
 import { AssessmentTableType } from '../types';

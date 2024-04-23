@@ -1,11 +1,11 @@
 import { css, CSSResult, html, TemplateResult } from "lit";
 import {property } from "lit/decorators.js";
-import { NHComponentShoelace } from "./ancestors/base";
+import { NHComponent } from "./ancestors/base";
 import { classMap } from "lit/directives/class-map.js";
 import NHCard from "./card";
 import NHButton from "./button";
 
-export default class NHCardList extends NHComponentShoelace {
+export default class NHCardList extends NHComponent {
   @property()
   direction!: 'vertical' | 'horizontal';
 

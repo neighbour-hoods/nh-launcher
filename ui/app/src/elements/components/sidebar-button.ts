@@ -1,8 +1,8 @@
 import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
 import { css, html, LitElement } from "lit";
+import { property } from "lit/decorators.js";
 
-import { property, query } from "lit/decorators.js";
-import { NHTooltip } from "@neighbourhoods/design-system-components";
+import NHTooltip from '@neighbourhoods/design-system-components/tooltip';
 
 export class SidebarButton extends ScopedRegistryHost(LitElement) {
 

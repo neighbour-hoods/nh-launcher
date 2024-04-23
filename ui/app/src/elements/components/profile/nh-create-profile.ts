@@ -1,12 +1,18 @@
 import { css, CSSResult, html } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
-import { NHButton, NHCard, NHComponentShoelace, NHForm, NHSelectAvatar, NHTextInput } from '@neighbourhoods/design-system-components';
 import { Profile, ProfilesStore } from '@holochain-open-dev/profiles';
 import { StoreSubscriber } from '@holochain-open-dev/stores';
 import { object, string } from 'yup';
 import { isDataURL } from '../helpers/functions';
 
-export class NHCreateProfile extends NHComponentShoelace {
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHCard from '@neighbourhoods/design-system-components/card';
+import NHForm from '@neighbourhoods/design-system-components/form/form';
+import NHTextInput from '@neighbourhoods/design-system-components/input/text';
+import NHSelectAvatar from '@neighbourhoods/design-system-components/select-avatar';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+
+export class NHCreateProfile extends NHComponent {
   @property() profilesStore!: ProfilesStore;
 
   @state() private loading : boolean = false;

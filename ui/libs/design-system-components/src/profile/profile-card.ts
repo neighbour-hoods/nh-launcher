@@ -1,6 +1,6 @@
 import { css, CSSResult, html, TemplateResult } from "lit";
 import { property, query, state } from "lit/decorators.js";
-import "@shoelace-style/shoelace/dist/components/skeleton/skeleton.js";
+import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
 import { NHComponentShoelace } from "../ancestors/base";
 import NHCard from "../card";
 import NHButton from "../button";

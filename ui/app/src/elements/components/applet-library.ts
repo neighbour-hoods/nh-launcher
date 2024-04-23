@@ -1,10 +1,13 @@
 import { css, html } from "lit";
 import { property, query } from "lit/decorators.js";
 
-import { NHButton, NHComponent, NHPageHeaderCard } from "@neighbourhoods/design-system-components";
-import { b64images } from "@neighbourhoods/design-system-styles";
 import { InstallableApplets } from "./installable-applets";
 import { InstallFromFsDialog } from "../dialogs/install-from-file-system";
+
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHPageHeaderCard from '@neighbourhoods/design-system-components/page-header-card';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+import { b64images } from "@neighbourhoods/design-system-styles";
 
 export class AppletLibrary extends NHComponent {
   @property()

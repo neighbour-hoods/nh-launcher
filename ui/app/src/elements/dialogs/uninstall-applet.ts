@@ -1,9 +1,13 @@
 import { CSSResult, html } from "lit";
 import { property, query } from "lit/decorators.js";
 
-import { NHAlert, NHButton, NHCard, NHComponentShoelace, NHDialog } from "@neighbourhoods/design-system-components";
+import NHAlert from '@neighbourhoods/design-system-components/alert';
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHCard from '@neighbourhoods/design-system-components/card';
+import NHDialog from '@neighbourhoods/design-system-components/dialog';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 
-export class UninstallApplet extends NHComponentShoelace {
+export class UninstallApplet extends NHComponent {
   @property()
   private _isOpen: boolean = false;
   @query('nh-dialog')

@@ -6,17 +6,16 @@ import { MatrixStore } from '../../matrix-store';
 import { matrixContext, weGroupContext } from '../../context';
 import { DnaHash } from '@holochain/client';
 
-import {
-  NHButton,
-  NHCard,
-  NHComponent,
-  NHDialog,
-  NHPageHeaderCard,
-} from '@neighbourhoods/design-system-components';
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHCard from '@neighbourhoods/design-system-components/card';
+import NHDialog from '@neighbourhoods/design-system-components/dialog';
+import NHPageHeaderCard from '@neighbourhoods/design-system-components/page-header-card';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+import { b64images } from '@neighbourhoods/design-system-styles';
+
 import CreateDimension from '../forms/create-input-dimension-form';
 import DimensionList from '../lists/dimension-list';
 import { property, query, state } from 'lit/decorators.js';
-import { b64images } from '@neighbourhoods/design-system-styles';
 import CreateOutputDimensionMethod from '../forms/create-output-dimension-form';
 
 export default class NHDimensionsConfig extends NHComponent {

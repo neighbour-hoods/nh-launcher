@@ -1,5 +1,4 @@
 import { EntryHash, EntryHashB64, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
-import { NHButton, NHCard, NHBaseForm, NHTooltip, NHSelect, NHTextInput, NHRadioGroup } from '@neighbourhoods/design-system-components';
 import { html, css, CSSResult, PropertyValueMap } from 'lit';
 import { object, string, boolean, number, ObjectSchema } from 'yup';
 import {
@@ -13,7 +12,16 @@ import {
   Program,
 } from '@neighbourhoods/client';
 import { property, query, state } from 'lit/decorators.js';
-import { NHAlert } from '@neighbourhoods/design-system-components';
+
+import NHBaseForm from '@neighbourhoods/design-system-components/ancestors/base-form';
+import NHAlert from '@neighbourhoods/design-system-components/alert';
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHCard from '@neighbourhoods/design-system-components/card';
+import NHTooltip from '@neighbourhoods/design-system-components/tooltip';
+import NHSelect from '@neighbourhoods/design-system-components/input/select';
+import NHTextInput from '@neighbourhoods/design-system-components/input/text';
+import NHRadioGroup from '@neighbourhoods/design-system-components/input/radiogroup';
+
 import { MAX_RANGE_FLOAT, MAX_RANGE_INT, MIN_RANGE_FLOAT, MIN_RANGE_INT, DEFAULT_RANGE_MIN } from "..";
 
 export default class CreateOutputDimensionMethod extends NHBaseForm {

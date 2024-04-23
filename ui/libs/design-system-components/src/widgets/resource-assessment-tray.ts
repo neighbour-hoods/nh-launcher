@@ -3,7 +3,7 @@ import { property, state } from "lit/decorators.js";
 import { NHComponent, NHTooltip } from '..';
 import NHAssessmentContainer from './assessment-container';
 import { AssessmentWidgetBlockConfig } from '@neighbourhoods/client';
-import { SlSpinner } from '@shoelace-style/shoelace';
+import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 
 /**
  */
@@ -35,7 +35,6 @@ export default class NHResourceAssessmentTray extends NHComponent {
   static elementDefinitions = {
     'assessment-container': NHAssessmentContainer,
     'nh-tooltip': NHTooltip,
-    'sl-spinner': SlSpinner,
   }
 
   static styles = [

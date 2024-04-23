@@ -8,7 +8,9 @@ import {
   Table,
 } from '@adaburrows/table-web-component';
 
-import { NHComponent, NHSkeleton } from '@neighbourhoods/design-system-components';
+import NHSkeleton from '@neighbourhoods/design-system-components/skeleton';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+
 import { AgentPubKeyB64, encodeHashToBase64 } from '@holochain/client';
 import { AssessmentTableRecord, AssessmentTableType } from '../types';
 import { generateHeaderHTML } from '../../elements/components/helpers/functions';
