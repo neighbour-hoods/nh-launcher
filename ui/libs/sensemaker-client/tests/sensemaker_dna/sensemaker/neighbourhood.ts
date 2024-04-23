@@ -34,7 +34,6 @@ import { ok } from "assert";
 import pkg from "tape-promise/tape";
 import { installAgent, setUpAliceandBob } from "../../utils";
 import { EntryRecord } from "@holochain-open-dev/utils";
-import { create } from "lodash";
 const { test } = pkg;
 
 export default () => {
