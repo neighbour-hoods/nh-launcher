@@ -1,6 +1,6 @@
 import { css, CSSResult, html, TemplateResult } from "lit";
 import { property, state } from "lit/decorators.js";
-import { NHComponentShoelace } from "./ancestors/base";
+import { NHComponent } from "./ancestors/base";
 import { classMap } from "lit/directives/class-map.js";
 
 import '@shoelace-style/shoelace/dist/components/menu/menu.js';
@@ -18,7 +18,7 @@ export type MenuSectionMember = {
   subSectionMembers: string[]
 };
 
-export default class NHMenu extends NHComponentShoelace {
+export default class NHMenu extends NHComponent {
   @property()
   theme: string = "dark";
 

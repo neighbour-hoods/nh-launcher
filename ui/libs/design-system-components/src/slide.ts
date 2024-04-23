@@ -1,8 +1,8 @@
 import { css, CSSResult, html, TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
-import { NHComponentShoelace } from './ancestors/base';
+import { NHComponent } from './ancestors/base';
 
-export default class NHSlide extends NHComponentShoelace {
+export default class NHSlide extends NHComponent {
   @property()
   heading!: string;
 

@@ -1,6 +1,6 @@
 import { css, CSSResult, html, TemplateResult } from 'lit';
 import { property, query } from 'lit/decorators.js';
-import { NHComponentShoelace } from './ancestors/base';
+import { NHComponent } from './ancestors/base';
 import { classMap } from "lit/directives/class-map.js";
 import { AlertType } from './alert'
 import NHAlert from './alert';
@@ -26,7 +26,7 @@ function preventOverlayClose(event: CustomEvent) : void {
   }
 }
 
-export default class NHDialog extends NHComponentShoelace {
+export default class NHDialog extends NHComponent {
   @property()
   title!: string
   @property()

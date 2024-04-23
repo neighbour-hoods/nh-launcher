@@ -1,6 +1,6 @@
 import { css, CSSResult, html } from "lit";
 import { property, queryAll } from "lit/decorators.js";
-import { NHComponentShoelace } from "../ancestors/base";
+import { NHComponent } from "../ancestors/base";
 
 
 /**
@@ -15,7 +15,7 @@ import { NHComponentShoelace } from "../ancestors/base";
  * but this also means the parent control needs to respect that and make sure other
  * controls become frozen, too. It would be easier if we just allowed changing this.
  */
-export default class NHIconContainer extends NHComponentShoelace {
+export default class NHIconContainer extends NHComponent {
 
   _selected: boolean = false;
   _fireTimeout?: ReturnType<typeof setTimeout>;

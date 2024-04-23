@@ -2,7 +2,7 @@ import { repeat } from 'lit/directives/repeat.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { css, CSSResult, html, PropertyValueMap, TemplateResult } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
-import { NHComponentShoelace } from '../ancestors/base';
+import { NHComponent } from '../ancestors/base';
 import { b64images } from '@neighbourhoods/design-system-styles';
 import { InputAssessmentRenderer } from '@neighbourhoods/app-loader';
 
@@ -13,7 +13,7 @@ export type OptionConfig = {
   renderBlock?: () => TemplateResult,
 }
 
-export default class NHSelect extends NHComponentShoelace {
+export default class NHSelect extends NHComponent {
   @property()
   name: string = "Field";
   @property()
