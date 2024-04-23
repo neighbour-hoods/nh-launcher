@@ -18,7 +18,7 @@ export default class NHTabButton extends NHComponent {
   render() : TemplateResult {
     return html`
       <button
-        ?disabled=${this.disabled}
+        .disabled=${this.disabled}
         class="btn${classMap({
           active: this.selected,
           fixed: this.fixed,
@@ -27,7 +27,7 @@ export default class NHTabButton extends NHComponent {
           [this.size]: !!this.size
         })}"
       >
-        <slot> </slot>
+        <slot></slot>
       </button>
     `;
   }
