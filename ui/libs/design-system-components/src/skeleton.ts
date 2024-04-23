@@ -1,11 +1,11 @@
-import { NHComponentShoelace } from './ancestors/base';
+import { NHComponent } from './ancestors/base';
 import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
 
 import { css, CSSResult, html, TemplateResult } from "lit";
 import {property } from "lit/decorators.js";
 import { repeat } from 'lit/directives/repeat.js';
 
-export default class NHSkeleton extends NHComponentShoelace {
+export default class NHSkeleton extends NHComponent {
   @property() type!: "dashboard-basic-grid" | "dashboard-table-full" ;
 
   @property() columns: number = 5;

@@ -1,10 +1,10 @@
-import { NHComponentShoelace } from './ancestors/base';
+import { NHComponent } from './ancestors/base';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 
 import { css, CSSResult, html, TemplateResult } from "lit";
 import {property } from "lit/decorators.js";
 
-export default class NHSpinner extends NHComponentShoelace {
+export default class NHSpinner extends NHComponent {
   @property() type: "icon" | "page" = "page";
 
   render() : TemplateResult {

@@ -14,7 +14,7 @@ export interface DialogProps {
 }
 
 const meta: Meta<DialogProps> = {
-  title: "NHComponentShoelace/Dialog",
+  title: "NHComponent/Dialog",
   component: "nh-dialog",
   argTypes: {
     title: { control: "text" },

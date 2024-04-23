@@ -1,14 +1,14 @@
 import { css, CSSResult, html, TemplateResult } from "lit";
 import { property, query, state } from "lit/decorators.js";
 import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
-import { NHComponentShoelace } from "../ancestors/base";
+import { NHComponent } from "../ancestors/base";
 import NHCard from "../card";
 import NHButton from "../button";
 import SlSkeleton from "@shoelace-style/shoelace/dist/components/skeleton/skeleton.js";
 import SlTooltip from "@shoelace-style/shoelace/dist/components/tooltip/tooltip.js";
 import { b64images } from "@neighbourhoods/design-system-styles";
 
-export default class NHProfileCard extends NHComponentShoelace {
+export default class NHProfileCard extends NHComponent {
   @property()
   agentAvatarSrc!: string;
   @property()

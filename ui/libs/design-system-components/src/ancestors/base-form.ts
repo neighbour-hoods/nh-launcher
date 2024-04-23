@@ -1,9 +1,9 @@
 import { CSSResult, LitElement, css } from 'lit';
 import { state } from 'lit/decorators.js';
 import { ValidationError, ObjectSchema } from 'yup';
-import { NHComponentShoelace } from './base';
+import { NHComponent } from './base';
 
-export abstract class NHBaseForm extends NHComponentShoelace {
+export abstract class NHBaseForm extends NHComponent {
   @state() protected errors: Record<string, string> = {};
   @state() protected touched: Record<string, boolean> = {};
   @state() protected formWasSubmitted: boolean = false;

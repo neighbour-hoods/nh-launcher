@@ -1,9 +1,9 @@
 import { classMap } from 'lit/directives/class-map.js';
 import { css, CSSResult, html, TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
-import { NHComponentShoelace } from './ancestors/base';
+import { NHComponent } from './ancestors/base';
 
-export default class NHTooltip extends NHComponentShoelace {
+export default class NHTooltip extends NHComponent {
   @property()
   text: string = "Tooltip Text";
   @property()

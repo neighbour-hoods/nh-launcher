@@ -1,6 +1,6 @@
 import { css, CSSResult, html, PropertyValueMap } from "lit";
 import { property, query } from "lit/decorators.js";
-import { NHComponentShoelace } from "../ancestors/base";
+import { NHComponent } from "../ancestors/base";
 import { InputAssessmentControl } from "@neighbourhoods/client";
 
 /**
@@ -11,7 +11,7 @@ import { InputAssessmentControl } from "@neighbourhoods/client";
  * The editMode allows showing the control in a non-interactive manner and allows
  * selecting a container.
  */
-export default class NHAssessmentContainer extends NHComponentShoelace {
+export default class NHAssessmentContainer extends NHComponent {
   @property()
   selected: boolean = false;
 

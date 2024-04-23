@@ -8,8 +8,6 @@ Currently this package exports these components, all of which are under developm
 
 `NHComponent` - Just the NH design token CSS variables
 
-`NHComponentShoelace` - In future we will add some Shoelace variable overrides so use this to include them too 
-
 ## NH Components
 
 `NHButton`
@@ -40,9 +38,7 @@ Currently this package exports these components, all of which are under developm
 
 `NHSlide`
 
-`NHMenu` -- currently same as NHButtonGroup
-
-## NH Shoelace Components (use `sl-` webcomponents internally)
+`NHMenu`
 
 `NHDialog`
 
