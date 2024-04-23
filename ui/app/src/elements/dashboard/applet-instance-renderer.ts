@@ -3,13 +3,13 @@ import { AppBlockDelegate } from "@neighbourhoods/client";
 import { consume } from "@lit/context";
 import { Task } from "@lit/task";
 import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
-import { CircularProgress } from "@scoped-elements/material-web";
 import { css, html, LitElement } from "lit";
 import { property } from "lit/decorators.js";
 import { matrixContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 import { sharedStyles } from "../../sharedStyles";
 import { AppBlockRenderer } from "@neighbourhoods/app-loader";
+import { NHSpinner } from "@neighbourhoods/design-system-components";
 
 export class AppletInstanceRenderer extends ScopedRegistryHost(LitElement) {
 
@@ -30,11 +30,7 @@ export class AppletInstanceRenderer extends ScopedRegistryHost(LitElement) {
 
   render() {
     return this._rendererTask.render({
-      pending: () => html`
-        <div class="row center-content" style="flex: 1;">
-          <mwc-circular-progress indeterminate></mwc-circular-progress>
-        </div>
-      `,
+      pending: () => html`<nh-spinner type=${"icon"}></nh-spinner>`,
       complete: (renderers) => {
         console.log("got renderers", renderers)
         if (renderers.appletRenderers && renderers.appletRenderers['full']) {
@@ -46,11 +42,9 @@ export class AppletInstanceRenderer extends ScopedRegistryHost(LitElement) {
     });
   }
 
-  static get elementDefinitions() {
-    return {
-      "app-block-renderer": AppBlockRenderer,
-      "mwc-circular-progress": CircularProgress,
-    };
+  static elementDefinitions = {
+    "nh-spinner": NHSpinner,
+    "app-block-renderer": AppBlockRenderer,
   }
 
   static styles = [
