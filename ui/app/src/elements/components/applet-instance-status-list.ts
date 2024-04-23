@@ -19,7 +19,6 @@ import { property, query, state } from "lit/decorators.js";
 import { CreateNeighbourhoodDialog } from "../dialogs/create-nh-dialog";
 import { ActionHash, DnaHash, AppInfo } from "@holochain/client";
 import { getStatus } from "@neighbourhoods/app-loader";
-import { FederateAppletDialog } from "../dialogs/federate-applet-dialog";
 import { SensemakerStore, sensemakerStoreContext } from "@neighbourhoods/client";
 import { NHButton, NHComponent, NHDialog } from "@neighbourhoods/design-system-components";
 import { b64images } from "@neighbourhoods/design-system-styles";
@@ -50,9 +49,6 @@ export class AppletInstanceStatusList extends NHComponent {
 
   @query("#uninstall-applet-dialog")
   _uninstallAppletDialog;
-
-  @query("#federate-applet-dialog")
-  _federateAppletDialog!: FederateAppletDialog;
 
   @state()
   private _currentAppInfo!: AppletInstanceInfo;
@@ -167,10 +163,6 @@ export class AppletInstanceStatusList extends NHComponent {
         @confirm-uninstall=${() => {this.uninstallApp(this._currentAppInfo.appInfo)}}
       ></uninstall-applet-dialog>
 
-      <federate-applet-dialog
-        id="federate-applet-dialog"
-      ></federate-applet-dialog>
-
       ${this.renderAppStates()}
     `;
   }
@@ -187,7 +179,6 @@ export class AppletInstanceStatusList extends NHComponent {
       "mwc-dialog": Dialog,
       "applet-list-item": AppletListItem,
       "uninstall-applet-dialog": UninstallApplet,
-      "federate-applet-dialog": FederateAppletDialog,
       'nh-dialog': NHDialog,
     };
   }
