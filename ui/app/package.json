@@ -30,7 +30,6 @@
     "@neighbourhoods/design-system-components": "workspace:*",
     "@neighbourhoods/design-system-styles": "workspace: *",
     "@neighbourhoods/membrane-invitations": "workspace:*",
-    "@scoped-elements/material-web": "^0.0.19",
     "@types/uuid": "^9.0.7",
     "@webcomponents/scoped-custom-element-registry": "^0.0.9",
     "@webcomponents/webcomponentsjs": "^2.8.0",
