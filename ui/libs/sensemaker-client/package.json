@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "prepare": "pnpm build",
-    "build": "tsc --build",
+    "build": "rm -rf ./dist; tsc --build",
     "build:watch": "tsc --watch --preserveWatchOutput",
     "test:debug": "TRYORAMA_LOG_LEVEL=debug RUST_BACKTRACE=1 RUST_LOG=holochain::core::ribosome::host_fn::debug=debug TRYORAMA_HOLOCHAIN_PATH=\"holochain\" node --loader ts-node/esm --experimental-specifier-resolution=node tests/index.ts",
     "test": "TRYORAMA_LOG_LEVEL=info TRYORAMA_HOLOCHAIN_PATH=\"holochain\" node --loader ts-node/esm --experimental-specifier-resolution=node tests/index.ts | tap-diff"
