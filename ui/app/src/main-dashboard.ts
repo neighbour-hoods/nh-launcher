@@ -720,7 +720,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
         transition: all 0.3s ease-in-out;
       }
       .dashboard-icon {
-        background: url(./icons/dashboard-icon.png);
+        background: url('data:image/svg+xml;base64,${unsafeCSS(b64images.nhIcons.dashboard)}');
         background-size: contain;
         background-repeat: no-repeat;
       }
