@@ -2,8 +2,8 @@ import { css, CSSResult, html, TemplateResult } from "lit";
 import {property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { NHComponent } from './ancestors/base';
-import NHButton from "./button";
-import { SlDetails } from "@shoelace-style/shoelace";
+import '@shoelace-style/shoelace/dist/components/details/details.js';
+import '@shoelace-style/shoelace/dist/components/button/button.js';
 
 export default class NHDropdownAccordion extends NHComponent {
   @property()
@@ -41,11 +41,6 @@ export default class NHDropdownAccordion extends NHComponent {
           </slot>
         </div>
       </sl-details>`;
-  }
-
-  static elementDefinitions = {
-    "nh-button": NHButton,
-    "sl-details": SlDetails,
   }
 
   static styles: CSSResult[] = [

@@ -2,7 +2,10 @@ import { css, CSSResult, html, TemplateResult } from "lit";
 import { property, state } from "lit/decorators.js";
 import { NHComponentShoelace } from "./ancestors/base";
 import { classMap } from "lit/directives/class-map.js";
-import { SlMenu, SlMenuItem, SlMenuLabel } from "@shoelace-style/shoelace";
+
+import '@shoelace-style/shoelace/dist/components/menu/menu.js';
+import '@shoelace-style/shoelace/dist/components/menu-item/menu-item.js';
+import '@shoelace-style/shoelace/dist/components/menu-label/menu-label.js';
 
 export type MenuSection = {
   sectionName: string;
@@ -86,12 +89,6 @@ export default class NHMenu extends NHComponentShoelace {
       })}
     `;
   }
-
-  static elementDefinitions = {
-    "sl-menu": SlMenu,
-    "sl-menu-item": SlMenuItem,
-    "sl-menu-label": SlMenuLabel,
-  };
 
   render() : TemplateResult {
     return html`

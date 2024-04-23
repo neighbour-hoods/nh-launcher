@@ -1,6 +1,5 @@
-import { NHComponent, NHButton, NHPageHeaderCard, NHDialog } from "@neighbourhoods/design-system-components";
 import { html, css } from "lit";
-import { property, state } from "lit/decorators.js";
+import { property } from "lit/decorators.js";
 import { InstallableApplets } from "./installable-applets";
 import { consume } from "@lit/context";
 import { MatrixStore } from "../../matrix-store";
@@ -8,6 +7,11 @@ import { matrixContext } from "../../context";
 import { AppInfo } from "@holochain/client";
 import { SensemakerStore } from "@neighbourhoods/client";
 import { AppletInstanceInfo } from "../../types";
+
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHPageHeaderCard from '@neighbourhoods/design-system-components/page-header-card';
+import NHDialog from '@neighbourhoods/design-system-components/dialog';;
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 
 export class AppletListItem extends NHComponent {
   @consume({ context: matrixContext , subscribe: true })

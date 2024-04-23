@@ -5,15 +5,14 @@ import { consume } from '@lit/context';
 import { MatrixStore } from '../../matrix-store';
 import { matrixContext, appletInstanceInfosContext, resourceDefContext, weGroupContext } from '../../context';
 
-import {
-  NHButton,
-  NHComponent,
-  NHPageHeaderCard,
-  NHSkeleton,
-} from '@neighbourhoods/design-system-components';
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHPageHeaderCard from '@neighbourhoods/design-system-components/page-header-card';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+import NHSkeleton from '@neighbourhoods/design-system-components/skeleton';
+import { b64images } from '@neighbourhoods/design-system-styles';
+
 import TabbedContextTables from '../lists/tabbed-context-tables';
 import { property, state } from 'lit/decorators.js';
-import { b64images } from '@neighbourhoods/design-system-styles';
 import { SensemakerStore, AppletConfig } from '@neighbourhoods/client';
 import { derived } from 'svelte/store';
 import {

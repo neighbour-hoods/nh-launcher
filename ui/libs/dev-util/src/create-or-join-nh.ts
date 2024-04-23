@@ -1,6 +1,9 @@
 import { query } from "lit/decorators.js"
 import { html, css } from "lit"
-import { NHComponent, NHButton } from '@neighbourhoods/design-system-components'
+//@ts-ignore
+import NHButton from '@neighbourhoods/design-system-components/button';
+//@ts-ignore
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 
 export default class CreateOrJoinNh extends NHComponent
 {
@@ -16,11 +19,10 @@ export default class CreateOrJoinNh extends NHComponent
             color: var(--nh-theme-info-subtle);
         }
         .nh-creation-container input {
-          /* :TODO: turn into Design System component */
             width: 15em;
         }
     `
-
+    //@ts-ignore
     @query('#ca-pubkey')
     input!: HTMLInputElement;
 
@@ -38,7 +40,7 @@ export default class CreateOrJoinNh extends NHComponent
     }
 
     dispatchCreateNeighbourhood() {
-        this.dispatchEvent(new CustomEvent('create-nh'))
+        (this as any).dispatchEvent(new CustomEvent('create-nh'))
     }
 
     dispatchJoinNeighbourhood() {
@@ -49,8 +51,7 @@ export default class CreateOrJoinNh extends NHComponent
                 bubbles: true,
                 composed: true
             };
-            console.log('ca key', newValue)
-            this.dispatchEvent(new CustomEvent('join-nh', options))
+            (this as any).dispatchEvent(new CustomEvent('join-nh', options))
             this.input.value = ''
         }
     }

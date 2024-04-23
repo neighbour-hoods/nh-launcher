@@ -1,10 +1,15 @@
-import { NHButton, NHCard, NHComponent, NHForm } from "@neighbourhoods/design-system-components";
 import { html, css, CSSResult, TemplateResult } from "lit";
+
 import { object, string, number, ObjectSchema, boolean } from 'yup';
 import { Dimension, Range, SensemakerStore, RangeKindFloat, RangeKindInteger } from "@neighbourhoods/client";
 import { property, query } from "lit/decorators.js";
 import { MAX_RANGE_FLOAT, MAX_RANGE_INT, MIN_RANGE_FLOAT, MIN_RANGE_INT } from "..";
 import { parseZomeError } from "../../utils";
+
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHCard from '@neighbourhoods/design-system-components/card';
+import NHForm from '@neighbourhoods/design-system-components/form/form';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 
 export default class CreateDimension extends NHComponent {
   @property()

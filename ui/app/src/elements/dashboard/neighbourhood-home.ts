@@ -1,22 +1,27 @@
 import { consume } from "@lit/context";
 import { html, css, CSSResult, PropertyValueMap } from "lit";
-import { get } from "svelte/store";
 
 import { matrixContext, weGroupContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 
 import { property, state } from "lit/decorators.js";
-import { NHButton, NHCard, NHComponentShoelace, NHDialog, NHPageHeaderCard, NHSkeleton, NHSpinner } from '@neighbourhoods/design-system-components';
 import { InvitationsBlock } from "../components/invitations-block";
 import { AppletLibrary } from "../components/applet-library";
-import { StoreSubscriber, subscribe } from "lit-svelte-stores";
+import { StoreSubscriber } from "lit-svelte-stores";
 import { DnaHash, EntryHash } from "@holochain/client";
 import { NeighbourhoodSettings } from "./neighbourhood-settings";
 import { ProfilePrompt } from "../components/profile-prompt";
 import { AppletNotInstalled } from "./applet-not-installed";
 import { provideWeGroupInfo } from "../../matrix-helpers";
 
-export class NeighbourhoodHome extends NHComponentShoelace {
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHCard from '@neighbourhoods/design-system-components/card';
+import NHDialog from '@neighbourhoods/design-system-components/dialog';
+import NHPageHeaderCard from '@neighbourhoods/design-system-components/page-header-card';
+import NHSpinner from '@neighbourhoods/design-system-components/spinner';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+
+export class NeighbourhoodHome extends NHComponent {
   @consume({ context: matrixContext , subscribe: true })
   @property({attribute: false})
   _matrixStore!: MatrixStore;

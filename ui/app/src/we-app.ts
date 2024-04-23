@@ -1,5 +1,5 @@
 import { provide } from "@lit/context";
-import { state, query, customElement } from "lit/decorators.js";
+import { state, customElement } from "lit/decorators.js";
 import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
 import { LitElement, html, css, TemplateResult, PropertyValueMap } from "lit";
 import './global-toast-styles.css'
@@ -9,7 +9,9 @@ import { MatrixStore } from "./matrix-store";
 import { matrixContext } from "./context";
 import { MainDashboard } from "./main-dashboard";
 import { connectHolochainApp } from "@neighbourhoods/app-loader";
-import { NHAlert, NHSpinner } from "@neighbourhoods/design-system-components";
+
+import NHAlert from '@neighbourhoods/design-system-components/alert';
+import NHSpinner from '@neighbourhoods/design-system-components/spinner';
 
 @customElement('we-app')
 export class WeApp extends ScopedRegistryHost(LitElement) {

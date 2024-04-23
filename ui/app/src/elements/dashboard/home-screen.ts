@@ -6,13 +6,13 @@ import { matrixContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 
 import { property, query } from "lit/decorators.js";
-import { NHComponentShoelace } from '@neighbourhoods/design-system-components';
 import { CreateNeighbourhoodDialog } from "../dialogs/create-nh-dialog";
 import { JoinGroupCard } from "../components/join-group-card";
 import { ManagingGroupsCard } from "../components/managing-groups-card";
 
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 
-export class HomeScreen extends NHComponentShoelace {
+export class HomeScreen extends NHComponent {
   @consume({ context: matrixContext , subscribe: true })
   @property({attribute: false})
   matrixStore!: MatrixStore;

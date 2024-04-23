@@ -11,7 +11,9 @@ import DimensionsConfig from './pages/nh-dimensions-config';
 import AssessmentWidgetConfig from './pages/nh-assessment-widget-config';
 import NHDashBoardOverview from './pages/nh-dashboard-overview';
 
-import { NHAlert, NHComponent, NHMenu } from '@neighbourhoods/design-system-components';
+import NHMenu from '@neighbourhoods/design-system-components/menu';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+
 import { property, query, state } from 'lit/decorators.js';
 import { provideWeGroupInfo } from '../matrix-helpers';
 

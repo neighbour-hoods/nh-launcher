@@ -9,7 +9,12 @@ import { provideAllApplets } from "../../matrix-helpers";
 import { matrixContext, weGroupContext } from '../../context';
 import { DnaHash, EntryHash } from '@holochain/client';
 import { fakeSeededEntryHash } from '../../utils';
-import { NHButton, NHDialog, NHForm, NHSpinner } from '@neighbourhoods/design-system-components';
+
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHDialog from '@neighbourhoods/design-system-components/dialog';
+import NHForm from '@neighbourhoods/design-system-components/form/form';
+import NHSpinner from '@neighbourhoods/design-system-components/spinner';
+
 import { object, string } from 'yup';
 
 export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {

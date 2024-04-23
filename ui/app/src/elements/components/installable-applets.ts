@@ -15,7 +15,9 @@ import { AppletMetaData } from "../../types";
 import { matrixContext, weGroupContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 import { DnaHash } from "@holochain/client";
-import { NHButton, NHSpinner } from "@neighbourhoods/design-system-components";
+
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHSpinner from '@neighbourhoods/design-system-components/spinner';
 
 export class InstallableApplets extends ScopedRegistryHost(LitElement) {
   @consume({ context: matrixContext , subscribe: true })

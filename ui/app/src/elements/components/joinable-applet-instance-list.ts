@@ -5,8 +5,11 @@ import { StoreSubscriber } from "lit-svelte-stores";
 import { matrixContext, weGroupContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 import { DnaHash, EntryHash } from "@holochain/client";
+
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 import { b64images } from "@neighbourhoods/design-system-styles";
-import { NHButton, NHComponent } from "@neighbourhoods/design-system-components";
+
 import { AppletListItem } from "./applet-list-item";
 import { provideNewAppletInstancesForGroup } from "../../matrix-helpers";
 import { property } from "lit/decorators.js";

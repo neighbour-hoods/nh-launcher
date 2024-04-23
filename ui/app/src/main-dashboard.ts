@@ -22,12 +22,17 @@ import { AppletIconBadge } from './elements/components/applet-icon-badge';
 import { getStatus } from '@neighbourhoods/app-loader';
 import { AppletNotRunning } from './elements/dashboard/applet-not-running';
 import { IconDot } from './elements/components/icon-dot';
-import { NHButton, NHDialog, NHProfileCard, NHSpinner, NHTooltip } from '@neighbourhoods/design-system-components';
 import { WithProfile } from './elements/components/profile/with-profile';
-import { b64images } from '@neighbourhoods/design-system-styles';
 import { provideMatrix } from './matrix-helpers.js';
 import { NHGlobalConfig } from './nh-config';
 import { ScopedRegistryHost } from '@lit-labs/scoped-registry-mixin';
+
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHSpinner from '@neighbourhoods/design-system-components/spinner';
+import NHTooltip from '@neighbourhoods/design-system-components/tooltip';
+import NHDialog from '@neighbourhoods/design-system-components/dialog';
+import NHProfileCard from '@neighbourhoods/design-system-components/profile/profile-card';
+import { b64images } from '@neighbourhoods/design-system-styles';
 
 export class MainDashboard extends ScopedRegistryHost(LitElement) {
   @consume({ context: matrixContext , subscribe: true })

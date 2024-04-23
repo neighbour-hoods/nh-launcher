@@ -12,24 +12,22 @@ import {
 } from '@holochain/client';
 import { compareUint8Arrays } from '@neighbourhoods/app-loader';
 
-import {
-  NHAlert,
-  NHAssessmentContainer,
-  NHButton,
-  NHButtonGroup,
-  NHCard,
-  NHComponent,
-  NHDialog,
-  NHDropdownAccordion,
-  NHForm,
-  NHPageHeaderCard,
-  NHResourceAssessmentTray,
-  NHSpinner,
-  NHTooltip,
-} from '@neighbourhoods/design-system-components';
+import NHAlert from '@neighbourhoods/design-system-components/alert';
+import NHAssessmentContainer from '@neighbourhoods/design-system-components/widgets/assessment-container';
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHButtonGroup from '@neighbourhoods/design-system-components/button-group';
+import NHCard from '@neighbourhoods/design-system-components/card';
+import NHDialog from '@neighbourhoods/design-system-components/dialog';
+import NHDropdownAccordion from '@neighbourhoods/design-system-components/dropdown-accordion';
+import NHForm from '@neighbourhoods/design-system-components/form/form';
+import NHPageHeaderCard from '@neighbourhoods/design-system-components/page-header-card';
+import NHResourceAssessmentTray from '@neighbourhoods/design-system-components/widgets/resource-assessment-tray';
+import NHSpinner from '@neighbourhoods/design-system-components/spinner';
+import NHTooltip from '@neighbourhoods/design-system-components/tooltip';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+import { b64images } from '@neighbourhoods/design-system-styles';
 
 import { property, query, queryAll, state } from 'lit/decorators.js';
-import { b64images } from '@neighbourhoods/design-system-styles';
 import {
   AssessmentWidgetBlockConfig,
   AssessmentWidgetConfig,

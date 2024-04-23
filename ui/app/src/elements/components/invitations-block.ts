@@ -5,10 +5,14 @@ import { property, query, state } from "lit/decorators.js";
 import { MatrixStore } from "../../matrix-store";
 import { matrixContext, weGroupContext } from "../../context";
 import { DnaHash, AgentPubKeyB64, decodeHashFromBase64 } from "@holochain/client";
-import { NHButton, NHCard, NHComponentShoelace, NHTextInput } from "@neighbourhoods/design-system-components";
+
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHCard from '@neighbourhoods/design-system-components/card';
+import NHTextInput from '@neighbourhoods/design-system-components/input/text';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 import { b64images } from "@neighbourhoods/design-system-styles";
 
-export class InvitationsBlock extends NHComponentShoelace {
+export class InvitationsBlock extends NHComponent {
   // TODO: add Yup schema for hash validation
   @consume({ context: matrixContext , subscribe: true })
   @property({attribute: false})

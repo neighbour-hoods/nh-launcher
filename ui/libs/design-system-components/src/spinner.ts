@@ -1,5 +1,5 @@
-import { SlSpinner } from '@shoelace-style/shoelace';
 import { NHComponentShoelace } from './ancestors/base';
+import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 
 import { css, CSSResult, html, TemplateResult } from "lit";
 import {property } from "lit/decorators.js";
@@ -16,10 +16,6 @@ export default class NHSpinner extends NHComponentShoelace {
         return html`<sl-spinner class="page-spinner"></sl-spinner>`
       default: return html``
     }
-  }
-
-  static elementDefinitions = {
-    'sl-spinner': SlSpinner,
   }
 
   static styles: CSSResult[] = [

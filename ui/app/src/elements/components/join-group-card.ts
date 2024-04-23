@@ -10,8 +10,12 @@ import { HoloHashMap } from '@holochain-open-dev/utils';
 import { AsyncStatus } from '@holochain-open-dev/stores';
 import { CreateNeighbourhoodDialog } from '../dialogs/create-nh-dialog';
 import { ActionHash, encodeHashToBase64 } from '@holochain/client';
-import { NHButton, NHButtonGroup, NHCard, NHComponent } from '@neighbourhoods/design-system-components';
 import { generateHashHTML } from './helpers/functions';
+
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHButtonGroup from '@neighbourhoods/design-system-components/button-group';
+import NHCard from '@neighbourhoods/design-system-components/card';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 import { b64images } from '@neighbourhoods/design-system-styles';
 
 export class JoinGroupCard extends NHComponent {

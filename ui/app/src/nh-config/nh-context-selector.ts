@@ -4,7 +4,11 @@ import { StoreSubscriber } from 'lit-svelte-stores';
 import { property, state } from 'lit/decorators.js';
 import { AppletConfig, ComputeContextInput, SensemakerStore, sensemakerStoreContext } from '@neighbourhoods/client';
 import { consume } from '@lit/context';
-import { NHButton, NHButtonGroup, NHComponent } from '@neighbourhoods/design-system-components';
+
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHButtonGroup from '@neighbourhoods/design-system-components/button-group';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+
 import { get } from 'svelte/store';
 
 export default class NHContextSelector extends NHComponent {

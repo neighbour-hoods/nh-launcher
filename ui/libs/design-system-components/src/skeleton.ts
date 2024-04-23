@@ -1,5 +1,5 @@
-import { SlSkeleton } from '@shoelace-style/shoelace';
 import { NHComponentShoelace } from './ancestors/base';
+import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
 
 import { css, CSSResult, html, TemplateResult } from "lit";
 import {property } from "lit/decorators.js";
@@ -27,10 +27,6 @@ export default class NHSkeleton extends NHComponentShoelace {
                     </div>`
       default: return html``
     }
-  }
-
-  static elementDefinitions = {
-    'sl-skeleton': SlSkeleton,
   }
 
   static styles: CSSResult[] = [

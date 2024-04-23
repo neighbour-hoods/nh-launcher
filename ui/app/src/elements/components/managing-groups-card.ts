@@ -1,7 +1,9 @@
-import { NHCard, NHComponentShoelace } from '@neighbourhoods/design-system-components';
 import { html, css } from 'lit';
 
-export class ManagingGroupsCard extends NHComponentShoelace {
+import NHCard from '@neighbourhoods/design-system-components/card';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+
+export class ManagingGroupsCard extends NHComponent {
   render() {
     return html`
       <nh-card .theme=${"dark"} .heading=${"Managing Neighbourhoods"} .textSize=${"md"}>

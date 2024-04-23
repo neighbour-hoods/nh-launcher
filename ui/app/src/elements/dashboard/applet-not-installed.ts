@@ -6,9 +6,11 @@ import { property, query, state } from "lit/decorators.js";
 import { matrixContext, weGroupContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 import { sharedStyles } from "../../sharedStyles";
-import { NHButton, NHSpinner } from "@neighbourhoods/design-system-components";
 import { AppletInstanceInfo, NewAppletInstanceInfo } from "../../types";
 import { InstallFromFsDialog } from "../dialogs/install-from-file-system";
+
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHSpinner from '@neighbourhoods/design-system-components/spinner';
 
 export class AppletNotInstalled extends ScopedRegistryHost(LitElement) {
   @consume({ context: matrixContext , subscribe: true })

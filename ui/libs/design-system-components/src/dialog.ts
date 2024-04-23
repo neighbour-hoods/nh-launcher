@@ -64,7 +64,7 @@ export default class NHDialog extends NHComponentShoelace {
     if(this.openButtonRef && typeof this.openButtonRef?.removeEventListener == 'function') {
       this.openButtonRef?.removeEventListener('click', this.showDialog);
     }
-    this._dialog.removeEventListener('sl-request-close', preventOverlayClose)
+    (this._dialog as any).removeEventListener('sl-request-close', preventOverlayClose)
     typeof this.onClose == 'function' && this._dialog.removeEventListener('sl-after-hide', this.onClose);
   }
 
@@ -79,7 +79,7 @@ export default class NHDialog extends NHComponentShoelace {
 
   firstUpdated() {
     if(!this._dialog) return
-    this._dialog.addEventListener('sl-request-close', preventOverlayClose)
+    (this._dialog as any).addEventListener('sl-request-close', preventOverlayClose)
     typeof this.onClose == 'function' && this._dialog.addEventListener('sl-after-hide', this.onClose);
   }
     

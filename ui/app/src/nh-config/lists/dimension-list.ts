@@ -4,7 +4,10 @@ import { property, state } from "lit/decorators.js";
 import { EntryHash, encodeHashToBase64 } from "@holochain/client";
 import { Dimension,  Method,  Range, RangeKind, SensemakerStore } from "@neighbourhoods/client";
 
-import { NHButton, NHCard, NHComponent } from "@neighbourhoods/design-system-components";
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHCard from '@neighbourhoods/design-system-components/card';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+
 import { capitalize } from "../../elements/components/helpers/functions";
 import { FieldDefinition, FieldDefinitions, Table, TableStore } from "@adaburrows/table-web-component";
 import { EntryRecord } from "@holochain-open-dev/utils";

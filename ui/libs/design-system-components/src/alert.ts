@@ -1,12 +1,12 @@
 import { classMap } from 'lit/directives/class-map.js';
 import { css, CSSResult, html, TemplateResult } from 'lit';
 import {property } from 'lit/decorators.js';
-import { NHComponentShoelace } from './ancestors/base';
+import { NHComponent } from './ancestors/base';
 import SlAlert from '@shoelace-style/shoelace/dist/components/alert/alert.js';
 
 export type AlertType = 'danger' | 'warning' | 'neutral' | 'success' | 'primary';
 
-export default class NHAlert extends NHComponentShoelace {
+export default class NHAlert extends NHComponent {
   @property()
   open: boolean = true;
   @property()

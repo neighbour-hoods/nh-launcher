@@ -1,9 +1,10 @@
-import { NHComponent } from "@neighbourhoods/design-system-components";
 import { css, html } from "lit";
 import { property } from "lit/decorators.js";
 import { NHCreateProfile } from "./profile/nh-create-profile";
 import { ProfilesStore } from "@holochain-open-dev/profiles";
 import { NeighbourhoodInfo } from "@neighbourhoods/client";
+
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 
 export class ProfilePrompt extends NHComponent {
   @property()

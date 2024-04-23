@@ -1,7 +1,6 @@
 import { classMap } from 'lit/directives/class-map.js';
 import { css, CSSResult, html, TemplateResult } from 'lit';
 import { property, query } from 'lit/decorators.js';
-import { SlInput } from '@shoelace-style/shoelace';
 import { NHComponent } from '../ancestors/base';
 
 export default class NHTextInput extends NHComponent {
@@ -32,7 +31,7 @@ export default class NHTextInput extends NHComponent {
   }
 
   handleInputChange(e: Event) {
-    this.value = (e.target as SlInput).value
+    this.value = (e.target as any).value
 
     this.dispatchEvent(
       new CustomEvent("change", {

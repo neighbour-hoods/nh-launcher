@@ -5,13 +5,19 @@ import { consume } from "@lit/context";
 
 import { matrixContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
-import { NHComponentShoelace, NHDialog, NHSelectAvatar, NHTextInput, NHTooltip } from "@neighbourhoods/design-system-components";
+
+import NHTextInput from '@neighbourhoods/design-system-components/input/text';
+import NHSelectAvatar from '@neighbourhoods/design-system-components/select-avatar';
+import NHDialog from '@neighbourhoods/design-system-components/dialog';
+import NHTooltip from '@neighbourhoods/design-system-components/tooltip';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 import { b64images } from "@neighbourhoods/design-system-styles";
+
 import { InferType, object, string } from "yup";
 
 const NH_DEFAULT_LOGO = b64images.nhIcons.logoCol;
 
-export class CreateNeighbourhoodDialog extends NHComponentShoelace {
+export class CreateNeighbourhoodDialog extends NHComponent {
   @consume({ context: matrixContext , subscribe: true })
   @property({attribute: false})
   _matrixStore!: MatrixStore;

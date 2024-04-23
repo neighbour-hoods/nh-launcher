@@ -1,9 +1,9 @@
 import { CSSResult, TemplateResult, css, html } from "lit";
 import { property, query, state } from "lit/decorators.js";
-import { NHComponent } from "./ancestors/base";
-import { SlAvatar } from "@shoelace-style/shoelace";
-import NHButton from "./button";
 import { classMap } from "lit/directives/class-map.js";
+import '@shoelace-style/shoelace/dist/components/avatar/avatar.js';
+import { NHComponent } from "./ancestors/base";
+import NHButton from "./button";
 import NHTooltip from "./tooltip";
 
 export default class NHSelectAvatar extends NHComponent {
@@ -127,7 +127,6 @@ export default class NHSelectAvatar extends NHComponent {
 
   static elementDefinitions = {
     "nh-tooltip": NHTooltip,
-    "sl-avatar": SlAvatar,
     "nh-button": NHButton,
   }
 
