@@ -1,11 +1,5 @@
 import { html, LitElement, css } from "lit";
 import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
-import {
-  Button,
-  TextField,
-  CircularProgress,
-  Card,
-} from "@scoped-elements/material-web";
 import { consume } from "@lit/context";
 import { property, query, state } from "lit/decorators.js";
 import { Task } from "@lit/task";
@@ -18,10 +12,10 @@ import {
 } from "../../processes/devhub/get-happs";
 
 import { AppletMetaData } from "../../types";
-import { CreateAppletDialog } from "../dialogs/create-applet-dialog";
 import { matrixContext, weGroupContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 import { DnaHash } from "@holochain/client";
+import { NHSpinner } from "@neighbourhoods/design-system-components";
 
 export class InstallableApplets extends ScopedRegistryHost(LitElement) {
   @consume({ context: matrixContext , subscribe: true })
@@ -46,7 +40,7 @@ export class InstallableApplets extends ScopedRegistryHost(LitElement) {
   private _selectedAppletInfo: AppletMetaData | undefined;
 
   @query("#applet-dialog")
-  _appletDialog!: CreateAppletDialog;
+  _appletDialog!: any;
 
   renderInstallableApplet(appletInfo: AppletMetaData) {
     return html`
@@ -108,20 +102,12 @@ export class InstallableApplets extends ScopedRegistryHost(LitElement) {
   render() {
     return this._installableApplets.render({
       complete: (applets) => this.renderApplets(applets),
-      pending: () => html`
-        <mwc-circular-progress indeterminate></mwc-circular-progress>
-      `,
+      pending: () => html`<nh-spinner type=${"icon"}></nh-spinner>`,
     });
   }
 
-  static get elementDefinitions() {
-    return {
-      "mwc-button": Button,
-      "mwc-textfield": TextField,
-      "mwc-circular-progress": CircularProgress,
-      "mwc-card": Card,
-      "create-applet-dialog": CreateAppletDialog,
-    };
+  static elementDefinitions = {
+    "nh-spinner": NHSpinner,
   }
 
   static localStyles = css`
