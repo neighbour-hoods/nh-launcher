@@ -5,6 +5,7 @@ import NHButton from './button'
 import NHCard from './card'
 import NHCardList from './card-list'
 import NHDialog from './dialog'
+import NHDropdownAccordion from './dropdown-accordion'
 import NHMenu from './menu'
 import NHPageHeaderCard from './page-header-card'
 import NHPagination from './pagination'
@@ -29,6 +30,7 @@ export {
   NHCard,
   NHCardList,
   NHDialog,
+  NHDropdownAccordion,
   NHMenu,
   NHPageHeaderCard,
   NHPagination,
