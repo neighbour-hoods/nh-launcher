@@ -6,7 +6,6 @@ import { consume } from "@lit/context";
 import { MatrixStore } from "../../matrix-store";
 import { matrixContext } from "../../context";
 import { AppInfo } from "@holochain/client";
-import { Snackbar } from "@scoped-elements/material-web";
 import { SensemakerStore } from "@neighbourhoods/client";
 import { AppletInstanceInfo } from "../../types";
 
@@ -37,11 +36,33 @@ export class AppletListItem extends NHComponent {
     const list = (this.parentNode as any);
     this.matrixStore.disableApp(appInfo)
       .then(() => {
-        (list.getElementById("app-disabled-snackbar") as Snackbar).show();
-        list.host.refresh();
+        this.dispatchEvent(
+          new CustomEvent("trigger-alert", {
+            detail: { 
+              title: "Applet Disabled",
+              msg: "You will no longer be able to use this applet.",
+              type: "success",
+              closable: true,
+            },
+            bubbles: true,
+            composed: true,
+          })
+        )
       }).catch((e) => {
         console.log("Error: ", e);
-        (list.getElementById("error-snackbar") as Snackbar).show();
+
+        this.dispatchEvent(
+          new CustomEvent("trigger-alert", {
+            detail: { 
+              title: "Applet Not Disabled",
+              msg: "Look in the developer console for more details.",
+              type: "danger",
+              closable: true,
+            },
+            bubbles: true,
+            composed: true,
+          })
+        )
       });
   }
 
@@ -49,11 +70,32 @@ export class AppletListItem extends NHComponent {
     const list = (this.parentNode as any);
     this.matrixStore.enableApp(appInfo)
       .then(() => {
-        (list.getElementById("app-enabled-snackbar") as Snackbar).show();
-        list.host.refresh();
+        this.dispatchEvent(
+          new CustomEvent("trigger-alert", {
+            detail: { 
+              title: "Applet Enabled",
+              msg: "You can now use this applet.",
+              type: "success",
+              closable: true,
+            },
+            bubbles: true,
+            composed: true,
+          })
+        )
       }).catch((e) => {
         console.log("Error: ", e);
-        (list.getElementById("error-snackbar") as Snackbar).show();
+        this.dispatchEvent(
+          new CustomEvent("trigger-alert", {
+            detail: { 
+              title: "Applet Not Enabled",
+              msg: "Look in the developer console for more details.",
+              type: "danger",
+              closable: true,
+            },
+            bubbles: true,
+            composed: true,
+          })
+        )
       });
   }
 
@@ -105,26 +147,27 @@ export class AppletListItem extends NHComponent {
   }
 
   render() {
-    return html`<div class="container">
-                  <div style="display: flex; flex: 1; align-items: center; gap: calc(1px * var(--nh-spacing-sm));">
-                    <img
-                      src=${this.appletInfo.applet.logoSrc!}
-                    />
-                    <h4>${this.appletInfo.applet.customName}</h4>
-                  </div>
-                  <div style="display: flex; flex: 3; align-items: center; gap: calc(1px * var(--nh-spacing-lg)); justify-content: flex-end;">
-                    <h4>${this.appletStatus}</h4>
-                    ${this.renderButtons()}
-                  </div>
-                </div>
+    return html`
+      <div class="container">
+        <div style="display: flex; flex: 1; align-items: center; gap: calc(1px * var(--nh-spacing-sm));">
+          <img
+            src=${this.appletInfo.applet.logoSrc!}
+          />
+          <h4>${this.appletInfo.applet.customName}</h4>
+        </div>
+        <div style="display: flex; flex: 3; align-items: center; gap: calc(1px * var(--nh-spacing-lg)); justify-content: flex-end;">
+          <h4>${this.appletStatus}</h4>
+          ${this.renderButtons()}
+        </div>
+      </div>
     `;
   }
 
   static elementDefinitions = {
-      "nh-button": NHButton,
-      "nh-page-header-card": NHPageHeaderCard,
-      "installable-applets": InstallableApplets,
-      "nh-dialog": NHDialog,
+    "nh-button": NHButton,
+    "nh-page-header-card": NHPageHeaderCard,
+    "installable-applets": InstallableApplets,
+    "nh-dialog": NHDialog,
   }
 
   static get styles() {
