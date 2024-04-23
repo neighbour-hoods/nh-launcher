@@ -1,18 +1,17 @@
 import { consume } from '@lit/context';
 import { b64images } from '@neighbourhoods/design-system-styles';
 import { classMap } from 'lit/directives/class-map.js';
-import { cleanForUI, snakeCase } from '../../elements/components/helpers/functions';
-import { CSSResult, PropertyValueMap, css, html } from 'lit';
+import { cleanForUI } from '../../elements/components/helpers/functions';
+import { CSSResult, css, html } from 'lit';
 import { NHAlert, NHButton, NHButtonGroup, NHComponent, NHPageHeaderCard, NHTabButton, NHTooltip } from '@neighbourhoods/design-system-components';
-import { property, query, state } from 'lit/decorators.js';
-import { SlTab, SlTabGroup, SlTabPanel } from '@scoped-elements/shoelace';
+import { property, query } from 'lit/decorators.js';
 import NHContextSelector from '../nh-context-selector';
 import { AssessmentTableType } from '../types';
 import { resourceDefContext } from '../../context';
 import { ResourceDef } from '@neighbourhoods/client';
 import { DashboardFilterMap } from './dashboard-filter-map';
-import { encodeHashToBase64 } from '@holochain/client';
 
+// TODO: componentise remaining tab/table logic and styles, wire up, once Spaces have replaced contexts.
 export default class TabbedContextTables extends NHComponent {
   @property() loaded!: boolean;
   @property() selectedContextEhB64: string = 'none';
@@ -24,21 +23,7 @@ export default class TabbedContextTables extends NHComponent {
 
   @property({ attribute: false }) resourceDefEntries!: object[];
   
-  @query('#danger-toast-1') private _dangerAlert;
   @query('dashboard-filter-map') private _table;
-
-  protected updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    if(!this?.contexts || this.contexts.length == 0) {
-      try {
-        // this._dangerAlert.openToast();
-      } catch (error) {
-        console.log('error :>> ', error);
-      }
-    } else {
-      this._table.loaded = true;
-      this._table.requestUpdate();
-    }
-  }
 
   renderActionButtons() {
     return html`
@@ -61,18 +46,10 @@ export default class TabbedContextTables extends NHComponent {
     `
   }
 
-  renderTabPanel(type: AssessmentTableType) {
+  renderTable(type: AssessmentTableType) {
     return html`
-      <sl-tab-panel
+      <div
         class="dashboard-tab-panel"
-        name=${type}
-        .active=${type == "resource"}
-        @display-context=${(e: CustomEvent) => {
-          const flatResults = typeof e.detail.results == "object" ? e.detail.results[this.selectedContextEhB64].flat() : [];
-          const dashboardFilterComponent = (e.currentTarget as any).children[0];
-          console.log('contextEhs :>> ', flatResults.map(eh => encodeHashToBase64(eh)));
-          // dashboardFilterComponent.contextEhsB64 = flatResults.map(eh => encodeHashToBase64(eh));
-        }}
       >
         <dashboard-filter-map
           .tableType=${type}
@@ -82,13 +59,13 @@ export default class TabbedContextTables extends NHComponent {
           .selectedContextEhB64=${this.selectedContextEhB64}
           .loaded=${this.loaded}
         ></dashboard-filter-map>
-      </sl-tab-panel>
+      </div>
     `
   }
 
   render() {
     return html`
-      <nh-page-header-card class="nested" role="navigation" .heading=${''}>
+      <nav>
         <nh-tab-button
           slot="primary-action"
           .fixed=${true}
@@ -97,21 +74,9 @@ export default class TabbedContextTables extends NHComponent {
         >
           ${(!this?.selectedResourceDef ? "All Resources" : cleanForUI((this?.selectedResourceDef as ResourceDef)!.resource_name))}
         </nh-tab-button>
-        
-        ${this.renderActionButtons()}
-      </nh-page-header-card>
+      </nav>
 
-      ${this.renderTabPanel(this.selectedContextEhB64 == 'none' ? AssessmentTableType.Resource : AssessmentTableType.Context)} 
-
-      <nh-alert 
-        id="danger-toast-1"
-        .title=${"You do not have any applets yet."}
-        .description=${"Return to your Neighbourhood home page by clicking its icon on the left sidebar, or the back arrow from this page. Then just install an applet to enable configuring of widgets."}
-        .closable=${false}
-        .isToast=${true}
-        .open=${false}
-        .type=${"danger"}>
-      </nh-alert>
+      ${this.renderTable(this.selectedContextEhB64 == 'none' ? AssessmentTableType.Resource : AssessmentTableType.Context)}
     `;
   }
 
@@ -121,7 +86,6 @@ export default class TabbedContextTables extends NHComponent {
     'nh-button': NHButton,
     'nh-button-group': NHButtonGroup,
     'nh-page-header-card': NHPageHeaderCard,
-    'sl-tab-panel': SlTabPanel,
     'nh-tab-button': NHTabButton,
     'nh-context-selector': NHContextSelector,
     'dashboard-filter-map': DashboardFilterMap,
@@ -136,9 +100,10 @@ export default class TabbedContextTables extends NHComponent {
         grid-column: 1/-1;
       }
 
-      nh-page-header-card {
+      nav {
         display: flex;
         flex: 1;
+        margin-left: calc(1px * var(--nh-spacing-sm));
       }
 
       /* Side scrolling **/
@@ -146,11 +111,11 @@ export default class TabbedContextTables extends NHComponent {
         display: flex;
         flex: 1;
         flex-direction: column;
-
         max-width: calc(100vw - calc(1px * var(--nh-spacing-sm)));
         overflow: hidden;
         background: var(--nh-theme-bg-canvas);
       }
+
       .dashboard-tab-panel {
         overflow: auto;
       }
@@ -179,50 +144,6 @@ export default class TabbedContextTables extends NHComponent {
       [slot='buttons'] :hover::part(base) {
         background-color: var(--nh-theme-bg-canvas);
         color: var(--nh-theme-accent-emphasis);
-      }
-
-      /* Tab hover effect */
-      [slot='buttons'] :hover::part(base)::after,
-      [slot='buttons'] .active::part(base)::after {
-        position: absolute;
-        background-color: var(--nh-theme-bg-canvas);
-        bottom: calc(-1px * var(--nh-spacing-sm));
-        left: 0px;
-        content: '';
-        width: 100%;
-        bottom: calc(-1px * var(--nh-spacing-lg));
-        height: calc(1px * var(--nh-spacing-lg));
-      }
-
-      [slot='button-fixed']::part(base) {
-        color: var(--nh-theme-fg-default);
-        background-color: var(--nh-theme-bg-element);
-        border: 4px solid --nh-colors-eggplant-800;
-        border-radius: calc(8px);
-        border-bottom-right-radius: 0;
-        border-top-right-radius: 0;
-      }
-      [slot='button-fixed'].active::part(base) {
-        background-color: var(--nh-theme-bg-canvas);
-      }
-
-      /* Divider after resource name */
-      [slot='button-fixed'].resource::before {
-        position: absolute;
-        background-color: var(--nh-theme-bg-surface);
-        bottom: 1px;
-        right: -3px;
-        content: '';
-        height: calc(100% - 2px);
-        width: 2px;
-      }
-
-      /** Tab Panels **/
-      .dashboard-tab-panel::part(base) {
-        padding: 0;
-      }
-      .dashboard-tab-group::part(tabs) {
-        border: none;
       }
     `]
 }
