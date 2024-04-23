@@ -22,7 +22,7 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "scripts": {
-    "build": "vite build && tsc"
+    "build": "rm -rf ./dist; vite build && tsc"
   },
   "devDependencies": {
     "tslib": "^2.6.2",

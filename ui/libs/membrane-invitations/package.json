@@ -17,7 +17,7 @@
   ],
   "scripts": {
     "prepare": "pnpm build",
-    "build": "tsc --build",
+    "build": "rm -rf ./dist; tsc --build",
     "build:watch": "tsc --watch --preserveWatchOutput"
   },
   "type": "module",
