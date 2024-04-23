@@ -1,23 +1,12 @@
-import { JoinMembraneInvitation } from "@neighbourhoods/membrane-invitations";
 import { consume } from "@lit/context";
-import { decode } from "@msgpack/msgpack";
 import { html, css } from "lit";
 import { StoreSubscriber   } from "lit-svelte-stores";
-import {
-  Button,
-  Card,
-  Snackbar,
-  Icon,
-  Dialog,
-  IconButton,
-} from "@scoped-elements/material-web";
-
 import { matrixContext, weGroupContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 import { sharedStyles } from "../../sharedStyles";
 import { property, query, state } from "lit/decorators.js";
 import { CreateNeighbourhoodDialog } from "../dialogs/create-nh-dialog";
-import { ActionHash, DnaHash, AppInfo } from "@holochain/client";
+import { DnaHash, AppInfo } from "@holochain/client";
 import { getStatus } from "@neighbourhoods/app-loader";
 import { SensemakerStore, sensemakerStoreContext } from "@neighbourhoods/client";
 import { NHButton, NHComponent, NHDialog } from "@neighbourhoods/design-system-components";
@@ -44,56 +33,47 @@ export class AppletInstanceStatusList extends NHComponent {
     () => this.matrixStore.getAppletInstanceInfosForGroup(this.weGroupId)
   );
 
-  @query("#copied-snackbar")
-  _copiedSnackbar!: Snackbar;
-
   @query("#uninstall-applet-dialog")
   _uninstallAppletDialog;
 
   @state()
   private _currentAppInfo!: AppletInstanceInfo;
 
-  async joinGroup(
-    invitationActionHash: ActionHash,
-    invitation: JoinMembraneInvitation
-  ) {
-    const properties = decode(invitation.clone_dna_recipe.properties) as any;
-    await this.matrixStore
-      .joinWeGroup(
-        invitationActionHash,
-        properties.name,
-        properties.logoSrc,
-        properties.timestamp,
-        properties.caPubKey
-      )
-      .then((weGroupId) => {
-        this.dispatchEvent(
-          new CustomEvent("we-group-joined", {
-            detail: weGroupId,
-            bubbles: true,
-            composed: true,
-          })
-        );
-      })
-      .catch((e) => {
-        if (e.data.data) {
-          if (e.data.data.includes("AppAlreadyInstalled")) {
-            (this.shadowRoot?.getElementById("error-snackbar") as Snackbar).show();
-          }
-        }
-      });
-  }
-
   async uninstallApp(appInfo: AppInfo) {
     console.log("Uninstalling applet: ", appInfo);
     this.matrixStore.uninstallApp(appInfo)
       .then(async () => {
-        (this.shadowRoot?.getElementById("app-uninstalled-snackbar") as Snackbar).show();
         await this.matrixStore.fetchMatrix();
         this.requestUpdate();
+        await this.updateComplete;
+
+        this.dispatchEvent(
+          new CustomEvent("trigger-alert", {
+            detail: { 
+              title: "Applet Uninstalled",
+              msg: "You will no longer be able to access this applet or its data.",
+              type: "success",
+              closable: true,
+            },
+            bubbles: true,
+            composed: true,
+          })
+        )
       }).catch((e) => {
         console.log("Error: ", e);
-        (this.shadowRoot?.getElementById("error-snackbar") as Snackbar).show();
+
+        this.dispatchEvent(
+          new CustomEvent("trigger-alert", {
+            detail: { 
+              title: "Error During Uninstall",
+              msg: "Look in the developer console for more information.",
+              type: "danger",
+              closable: true,
+            },
+            bubbles: true,
+            composed: true,
+          })
+        )
       });
   }
 
@@ -137,27 +117,6 @@ export class AppletInstanceStatusList extends NHComponent {
 
   render() {
     return html`
-      <mwc-snackbar
-        id="app-disabled-snackbar"
-        timeoutMs="4000"
-        labelText="Applet disabled."
-      ></mwc-snackbar>
-      <mwc-snackbar
-        id="app-enabled-snackbar"
-        timeoutMs="4000"
-        labelText="Applet started."
-      ></mwc-snackbar>
-      <mwc-snackbar
-        id="app-uninstalled-snackbar"
-        timeoutMs="4000"
-        labelText="Applet uninstalled."
-      ></mwc-snackbar>
-      <mwc-snackbar
-        style="text-align: center;"
-        id="error-snackbar"
-        labelText="Error."
-      ></mwc-snackbar>
-
       <uninstall-applet-dialog
         id="uninstall-applet-dialog"
         @confirm-uninstall=${() => {this.uninstallApp(this._currentAppInfo.appInfo)}}
@@ -167,20 +126,12 @@ export class AppletInstanceStatusList extends NHComponent {
     `;
   }
 
-  static get elementDefinitions() {
-    return {
-      "nh-button": NHButton,
-      "mwc-button": Button,
-      "mwc-icon-button": IconButton,
-      "mwc-card": Card,
-      "mwc-icon": Icon,
-      "mwc-snackbar": Snackbar,
-      "create-we-group-dialog": CreateNeighbourhoodDialog,
-      "mwc-dialog": Dialog,
-      "applet-list-item": AppletListItem,
-      "uninstall-applet-dialog": UninstallApplet,
-      'nh-dialog': NHDialog,
-    };
+  static elementDefinitions = {
+    "nh-button": NHButton,
+    "create-we-group-dialog": CreateNeighbourhoodDialog,
+    "applet-list-item": AppletListItem,
+    "uninstall-applet-dialog": UninstallApplet,
+    'nh-dialog': NHDialog,
   }
 
   static get styles() {
