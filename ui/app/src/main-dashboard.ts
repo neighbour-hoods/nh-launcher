@@ -3,7 +3,6 @@ import { state, query, queryAsync, property } from 'lit/decorators.js';
 import { DnaHash, EntryHash, encodeHashToBase64 } from '@holochain/client';
 import { html, css, CSSResult, unsafeCSS, LitElement } from 'lit';
 import { StoreSubscriber } from 'lit-svelte-stores';
-import { CircularProgress, Fab, Icon, Snackbar } from '@scoped-elements/material-web';
 import { classMap } from 'lit/directives/class-map.js';
 import { matrixContext } from './context';
 import { MatrixStore } from './matrix-store';
@@ -15,7 +14,6 @@ import { SidebarButton } from './elements/components/sidebar-button';
 import { CreateNeighbourhoodDialog } from './elements/dialogs/create-nh-dialog';
 import { WeGroupContext } from './elements/we-group-context';
 import { NeighbourhoodHome } from './elements/dashboard/neighbourhood-home';
-import { SensemakerDashboard } from './elements/dashboard/sensemaker-dashboard';
 import { AppletInstanceRenderer } from './elements/dashboard/applet-instance-renderer';
 import { AppletNotInstalled } from './elements/dashboard/applet-not-installed';
 import { NotificationDot } from './elements/components/notification-dot';
@@ -24,7 +22,7 @@ import { AppletIconBadge } from './elements/components/applet-icon-badge';
 import { getStatus } from '@neighbourhoods/app-loader';
 import { AppletNotRunning } from './elements/dashboard/applet-not-running';
 import { IconDot } from './elements/components/icon-dot';
-import { NHAlert, NHButton, NHDialog, NHProfileCard, NHSpinner, NHTooltip } from '@neighbourhoods/design-system-components';
+import { NHButton, NHDialog, NHProfileCard, NHSpinner, NHTooltip } from '@neighbourhoods/design-system-components';
 import { WithProfile } from './elements/components/profile/with-profile';
 import { b64images } from '@neighbourhoods/design-system-styles';
 import { provideMatrix } from './matrix-helpers.js';
@@ -395,7 +393,6 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
     this._selectedWeGroupId = undefined;
     this._dashboardMode = DashboardMode.MainHome;
     this._navigationMode = NavigationMode.Agnostic;
-    (this.shadowRoot?.getElementById('group-left-snackbar') as Snackbar).show();
   }
 
   handleAppletInstalled(e: CustomEvent) {
