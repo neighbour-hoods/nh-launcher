@@ -1,13 +1,11 @@
 import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
-import { Button, CircularProgress, Icon, IconButtonToggle, Snackbar } from "@scoped-elements/material-web";
 import { css, html, LitElement } from "lit";
 import { sharedStyles } from "../../sharedStyles";
+
 export class AppletNotRunning extends ScopedRegistryHost(LitElement) {
 
   render() {
-
     return html`
-
       <div class="flex-scrollable-parent">
         <div class="flex-scrollable-container">
           <div class="flex-scrollable-y">
@@ -20,20 +18,13 @@ export class AppletNotRunning extends ScopedRegistryHost(LitElement) {
               </div>
               <div
                 style="margin-top: 70px; font-size: 1.2em; text-align: center; max-width: 700px; line-height: 1.7">
-                Go to the <strong>Neighbourhood Settings</strong> (<mwc-icon style="position: relative; top: 0.25em;">settings</mwc-icon>) of the neighbourhood in which this applet is installed to boot it up again.
+                Go to the <strong>Neighbourhood Settings</strong> <em>settings</em> of the neighbourhood in which this applet is installed to boot it up again.
               </div>
             </div>
           </div>
         </div>
       </div>
     `;
-  }
-
-
-  static get elementDefinitions() {
-    return {
-      "mwc-icon": Icon,
-    };
   }
 
   static get styles() {
