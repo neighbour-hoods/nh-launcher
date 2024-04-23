@@ -20,6 +20,7 @@ import {
   NHCard,
   NHComponent,
   NHDialog,
+  NHDropdownAccordion,
   NHForm,
   NHPageHeaderCard,
   NHResourceAssessmentTray,
@@ -29,8 +30,6 @@ import {
 
 import { property, query, queryAll, state } from 'lit/decorators.js';
 import { b64images } from '@neighbourhoods/design-system-styles';
-import { SlDetails, SlSpinner } from '@scoped-elements/shoelace';
-import { classMap } from 'lit/directives/class-map.js';
 import {
   AssessmentWidgetBlockConfig,
   AssessmentWidgetConfig,
@@ -328,71 +327,29 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
             >Update Config</nh-button>
           </div>
 
-          <sl-details
-            class="${classMap({
-              editing: !!this.editingConfig,
-            })}"
+          <nh-dropdown-accordion
             .open=${!!this.editingConfig}
-            @sl-hide=${(_e: Event) => {
-              this.editingConfig = false;
-            }}
             @submit-successful=${async () => {
               this.placeHolderWidget = undefined;
               this.requestUpdate()
               await this.updateComplete
-            }}
-          >
-            <div>
+          }}>
+            <div slot="inner-content">
               <h2>${this.editMode ? "Update Control" : "Add Control"}</h2>
-              ${this.renderMainForm(!!foundEditableWidget ? foundEditableWidget : null, !!foundEditableWidgetConfig ? foundEditableWidgetConfig : null, )}
+              ${this.renderMainForm(!!foundEditableWidget ? foundEditableWidget : null, !!foundEditableWidgetConfig ? foundEditableWidgetConfig : null)}
             </div>
-            <nh-button-group
-              .direction=${'horizontal'}
-              class="action-buttons"input
-            >
-              <span slot="buttons">
-                <nh-button
-                  id="close-widget-config"
-                  .variant=${'danger'}
-                  .size=${'md'}
-                  @click=${async () => {
-                    this.editingConfig = false;
-                    await this.resetWorkingState()
-                  }}
-                >Cancel</nh-button>
-
-                <nh-button
-                  id="reset-widget-config"
-                  .variant=${'warning'}
-                  .size=${'md'}
-                  @click=${async () => {
-                    if(!this.editingConfig) {
-                      await this.resetWorkingState();
-                      this.reselectPlaceholderControl()
-                    }
-                    this._form.reset()
-                  }}
-                >Reset</nh-button>
-
-                <nh-button
-                  type="submit"
-                  id="add-widget-config"
-                  .variant=${'success'}
-                  .size=${'md'}
-                >${this.editMode ? "Update" : "Add"}</nh-button>
-              </span>
-            </nh-button-group>
+            ${this.renderButtonGroup()}
+          </nh-dropdown-accordion>
+            
+          <nh-alert
+            id="success-toast"
+            .title=${"You have saved your changes."}
+            .description=${"You have saved your changes."}
+            .closable=${true}
+            .isToast=${true}
+            .open=${false}
+            .type=${"success"}></nh-alert>
           </div>
-        </sl-details>
-        <nh-alert
-          id="success-toast"
-          .title=${"You have saved your changes."}
-          .description=${"You have saved your changes."}
-          .closable=${true}
-          .isToast=${true}
-          .open=${false}
-          .type=${"success"}></nh-alert>
-        </div>
         </div>
       </div>
     </div>`;
@@ -505,6 +462,48 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
 
     e.currentTarget.requestUpdate();
     await e.currentTarget.updateComplete;
+  }
+
+  private renderButtonGroup(): TemplateResult {
+    return html`
+      <nh-button-group
+        .direction=${'horizontal'}
+        class="action-buttons"
+        slot="actions"
+      >
+        <span slot="buttons">
+          <nh-button
+            id="close-widget-config"
+            .variant=${'danger'}
+            .size=${'md'}
+            @click=${async () => {
+              this.editingConfig = false;
+              await this.resetWorkingState()
+            }}
+          >Cancel</nh-button>
+
+          <nh-button
+            id="reset-widget-config"
+            .variant=${'warning'}
+            .size=${'md'}
+            @click=${async () => {
+              if(this.editingConfig) {
+                await this.resetWorkingState();
+                this.reselectPlaceholderControl()
+              }
+              this._form.reset()
+            }}
+          >Reset</nh-button>
+
+          <nh-button
+            type="submit"
+            id="add-widget-config"
+            .variant=${'success'}
+            .size=${'md'}
+          >${this.editMode ? "Update" : "Add"}</nh-button>
+        </span>
+      </nh-button-group>
+    `
   }
 
   private renderMainForm(foundEditableWidget?: AssessmentWidgetRegistrationInput | null, foundEditableWidgetConfig?: AssessmentWidgetConfig | null): TemplateResult {
@@ -681,7 +680,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     'nh-dialog': NHDialog,
     'nh-page-header-card': NHPageHeaderCard,
     'nh-tooltip': NHTooltip,
-    'sl-details': SlDetails,
+    'nh-dropdown-accordion': NHDropdownAccordion,
     'nh-spinner': NHSpinner,
     'nh-alert': NHAlert,
     'assessment-widget-tray': NHResourceAssessmentTray,
@@ -739,35 +738,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
         align-items: center;
         justify-content: space-around;
         width: 100%;
-      }
-
-      /* Slide up accordion for main form container, uses sl-details */
-
-      sl-details {
-        margin-top: 3em;
-      }
-
-      sl-details.editing::part(base) {
-        opacity: 1;
-      }
-
-      sl-details::part(content) {
-        min-height: 28rem;
-        padding: calc(1px * var(--nh-spacing-xl));
-      }
-
-      sl-details::part(base) {
-        opacity: 0;
-        transition: 0.5s all cubic-bezier(0.4, 0, 1, 1);
-
-        border-radius: calc(1px * var(--nh-radii-lg));
-        background-color: var(--nh-theme-bg-surface);
-        border-color: var(--nh-theme-fg-disabled);
-        margin: 0 calc(1px * var(--nh-spacing-lg));
-      }
-
-      sl-details::part(summary-icon) {
-        display: none;
       }
 
       /* Form actions */
