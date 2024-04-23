@@ -15,7 +15,7 @@ import { AppletMetaData } from "../../types";
 import { matrixContext, weGroupContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 import { DnaHash } from "@holochain/client";
-import { NHSpinner } from "@neighbourhoods/design-system-components";
+import { NHButton, NHSpinner } from "@neighbourhoods/design-system-components";
 
 export class InstallableApplets extends ScopedRegistryHost(LitElement) {
   @consume({ context: matrixContext , subscribe: true })
@@ -44,22 +44,19 @@ export class InstallableApplets extends ScopedRegistryHost(LitElement) {
 
   renderInstallableApplet(appletInfo: AppletMetaData) {
     return html`
-      <mwc-card class="applet-card">
-        <div style="height: 145px;">
-          <h2 style="padding: 5px; margin:0;">${appletInfo.title}</h2>
-          <h3 style="padding: 5px; margin: 0;">${appletInfo.subtitle}</h3>
-          <div style="height: 70px; overflow-y: auto; padding: 5px;">
-            ${appletInfo.description}
-          </div>
+      <div style="height: 145px;">
+        <h2 style="padding: 5px; margin:0;">${appletInfo.title}</h2>
+        <h3 style="padding: 5px; margin: 0;">${appletInfo.subtitle}</h3>
+        <div style="height: 70px; overflow-y: auto; padding: 5px;">
+          ${appletInfo.description}
         </div>
-        <mwc-button
-          outlined
-          @click=${() => {
-            this._appletDialog.open(appletInfo);
-          }}
-          >Add to neighbourhood</mwc-button
-        >
-      </mwc-card>
+      </div>
+      <nh-button
+        @click=${() => {
+          this._appletDialog.open(appletInfo);
+        }}
+      >Add to neighbourhood</nh-button
+      >
     `;
   }
 
@@ -108,6 +105,7 @@ export class InstallableApplets extends ScopedRegistryHost(LitElement) {
 
   static elementDefinitions = {
     "nh-spinner": NHSpinner,
+    "nh-button": NHButton,
   }
 
   static localStyles = css`

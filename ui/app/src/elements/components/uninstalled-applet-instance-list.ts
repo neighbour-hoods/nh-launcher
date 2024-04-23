@@ -2,20 +2,10 @@ import { consume } from "@lit/context";
 import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
 import { html, LitElement, css } from "lit";
 import { StoreSubscriber } from "lit-svelte-stores";
-import {
-  Button,
-  List,
-  ListItem,
-  Card,
-  Snackbar,
-  Icon,
-  Dialog,
-} from "@scoped-elements/material-web";
-
 import { matrixContext, weGroupContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 import { sharedStyles } from "../../sharedStyles";
-import { property, query, state } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import { DnaHash, EntryHash } from "@holochain/client";
 import { b64images } from "@neighbourhoods/design-system-styles";
 import { NHButton } from "@neighbourhoods/design-system-components";
@@ -84,27 +74,6 @@ export class UninstalledAppletInstanceList extends ScopedRegistryHost(LitElement
 
   render() {
     return html`
-      <mwc-snackbar
-        id="app-disabled-snackbar"
-        timeoutMs="4000"
-        labelText="Applet disabled."
-      ></mwc-snackbar>
-      <mwc-snackbar
-        id="app-enabled-snackbar"
-        timeoutMs="4000"
-        labelText="Applet started."
-      ></mwc-snackbar>
-      <mwc-snackbar
-        id="app-uninstalled-snackbar"
-        timeoutMs="4000"
-        labelText="Applet uninstalled."
-      ></mwc-snackbar>
-      <mwc-snackbar
-        style="text-align: center;"
-        id="error-snackbar"
-        labelText="Error."
-      ></mwc-snackbar>
-
       <uninstall-applet-dialog
         id="uninstall-applet-dialog"
         @confirm-uninstall=${() => {this.reinstallApp(this._currentAppInfo.appletId)}}
@@ -114,12 +83,9 @@ export class UninstalledAppletInstanceList extends ScopedRegistryHost(LitElement
     `;
   }
 
-  static get elementDefinitions() {
-    return {
-      "nh-button": NHButton,
-      "mwc-snackbar": Snackbar,
-      "applet-list-item": AppletListItem,
-    };
+  static elementDefinitions = {
+    "nh-button": NHButton,
+    "applet-list-item": AppletListItem,
   }
 
   static get styles() {

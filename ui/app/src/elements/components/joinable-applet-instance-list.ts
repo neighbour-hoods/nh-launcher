@@ -1,7 +1,6 @@
 import { consume } from "@lit/context";
 import { html, css } from "lit";
 import { StoreSubscriber } from "lit-svelte-stores";
-import { Snackbar } from "@scoped-elements/material-web";
 
 import { matrixContext, weGroupContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
@@ -39,10 +38,9 @@ export class JoinableAppletInstanceList extends NHComponent {
 
   refresh() {
     provideNewAppletInstancesForGroup(this.matrixStore, this.weGroupId)
-    // this.requestUpdate();
   }
 
-  renderAppStates() {
+  render() {
     const applets = this._joinableApplets.value
     return html`
       ${applets.length === 0
@@ -64,37 +62,9 @@ export class JoinableAppletInstanceList extends NHComponent {
       `
   }
 
-  render() {
-    return html`
-      <mwc-snackbar
-        id="app-disabled-snackbar"
-        timeoutMs="4000"
-        labelText="Applet disabled."
-      ></mwc-snackbar>
-      <mwc-snackbar
-        id="app-enabled-snackbar"
-        timeoutMs="4000"
-        labelText="Applet started."
-      ></mwc-snackbar>
-      <mwc-snackbar
-        id="app-uninstalled-snackbar"
-        timeoutMs="4000"
-        labelText="Applet uninstalled."
-      ></mwc-snackbar>
-      <mwc-snackbar
-        style="text-align: center;"
-        id="error-snackbar"
-        labelText="Error."
-      ></mwc-snackbar>
-
-      ${this.renderAppStates()}
-    `;
-  }
-
   static elementDefinitions = {
     "applet-list-item": AppletListItem,
     "nh-button": NHButton,
-    "mwc-snackbar": Snackbar,
   }
 
   static get styles() {
