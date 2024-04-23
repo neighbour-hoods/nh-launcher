@@ -75,8 +75,8 @@ export class DashboardTable extends NHComponent {
           bubbles: true,
           composed: true,
         })
-        );
-        this.showSkeleton = true;
+      );
+      this.showSkeleton = true;
     }
     if(typeof this.contextFieldDefs == 'object') this.columns = Object.values(this.contextFieldDefs).length + 2
   }
