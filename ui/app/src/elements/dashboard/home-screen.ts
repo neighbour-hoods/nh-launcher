@@ -2,11 +2,6 @@ import { JoinMembraneInvitation } from "@neighbourhoods/membrane-invitations";
 import { consume } from "@lit/context";
 import { decode } from "@msgpack/msgpack";
 import { html, css, CSSResult } from "lit";
-import {
-  Snackbar,
-  Dialog,
-} from "@scoped-elements/material-web";
-
 import { matrixContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 
@@ -26,10 +21,7 @@ export class HomeScreen extends NHComponentShoelace {
   _weGroupDialog!: CreateNeighbourhoodDialog;
 
   @query("#join-group-dialog")
-  _joinGroupDialog!: Dialog;
-
-  @query("#copied-snackbar")
-  _copiedSnackbar!: Snackbar;
+  _joinGroupDialog!: any;
 
   weName(invitation: JoinMembraneInvitation) {
     return (decode(invitation.clone_dna_recipe.properties) as any).name;
@@ -47,16 +39,10 @@ export class HomeScreen extends NHComponentShoelace {
             <create-we-group-dialog
               id="we-dialog"
             ></create-we-group-dialog>
-            <mwc-snackbar
-              id="copied-snackbar"
-              timeoutMs="4000"
-              labelText="Copied!"
-              style="text-align: center;"
-            ></mwc-snackbar>
 
             <div class="column content-pane center-content">
-                <managing-groups-card></managing-groups-card>
-                <join-group-card ></join-group-card>
+              <managing-groups-card></managing-groups-card>
+              <join-group-card ></join-group-card>
             </div>
           </div>
         </div>
@@ -64,13 +50,10 @@ export class HomeScreen extends NHComponentShoelace {
     `;
   }
 
-  static get elementDefinitions() {
-    return {
-      "mwc-snackbar": Snackbar,
-      "create-we-group-dialog": CreateNeighbourhoodDialog,
-      "join-group-card": JoinGroupCard,
-      "managing-groups-card": ManagingGroupsCard,
-    };
+  static elementDefinitions = {
+    "create-we-group-dialog": CreateNeighbourhoodDialog,
+    "join-group-card": JoinGroupCard,
+    "managing-groups-card": ManagingGroupsCard,
   }
 
   static styles : CSSResult[] = [
