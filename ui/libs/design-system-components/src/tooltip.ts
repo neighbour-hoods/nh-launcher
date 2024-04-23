@@ -60,7 +60,7 @@ export default class NHTooltip extends NHComponentShoelace {
         position: absolute;
         top: 105%;
         right: 0%;
-        width: 100%;
+        width: fit-content;
 
         text-align: left;
         padding: 4px 8px 8px 8px;

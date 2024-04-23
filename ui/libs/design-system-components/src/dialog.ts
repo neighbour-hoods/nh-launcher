@@ -207,14 +207,12 @@ export default class NHDialog extends NHComponentShoelace {
     if(result && result.preventDefault) this.showDialog();
   };
 
-  static get elementDefinitions() {
-    return {
-      'sl-dialog': SlDialog,
-      'nh-alert': NHAlert,
-      'sl-button-group': SlButtonGroup,
-      'sl-button': SlButton,
-      'nh-button': NHButton,
-    };
+  static elementDefinitions = {
+    'sl-dialog': SlDialog,
+    'nh-alert': NHAlert,
+    'sl-button-group': SlButtonGroup,
+    'sl-button': SlButton,
+    'nh-button': NHButton,
   }
 
   static styles: CSSResult[] = [
@@ -235,6 +233,7 @@ export default class NHDialog extends NHComponentShoelace {
       }
 
       #main.medium::part(panel) {
+        min-height: 33vh;
         max-height: 90vh;
         min-width: 50vw;
       }
@@ -278,6 +277,10 @@ export default class NHDialog extends NHComponentShoelace {
         font-family: var(--nh-font-families-headlines);
         padding: calc(1px * var(--nh-spacing-sm));
         color: var(--nh-theme-fg-muted);
+      }
+
+      :host(.no-title) #main::part(title) {
+        height: 0;
       }
 
       #main::part(title) {

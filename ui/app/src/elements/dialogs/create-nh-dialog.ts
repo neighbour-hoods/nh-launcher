@@ -88,25 +88,16 @@ export class CreateNeighbourhoodDialog extends NHComponentShoelace {
     return html`
       <nh-dialog
         id="dialog"
-        dialogType="create-neighbourhood"
-        title="Create Neighbourhood"
+        class="no-title"
+        .dialogType=${"create-neighbourhood"}
+        .title="Create Neighbourhood"
         .handleOk=${this.onSubmit.bind(this)}
         .handleClose=${this.reset.bind(this)}
-        openButtonRef=${this.openDialogButton}
+        .size=${"medium"}
+        .openButtonRef=${this.openDialogButton}
         .primaryButtonDisabled=${!this._neighbourhoodSchema.isValidSync(this._neighbourhood)}
       >
         <div slot="inner-content" class="row">
-          <nh-select-avatar
-            slot="hoverable"
-            id="select-avatar"
-            .defaultTooltip=${"NH Image"}
-            .shape=${'circle'}
-            .label=${"Image"}
-            .size=${"lg"}
-            .value=${this._neighbourhood.image}
-            .defaultValue=${NH_DEFAULT_LOGO}
-          ></nh-select-avatar>
-
           <nh-tooltip .visible=${!this.validName} .text=${"Your Neighbourhood name should be at least 3 characters"} .variant=${"danger"}>
             <nh-text-input
               slot="hoverable"
@@ -120,6 +111,17 @@ export class CreateNeighbourhoodDialog extends NHComponentShoelace {
               @change=${(e: CustomEvent) => this.handleNameChange(e)}
             ></nh-text-input>
           </nh-tooltip>
+
+          <nh-select-avatar
+            slot="hoverable"
+            id="select-avatar"
+            .defaultTooltip=${"NH Image"}
+            .shape=${'circle'}
+            .label=${"Image"}
+            .size=${"lg"}
+            .value=${this._neighbourhood.image}
+            .defaultValue=${NH_DEFAULT_LOGO}
+          ></nh-select-avatar>
         </div>
       </nh-dialog>
     `;
@@ -152,9 +154,9 @@ export class CreateNeighbourhoodDialog extends NHComponentShoelace {
       super.styles as CSSResult,
       css`
         .row {
-          min-height: 9rem;
+          min-height: 8rem;
           align-items: center;
-          justify-content: space-around;
+          justify-content: center;
         }
       `,
     ];
