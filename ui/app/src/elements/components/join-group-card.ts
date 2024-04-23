@@ -3,14 +3,9 @@ import { consume } from '@lit/context';
 import { decode } from '@msgpack/msgpack';
 import { html, css, CSSResult } from 'lit';
 import { StoreSubscriber } from 'lit-svelte-stores';
-import {
-  Snackbar,
-} from '@scoped-elements/material-web';
-
 import { matrixContext } from '../../context';
 import { MatrixStore } from '../../matrix-store';
-import { sharedStyles } from '../../sharedStyles';
-import { property, query, state } from 'lit/decorators.js';
+import { property } from 'lit/decorators.js';
 import { HoloHashMap } from '@holochain-open-dev/utils';
 import { AsyncStatus } from '@holochain-open-dev/stores';
 import { CreateNeighbourhoodDialog } from '../dialogs/create-nh-dialog';
@@ -29,9 +24,6 @@ export class JoinGroupCard extends NHComponent {
     () => this.matrixStore.membraneInvitationsStore.myInvitations,
     () => [this.matrixStore],
   );
-
-  @query('#copied-snackbar')
-  _copiedSnackbar!: Snackbar;
 
   async joinGroup(invitationActionHash: ActionHash, invitation: JoinMembraneInvitation) {
     const properties = decode(invitation.clone_dna_recipe.properties) as any;
@@ -55,7 +47,18 @@ export class JoinGroupCard extends NHComponent {
       .catch(e => {
         if (e.data) {
           if (e.data.includes('AppAlreadyInstalled')) {
-            (this.shadowRoot?.getElementById('error-snackbar') as Snackbar).show();
+            this.dispatchEvent(
+              new CustomEvent("trigger-alert", {
+                detail: { 
+                  title: "Already Installed",
+                  msg: "This applet has already been installed.",
+                  type: "danger",
+                  closable: true,
+                },
+                bubbles: true,
+                composed: true,
+              })
+            )
           }
         }
       });
@@ -111,17 +114,6 @@ export class JoinGroupCard extends NHComponent {
     this.matrixStore.membraneInvitationsStore.client.getMyInvitations()
   }
 
-  renderErrorSnackbar() {
-    return html`
-      <mwc-snackbar
-        style="text-align: center;"
-        id="error-snackbar"
-        labelText="You are already part of this Group!"
-      >
-      </mwc-snackbar>
-    `;
-  }
-
   renderInvitations(invitations: HoloHashMap<ActionHash, JoinMembraneInvitation>) {
     if ([...invitations.entries()].length == 0) {
       return html`
@@ -148,7 +140,6 @@ export class JoinGroupCard extends NHComponent {
             );
           })
           .map(([actionHash, invitation]) => {
-            // TODO: refactor this into a component and correct layout at different screen sizes
             return html`
               <div class="column" style="align-items: right; width: 100%;">
                 <nh-card .theme=${"dark"} class="nested-card">
@@ -205,7 +196,6 @@ export class JoinGroupCard extends NHComponent {
 
   renderInvitationsBlock(invitations: AsyncStatus<HoloHashMap<ActionHash, JoinMembraneInvitation>>) {
     return html`
-      ${this.renderErrorSnackbar()}
       <h2>Your invitations:</h2>
       </div>
       <div>
@@ -216,8 +206,6 @@ export class JoinGroupCard extends NHComponent {
 
   render() {
     return html`
-      <mwc-snackbar id="copied-snackbar" timeoutMs="4000" labelText="Copied!"></mwc-snackbar>
-
       <nh-card .theme=${"dark"} .heading=${"Joining A Neighbourhood"}>
         <div>
           <p>
@@ -238,7 +226,18 @@ export class JoinGroupCard extends NHComponent {
                     navigator.clipboard.writeText(
                       encodeHashToBase64(this.matrixStore.myAgentPubKey),
                       );
-                      this._copiedSnackbar.show();
+                      this.dispatchEvent(
+                        new CustomEvent("trigger-alert", {
+                          detail: { 
+                            title: "Copied!",
+                            msg: "Now send this to a Neighbour and they will be able to invite you in.",
+                            type: "success",
+                            closable: true,
+                          },
+                          bubbles: true,
+                          composed: true,
+                        })
+                      )
                       this.requestUpdate();
                     }}
                   >
@@ -258,7 +257,6 @@ export class JoinGroupCard extends NHComponent {
   }
 
   static elementDefinitions = {
-      'mwc-snackbar': Snackbar,
       'create-we-group-dialog': CreateNeighbourhoodDialog,
       'nh-card': NHCard,
       'nh-button-group': NHButtonGroup,
