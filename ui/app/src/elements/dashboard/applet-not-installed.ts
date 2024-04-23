@@ -1,22 +1,19 @@
 import { DnaHash, EntryHash } from "@holochain/client";
 import { consume } from "@lit/context";
 import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
-import { Button, CircularProgress, Dialog, IconButtonToggle, Snackbar } from "@scoped-elements/material-web";
 import { css, html, LitElement } from "lit";
 import { property, query, state } from "lit/decorators.js";
 import { matrixContext, weGroupContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 import { sharedStyles } from "../../sharedStyles";
-import { JoinFromFsDialog } from "../dialogs/join-from-file-system";
-import { NHButton } from "@neighbourhoods/design-system-components";
+import { NHButton, NHSpinner } from "@neighbourhoods/design-system-components";
 import { AppletInstanceInfo, NewAppletInstanceInfo } from "../../types";
+import { InstallFromFsDialog } from "../dialogs/install-from-file-system";
 
 export class AppletNotInstalled extends ScopedRegistryHost(LitElement) {
-
   @consume({ context: matrixContext , subscribe: true })
   @property({attribute: false})
   _matrixStore!: MatrixStore;
-
 
   @consume({ context: weGroupContext, subscribe: true })
   @property({attribute: false})
@@ -32,7 +29,7 @@ export class AppletNotInstalled extends ScopedRegistryHost(LitElement) {
   mode!: "reinstall" | "join";
 
   @query("#join-from-fs-dialog")
-  joinFromFsDialog!: JoinFromFsDialog;
+  joinFromFsDialog!: InstallFromFsDialog;
 
 
   private toggleAppletDescription() {
@@ -40,7 +37,7 @@ export class AppletNotInstalled extends ScopedRegistryHost(LitElement) {
   }
 
   async joinApplet() {
-    (this.shadowRoot?.getElementById("installing-progress") as Snackbar).show();
+    // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).show();
 
     await this._matrixStore.joinApplet(this.weGroupId, this.appletInstanceId)
       .then(() => {
@@ -52,18 +49,17 @@ export class AppletNotInstalled extends ScopedRegistryHost(LitElement) {
             }
           )
         );
-        (this.shadowRoot?.getElementById("installing-progress") as Snackbar).close();
-        (this.shadowRoot?.getElementById("success-snackbar") as Snackbar).show();
+        // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).close();
+        // (this.shadowRoot?.getElementById("success-snackbar") as Snackbar).show();
       }).catch((e) => {
         console.log("Installation Error: ", e);
-        (this.shadowRoot?.getElementById("installing-progress") as Snackbar).close();
-        (this.shadowRoot?.getElementById("error-snackbar") as Snackbar).show();
+        // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).close();
+        // (this.shadowRoot?.getElementById("error-snackbar") as Snackbar).show();
       })
   }
 
-
   async reinstallApplet() {
-    (this.shadowRoot?.getElementById("installing-progress") as Snackbar).show();
+    // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).show();
 
     await this._matrixStore.reinstallApplet(this.weGroupId, this.appletInstanceId)
       .then(() => {
@@ -75,40 +71,13 @@ export class AppletNotInstalled extends ScopedRegistryHost(LitElement) {
             }
           )
         );
-        (this.shadowRoot?.getElementById("installing-progress") as Snackbar).close();
-        (this.shadowRoot?.getElementById("success-snackbar") as Snackbar).show();
+        // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).close();
+        // (this.shadowRoot?.getElementById("success-snackbar") as Snackbar).show();
       }).catch((e) => {
         console.log("Installation Error: ", e);
-        (this.shadowRoot?.getElementById("installing-progress") as Snackbar).close();
-        (this.shadowRoot?.getElementById("error-snackbar") as Snackbar).show();
+        // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).close();
+        // (this.shadowRoot?.getElementById("error-snackbar") as Snackbar).show();
       })
-  }
-
-
-  renderErrorSnackbar() {
-    return html`
-      <mwc-snackbar
-        id="error-snackbar"
-        labelText="Installation failed! (See console for details)"
-      >
-      </mwc-snackbar>
-    `;
-  }
-
-  renderSuccessSnackbar() {
-    return html`
-      <mwc-snackbar
-        id="success-snackbar"
-        labelText="Installation successful"
-      ></mwc-snackbar>
-    `;
-  }
-
-  renderInstallingProgress() {
-    return html`
-      <mwc-snackbar id="installing-progress" labelText="Installing..." .timeoutMs=${-1}>
-      </mwc-snackbar>
-    `;
   }
 
   cancelReinstall() {
@@ -121,23 +90,13 @@ export class AppletNotInstalled extends ScopedRegistryHost(LitElement) {
   }
 
   render() {
-
     const appletInstanceInfo: AppletInstanceInfo | NewAppletInstanceInfo | undefined = this.mode == "reinstall"
       ? this._matrixStore.getUninstalledAppletInstanceInfo(this.appletInstanceId)
-      : this._matrixStore.getNewAppletInstanceInfo(this.appletInstanceId)
-    if (!appletInstanceInfo) {
-      return html `
-        <div class="center-content" style="flex: 1;display: flex;">
-          <mwc-circular-progress indeterminate></mwc-circular-progress>
-        </div>
-      `
-    }
+      : this._matrixStore.getNewAppletInstanceInfo(this.appletInstanceId);
+
+    if (!appletInstanceInfo) return html`<nh-spinner type=${"icon"}></nh-spinner>`;
 
     return html`
-
-      ${this.renderErrorSnackbar()} ${this.renderSuccessSnackbar()}
-      ${this.renderInstallingProgress()}
-
       <join-from-fs-dialog
         mode=${this.mode}
         .appletInstanceId=${this.appletInstanceId}
@@ -182,15 +141,6 @@ export class AppletNotInstalled extends ScopedRegistryHost(LitElement) {
               </p>
             `
         }
-      ${
-        // TODO: reimplement
-        // <mwc-button
-        //   @click=${async () => this.mode == "reinstall" ? await this.reinstallApplet() : await this.joinApplet()}
-        //   >Automatically Install from the DevHub</mwc-button
-        // >
-        null
-      }
-
         <div class="buttons">
           <nh-button
             .variant=${"primary"}
@@ -205,13 +155,10 @@ export class AppletNotInstalled extends ScopedRegistryHost(LitElement) {
     `;
   }
 
-
   static elementDefinitions = {
-    "mwc-circular-progress": CircularProgress,
-    "mwc-button": Button,
     "nh-button": NHButton,
-    "mwc-snackbar": Snackbar,
-    "join-from-fs-dialog": JoinFromFsDialog,
+    "nh-spinner": NHSpinner,
+    "join-from-fs-dialog": InstallFromFsDialog,
   }
 
   static get styles() {
