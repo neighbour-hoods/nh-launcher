@@ -184,7 +184,7 @@ export class SensemakerStore {
     return entryRecords;
   }
 
-  async createOutputDimensionAndMethodAtomically(input: {outputDimension: Dimension, partialMethod: Partial<Method>}): Promise<{outputDimension: EntryHash, method: EntryHash}> {
+  async createOutputDimensionAndMethodAtomically(input: {outputDimension: Dimension, partialMethod: Partial<Method>}): Promise<{outputDimension: EntryRecord<Dimension>, method: EntryRecord<Method>}> {
     const [dimensionRecord, methodRecord] = await this.service.createOutputDimensionAndMethodAtomically(input);
 
     const dimensionEntryRecord = new EntryRecord<Dimension>(dimensionRecord);
@@ -199,7 +199,7 @@ export class SensemakerStore {
       return methods;
     });
 
-    return { outputDimension: dimensionEntryRecord.entryHash, method: methodEntryRecord.entryHash};
+    return { outputDimension: dimensionEntryRecord, method: methodEntryRecord };
   }
 
   // TODO: update applet config update to key by applet name
