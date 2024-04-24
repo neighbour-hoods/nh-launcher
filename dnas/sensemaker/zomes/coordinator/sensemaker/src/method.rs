@@ -147,7 +147,7 @@ pub fn create_method(method: Method) -> ExternResult<Record> {
 }
 
 #[hdk_extern]
-pub fn run_method(input: RunMethodInput) -> ExternResult<Option<Assessment>> {
+pub fn run_method(input: RunMethodInput) -> ExternResult<Option<Record>> {
     let maybe_record = get_method(input.method_eh.clone())?;
     if let Some(record) = maybe_record {
         let method = entry_from_record::<Method>(record)?;
@@ -170,9 +170,8 @@ pub fn run_method(input: RunMethodInput) -> ExternResult<Option<Assessment>> {
             input.resource_def_eh,
         )?;
         if let Some(objective_assessment) = maybe_objective_assessment {
-            // TODO: may want to change `create_assessment` to return the created assessment rather than the hash. For now sticking with this for minimal side-effects.
             let assessment_record = create_assessment(objective_assessment)?;
-            Ok(Some(entry_from_record::<Assessment>(assessment_record)?))
+            Ok(Some(assessment_record))
         } else {
             Err(wasm_error!(WasmErrorInner::Guest(String::from(
                 "Issue With Computation"

@@ -350,15 +350,16 @@ export class SensemakerStore {
       return entryRecords;
   }
 
-  async runMethod(runMethodInput: RunMethodInput): Promise<Assessment> {
-    let assessment = await this.service.runMethod(runMethodInput);
+  async runMethod(runMethodInput: RunMethodInput): Promise<EntryRecord<Assessment>> {
+    let result = await this.service.runMethod(runMethodInput);
+    let assessment = new EntryRecord<Assessment>(result);
     this._resourceAssessments.update(resourceAssessments => {
-      const maybePrevAssessments = resourceAssessments[encodeHashToBase64(assessment.resource_eh)];
+      const maybePrevAssessments = resourceAssessments[encodeHashToBase64(assessment.entry.resource_eh)];
       const prevAssessments = maybePrevAssessments ? maybePrevAssessments : [];
-      resourceAssessments[encodeHashToBase64(runMethodInput.resource_eh)] = [...prevAssessments, assessment]
+      resourceAssessments[encodeHashToBase64(runMethodInput.resource_eh)] = [...prevAssessments, assessment.entry]
       return resourceAssessments;
     })
-    return assessment;
+    return assessment
   }
 
   async createCulturalContext(culturalContext: CulturalContext, appletName: string): Promise<EntryHash> {

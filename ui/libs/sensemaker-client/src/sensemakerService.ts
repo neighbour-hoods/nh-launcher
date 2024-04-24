@@ -77,7 +77,7 @@ export class SensemakerService {
     return this.callZome('get_method', methodEh);
   }
 
-  async runMethod(runMethodInput: RunMethodInput): Promise<Assessment> {
+  async runMethod(runMethodInput: RunMethodInput): Promise<HolochainRecord> {
     return this.callZome('run_method', runMethodInput);
   }
 
