@@ -440,9 +440,9 @@ export class SensemakerStore {
     return appletConfig;
   }
 
-  async registerWidget(widgetRegistration: AssessmentWidgetRegistrationInput): Promise<AssessmentWidgetRegistrationInput> {
+  async registerWidget(widgetRegistration: AssessmentWidgetRegistrationInput): Promise<EntryRecord<AssessmentWidgetRegistrationInput>> {
     const result = await this.service.registerWidget(widgetRegistration);
-    return new EntryRecord<AssessmentWidgetRegistrationInput>(result).entry
+    return new EntryRecord<AssessmentWidgetRegistrationInput>(result)
   }
 
   async getRegisteredWidgets(): Promise<Record<EntryHashB64, AssessmentWidgetRegistrationInput>> {
