@@ -9,9 +9,7 @@ import { StoreSubscriber } from "lit-svelte-stores";
 import { MatrixStore } from "../../matrix-store";
 import { consume } from "@lit/context";
 import { matrixContext, weGroupContext } from "../../context";
-import { rangeKindEqual } from "../../utils";
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(() => r(null), ms));
+import { rangeKindEqual, sleep } from "../../utils";
 
 export class ConfigureAppletDimensions extends NHComponentShoelace {
   @consume({ context: matrixContext , subscribe: true })
@@ -25,6 +23,7 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
   );
 
   @property() handleSubmit!: Function;
+
   @property() config!: AppletConfigInput;
 
   @query('nh-dialog') dialog!: NHDialog;
@@ -36,9 +35,9 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
 
   async createRangesOfCheckedDimensions() {
     for(let dim of this._configDimensionsToCreate) {
-          const rangeEntryHash = await this._sensemakerStore.value?.createRange(dim.range);
+          const rangeEntryRecord = await this._sensemakerStore.value?.createRange(dim.range);
           // Assign entry hash to config dimensions ready for creation of dimensions
-          dim.range_eh = rangeEntryHash;
+          dim.range_eh = rangeEntryRecord?.entryHash;
         }
     console.log('ranges created for config dimensions')
   }
@@ -48,6 +47,16 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
       if(!(dimension.range_eh)) throw new Error("Could not find created range for dimension");
       return async () => {return this._sensemakerStore.value?.createDimension(({name: dimension.name, computed: dimension.computed, range_eh: (dimension!.range_eh)} as Dimension))}
     }))
+  }
+
+  async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
+    if(changedProperties.has("handleSubmit")) { // By now we should have a Sensemaker store value
+      if(!this._sensemakerStore?.value) return;
+      await this.fetchDimensionEntries();
+    }
+    if(changedProperties.has("_existingDimensionEntries") && this._existingDimensionEntries?.length > 0) {
+      await this.fetchRangeEntriesFromHashes(this._existingDimensionEntries.map((dimension: Dimension) => dimension.range_eh));
+    }
   }
 
   render() {
@@ -114,21 +123,11 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
                       >
                       </config-dimension-list>
                   `
-              : html`No config!` // Need to add loading spinner instead?
+              : html`No config!` // TODO: replace with nh-spinner once that feature branch is merged.
             } 
         </div>
       </nh-dialog>
     `;
-  }
-
-  async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
-    if(changedProperties.has("handleSubmit")) { // By now we have a Sensemaker store value
-      if(!this._sensemakerStore?.value) return;
-      await this.fetchDimensionEntries();
-    }
-    if(changedProperties.has("_existingDimensionEntries") && this._existingDimensionEntries?.length > 0) {
-      await this.fetchRangeEntriesFromHashes(this._existingDimensionEntries.map((dimension: Dimension) => dimension.range_eh));
-    }
   }
 
   async fetchRangeEntriesFromHashes(rangeEhs: EntryHash[]) {

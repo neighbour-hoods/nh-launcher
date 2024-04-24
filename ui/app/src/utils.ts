@@ -15,6 +15,8 @@ export function parseZomeError(err: Error) {
   return JSON.stringify(error ? decode(JSON.parse("[" + error + "]")) : "{}", null, 2)
 }
 
+export const sleep = (ms: number) => new Promise((r) => setTimeout(() => r(null), ms));
+
 export async function fakeSeededEntryHash(happBytes: Uint8Array): Promise<EntryHash> {
   const sha = await crypto.subtle.digest("SHA-256", happBytes)
   return new Uint8Array([0x84, 0x21, 0x24, ...new Uint8Array(sha), ...new Uint8Array(4)])
