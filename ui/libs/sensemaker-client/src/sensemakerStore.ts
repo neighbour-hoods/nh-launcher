@@ -241,14 +241,14 @@ export class SensemakerStore {
     return entryRecords;
   }
 
-  async createResourceDef(resourceDef: ResourceDef): Promise<EntryHash> {
+  async createResourceDef(resourceDef: ResourceDef): Promise<EntryRecord<ResourceDef>> {
     const resourceDefRecord = await this.service.createResourceDef(resourceDef);
     const entryRecord = new EntryRecord<ResourceDef>(resourceDefRecord);
     this.resourceDefinitions.update(resourceDefs => {
       resourceDefs.set(encodeHashToBase64(entryRecord.entryHash), entryRecord);
       return resourceDefs;
     });
-    return entryRecord.entryHash;
+    return entryRecord;
   }
 
   async getResourceDef(resourceDefEh: EntryHash): Promise<EntryRecord<ResourceDef>> {
