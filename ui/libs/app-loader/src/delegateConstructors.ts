@@ -1,3 +1,4 @@
+import { EntryRecord } from "@holochain-open-dev/utils";
 import {
   AppAgentClient,
   AppInfo,
@@ -179,18 +180,16 @@ export function createInputAssessmentWidgetDelegate(
     /**
      * Create an assessment for the current user
      */
-    async createAssessment(value: RangeValue): Promise<Assessment> {
-      const assessmentEh =  (await sensemakerStore.createAssessment({
+    async createAssessment(value: RangeValue): Promise<EntryRecord<Assessment>> {
+      const assessmentEntryRecord = await sensemakerStore.createAssessment({
         value,
         dimension_eh: dimensionEh,
         resource_eh: resourceEh,
         resource_def_eh: resourceDefEh,
         maybe_input_dataset: null
-      })).entryHash
-      const assessmentEntryRecord = await sensemakerStore.getAssessment(assessmentEh)
-      assessment = assessmentEntryRecord.entry
-      subscribers.dispatch(assessment)
-      return assessment;
+      });
+      subscribers.dispatch(assessmentEntryRecord.entry)
+      return assessmentEntryRecord;
     },
 
     /**
@@ -237,14 +236,14 @@ export class FakeInputAssessmentWidgetDelegate implements InputAssessmentWidgetD
   subscribe(callback: CallbackFn) {
     return this.subscribers.subscribe(callback)
   }
-  
-  async createAssessment(value: RangeValue): Promise<Assessment> {
+  //@ts-ignore
+  async createAssessment(value: RangeValue): Promise<Partial<EntryRecord<Assessment>>> {
     this.assessment = {
       value
     } as Assessment;
 
     this.subscribers.dispatch(this.assessment)
-    return this.assessment;
+    return {entry: this.assessment} as Partial<EntryRecord<Assessment>>;
   }
 
   invalidateAssessment() {

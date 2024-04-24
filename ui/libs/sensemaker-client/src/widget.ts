@@ -6,6 +6,7 @@ import {
   NHDelegateReceiverConstructor,
   UnsubscribeFn
 } from "./delegate"
+import { EntryRecord } from '@holochain-open-dev/utils';
 
 /**
  * The minimal interface needed for an assessment widget.
@@ -18,7 +19,7 @@ import {
 export interface InputAssessmentWidgetDelegate {
   getLatestAssessmentForUser(): Promise<Assessment | undefined> // get the latest assessment value the user created (or none if never assessed or invalidated)
   subscribe(_:CallbackFn): UnsubscribeFn // subscribe to when the current assessment changes
-  createAssessment(value: RangeValue): Promise<Assessment> // create an assessment
+  createAssessment(value: RangeValue): Promise<EntryRecord<Assessment>> // create an assessment
   invalidateAssessment(): void // invalidate assessment [ignore for now, we only support creating new assessments]
 }
 
