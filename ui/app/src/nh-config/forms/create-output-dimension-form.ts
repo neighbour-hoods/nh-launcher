@@ -255,7 +255,7 @@ export default class CreateOutputDimensionMethod extends NHBaseForm {
             range_eh = this._model.range_eh
           } else {
             try {
-              range_eh = await this.sensemakerStore.createRange(this._dimensionRange);
+              range_eh = (await this.sensemakerStore.createRange(this._dimensionRange)).entryHash;
             } catch (error) {
               console.error('Range creation error :>> ', error);
             }
