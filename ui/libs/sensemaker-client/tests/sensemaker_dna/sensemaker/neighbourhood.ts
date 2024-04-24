@@ -462,12 +462,12 @@ export default () => {
           method_eh: createMethodEntryHash,
         };
 
-        const runMethodOutput: Assessment = await callZomeAlice(
+        const runMethodOutput: Assessment = new EntryRecord<Assessment>(await callZomeAlice(
           "sensemaker",
           "run_method",
           runMethodInput,
           true
-        );
+        )).entry;
         t.ok(runMethodOutput);
 
         await pause(pauseDuration);
@@ -896,12 +896,12 @@ export default () => {
           method_eh: createMethodEntryHash,
         };
 
-        const runMethodOutput: Assessment = await callZomeAlice(
+        const runMethodOutput: Assessment = new EntryRecord<Assessment>(await callZomeAlice(
           "sensemaker",
           "run_method",
           runMethodInput,
           true
-        );
+        )).entry;
         t.ok(runMethodOutput);
 
         const runMethodInput2 = {
@@ -910,12 +910,12 @@ export default () => {
           method_eh: createMethodEntryHash,
         };
 
-        const runMethodOutput2: Assessment = await callZomeAlice(
+        const runMethodOutput2: Assessment = new EntryRecord<Assessment>(await callZomeAlice(
           "sensemaker",
           "run_method",
           runMethodInput2,
           true
-        );
+        )).entry;
         t.ok(runMethodOutput2);
 
         const runMethodInput3 = {
@@ -924,12 +924,12 @@ export default () => {
           method_eh: createMethodEntryHash,
         };
 
-        const runMethodOutput3: Assessment = await callZomeAlice(
+        const runMethodOutput3: Assessment = new EntryRecord<Assessment>(await callZomeAlice(
           "sensemaker",
           "run_method",
           runMethodInput3,
           true
-        );
+        )).entry;
         t.ok(runMethodOutput3);
 
         await pause(pauseDuration);
@@ -1366,12 +1366,12 @@ export default () => {
           method_eh: createMethodEntryHash,
         };
 
-        const runMethodOutput: Assessment = await callZomeAlice(
+        const runMethodOutput: Assessment = new EntryRecord<Assessment>(await callZomeAlice(
           "sensemaker",
           "run_method",
           runMethodInput,
           true
-        );
+        )).entry;
         t.ok(runMethodOutput);
         console.log("runMethodOutput", runMethodOutput);
 
@@ -1625,12 +1625,12 @@ export default () => {
           method_eh: createMethodEntryHash,
         };
 
-        const runMethodOutput: Assessment = await callZomeAlice(
+        const runMethodOutput: Assessment = new EntryRecord<Assessment>(await callZomeAlice(
           "sensemaker",
           "run_method",
           runMethodInput,
           true
-        );
+        )).entry;
         t.ok(runMethodOutput);
         console.log("runMethodOutput", runMethodOutput);
 
