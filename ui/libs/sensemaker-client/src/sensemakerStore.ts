@@ -279,7 +279,7 @@ export class SensemakerStore {
       return entryRecords
   }
 
-  async createAssessment(assessment: CreateAssessmentInput): Promise<EntryHash> {
+  async createAssessment(assessment: CreateAssessmentInput): Promise<EntryRecord<Assessment>> {
     const assessmentRecord = await this.service.createAssessment(assessment);
     const entryRecord = new EntryRecord<Assessment>(assessmentRecord);
     this._resourceAssessments.update(resourceAssessments => {
@@ -288,7 +288,7 @@ export class SensemakerStore {
       resourceAssessments[encodeHashToBase64(assessment.resource_eh)] = [...prevAssessments, entryRecord.entry]
       return resourceAssessments;
     })
-    return entryRecord.entryHash;
+    return entryRecord;
   }
 
   async getAssessment(assessmentEh: EntryHash): Promise<EntryRecord<Assessment>> {

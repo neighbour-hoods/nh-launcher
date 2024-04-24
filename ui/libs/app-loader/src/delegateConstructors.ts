@@ -180,13 +180,13 @@ export function createInputAssessmentWidgetDelegate(
      * Create an assessment for the current user
      */
     async createAssessment(value: RangeValue): Promise<Assessment> {
-      const assessmentEh =  await sensemakerStore.createAssessment({
+      const assessmentEh =  (await sensemakerStore.createAssessment({
         value,
         dimension_eh: dimensionEh,
         resource_eh: resourceEh,
         resource_def_eh: resourceDefEh,
         maybe_input_dataset: null
-      })
+      })).entryHash
       const assessmentEntryRecord = await sensemakerStore.getAssessment(assessmentEh)
       assessment = assessmentEntryRecord.entry
       subscribers.dispatch(assessment)
