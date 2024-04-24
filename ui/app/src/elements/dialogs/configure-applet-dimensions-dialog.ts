@@ -155,20 +155,6 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
     }
   }
 
-  async fetchRangeEntries() {
-    try {
-      const entryRecords = await this._sensemakerStore.value?.getDimensions();
-      this._existingDimensionEntries = entryRecords!.map(entryRecord => {
-        return {
-          ...entryRecord.entry,
-          dimension_eh: entryRecord.entryHash
-        }
-      })
-    } catch (error) {
-      console.log('Error fetching dimension details: ', error);
-    }
-  }
-
   static elementDefinitions = {
     'nh-dialog' : NHDialog,
     'nh-form' : NHForm,
