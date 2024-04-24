@@ -146,14 +146,14 @@ export class SensemakerStore {
     return await this.service.getAllAgents();
   }
 
-  async createRange(range: Range): Promise<EntryHash> {
+  async createRange(range: Range): Promise<EntryRecord<Range>> {
     const rangeRecord = await this.service.createRange(range);
     const entryRecord = new EntryRecord<Range>(rangeRecord);
     this.ranges.update(ranges => {
       ranges.set(encodeHashToBase64(entryRecord.entryHash), entryRecord);
       return ranges;
     });
-    return entryRecord.entryHash;
+    return entryRecord;
   }
 
   async getRange(rangeEh: EntryHash): Promise<EntryRecord<Range>> {
