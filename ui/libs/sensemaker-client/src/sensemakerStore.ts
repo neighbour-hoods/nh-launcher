@@ -203,14 +203,14 @@ export class SensemakerStore {
   }
 
   // TODO: update applet config update to key by applet name
-  async createDimension(dimension: Dimension): Promise<EntryHash> {
+  async createDimension(dimension: Dimension): Promise<EntryRecord<Dimension>> {
     const dimensionRecord = await this.service.createDimension(dimension);
     const entryRecord = new EntryRecord<Dimension>(dimensionRecord);
     this.dimensions.update(dimensions => {
       dimensions.set(encodeHashToBase64(entryRecord.entryHash), entryRecord);
       return dimensions;
     });
-    return entryRecord.entryHash;
+    return entryRecord;
   }
 
   async getDimension(dimensionEh: EntryHash): Promise<EntryRecord<Dimension>> {

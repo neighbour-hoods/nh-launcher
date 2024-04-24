@@ -78,7 +78,7 @@ export default class CreateDimension extends NHComponent {
       range_eh: rangeEh
     }
     try {
-      dimensionEh = await this.sensemakerStore.createDimension(inputDimension);
+      dimensionEh = (await this.sensemakerStore.createDimension(inputDimension)).entryHash;
     } catch (error) {
       return Promise.reject(Error(' creating new dimension: ' + parseZomeError(error as Error)))
     }
