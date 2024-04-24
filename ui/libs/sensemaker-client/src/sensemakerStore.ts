@@ -306,14 +306,14 @@ export class SensemakerStore {
     return resourceAssessments;
   }
 
-  async createMethod(method: Method): Promise<EntryHash> {
+  async createMethod(method: Method): Promise<EntryRecord<Method>> {
     const methodRecord = await this.service.createMethod(method);
     const entryRecord = new EntryRecord<Method>(methodRecord);
     this.methods.update((methods) => {
       methods.set(encodeHashToBase64(entryRecord.entryHash), entryRecord);
       return methods;
     });
-    return entryRecord.entryHash;
+    return entryRecord;
   }
 
   async getMethod(methodEh: EntryHash): Promise<EntryRecord<Method>> {
