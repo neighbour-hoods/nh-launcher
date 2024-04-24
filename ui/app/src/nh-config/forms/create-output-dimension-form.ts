@@ -293,7 +293,7 @@ export default class CreateOutputDimensionMethod extends NHBaseForm {
           this.dispatchEvent(
             new CustomEvent('dimension-created', {
               detail: {
-                dimensionEh: outputDimension,
+                dimensionEh: outputDimension.entryHash,
                 dimensionType: "output",
                 dimension: input.outputDimension,
               },
