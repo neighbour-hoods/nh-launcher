@@ -36,7 +36,7 @@ class ExtendedTable extends Table { // Allows custom elements to be rendered wit
 
 type DimensionEntry = Dimension & { dimension_eh: EntryHash };
 
-type InboundDimension = ConfigDimension & {selected?: boolean, clashes?: Array<DimensionEntry>};
+type InboundDimension = ConfigDimension & {selected?: boolean, duplicateOf?: Array<DimensionEntry>};
 
 // Helpers for reaching into table DOM and adding/removing selected state
 function showRowSelected(row: HTMLElement, isClash: boolean = false) {
@@ -91,9 +91,9 @@ export default class ConfigDimensionList extends NHComponent {
 
   @property() configDimensions!: Array<InboundDimension & {dimension_eh?: EntryHash, clash?: boolean}>;
 
-  @property() configDimensionClashes: Array<InboundDimension & {dimension_eh?: EntryHash}> = [];
+  @property() inboundDimensionDuplicates: Array<InboundDimension & {existing_dimension_eh?: EntryHash}> = [];
 
-  @property() existingDimensions!: Array<Dimension & { dimension_eh: EntryHash }>;
+  @property() existingDimensions!: Array<DimensionEntry>;
   @property() existingRanges!: Array<Range & { range_eh: EntryHash }>;
 
   @property() configMethods!: Array<ConfigMethod>;
@@ -105,17 +105,17 @@ export default class ConfigDimensionList extends NHComponent {
       try {
         const newTableRecords = [] as any;
 
-        if(this.configDimensionClashes.length == 0 && typeof this.existingDimensions !== 'undefined' && typeof this.existingRanges !== 'undefined' && this.existingDimensions.length > 0 && this.existingRanges.length > 0) {
+        if(this.inboundDimensionDuplicates.length == 0 && typeof this.existingDimensions !== 'undefined' && typeof this.existingRanges !== 'undefined' && this.existingDimensions.length > 0 && this.existingRanges.length > 0) {
           // Add config dimensions that have clashes with existing dimensions to an array in local state
-          this.configDimensionClashes = this.configDimensions.filter((configDimension) => {
+          this.inboundDimensionDuplicates = this.configDimensions.filter((configDimension) => {
             // Find the existing dimension entries for those clashing config dimensions
             const existingDimensionClashes : Array<Dimension & { dimension_eh: EntryHash }> = this.filterExistingDimensionsByInboundClash(configDimension);
 
             // If there exists a filtered list, add that as a property on the config dimension so we can add it below in the table 
             if(existingDimensionClashes.length > 0) {
-              configDimension.clashes = existingDimensionClashes
+              configDimension.duplicateOf = existingDimensionClashes
               // As a side effect, add the dimension entry hash to the config dimension, so that we can pair them with the existing entry
-              configDimension.clashes.forEach(existingDimensionClash => configDimension.dimension_eh = existingDimensionClash.dimension_eh);
+              configDimension.duplicateOf.forEach(existingDimensionClash => configDimension.dimension_eh = existingDimensionClash.dimension_eh);
               return true
             }
             return false
@@ -125,10 +125,10 @@ export default class ConfigDimensionList extends NHComponent {
         }
         this.configDimensions.forEach((configDimension)=> {
           newTableRecords.push(configDimension as any); // First add the incoming config dimension
-          if(!configDimension?.clashes) return;
+          if(!configDimension?.duplicateOf) return;
           // Iterate through the clashes and add them so they appear underneath, and have a property 'clash' to indicate they already exist
           const range = configDimension.range;
-          for(let clashingDimension of configDimension.clashes as Array<Dimension & { dimension_eh: EntryHash,  clashes?: Array<Dimension & { dimension_eh: EntryHash }> }>) {
+          for(let clashingDimension of configDimension.duplicateOf as Array<Dimension & { dimension_eh: EntryHash,  duplicateOf?: Array<DimensionEntry> }>) {
               newTableRecords.push({...(clashingDimension as any), clash: true, clashes: undefined, range, selected: true } as any)
             }
         })
@@ -136,14 +136,14 @@ export default class ConfigDimensionList extends NHComponent {
         this.tableStore.records = (newTableRecords.length > 0 ? newTableRecords : this.configDimensions) // If not new clashing table records just use all config dimensions
           .map((r) => this.toTableRecord(r));
 
-        this.requestUpdate('configDimensionClashes')
+        this.requestUpdate('inboundDimensionDuplicates')
       } catch (error) {
         console.log('Error mapping dimensions and ranges to table values: ', error)
       }
     }
 
     // Logic for dom manipulation of rows based on selected and incoming/outgoing state as determined above
-    if(changedProperties.has('configDimensionClashes') && this.configDimensionClashes.length > 0 && !(this.configDimensions.some((configDimension: any) => configDimension?.clash))) {  
+    if(changedProperties.has('inboundDimensionDuplicates') && this.inboundDimensionDuplicates.length > 0 && !(this.configDimensions.some((configDimension: any) => configDimension?.clash))) {  
       const table = this._table?.renderRoot?.children?.[1];
       if(typeof table == 'undefined') return
       const rows = [...table.querySelectorAll('tr')].slice(1); // Omit the header row
@@ -168,7 +168,7 @@ export default class ConfigDimensionList extends NHComponent {
       dimensionToSelect.selected = !currentRowState as boolean;
 
       // Deselect each original dimension entry row for which this config row is a duplicate
-      dimensionToSelect.clashes?.forEach((_, idx) => {
+      dimensionToSelect.duplicateOf?.forEach((_, idx) => {
         const rowToDeselect = allRows[selectedRowIndex + (idx + 1)];
         this.uncheckRow(rowToDeselect)
       })
@@ -206,8 +206,8 @@ export default class ConfigDimensionList extends NHComponent {
   }
 
   // Map to field values and update selected state of in memory config dimensions
-  toTableRecord = (dimension: InboundDimension & {clash?: boolean}) => {
-    dimension.selected = !!(typeof dimension?.clashes == 'undefined'); // By default select all dimensions for creation
+  private toTableRecord = (dimension: InboundDimension & {clash?: boolean}) => {
+    dimension.selected = !!(typeof dimension?.duplicateOf == 'undefined'); // By default select all dimensions which are not duplicates of existing dimension entries
 
     const range = dimension.range
     const linkedMethods = this.dimensionType == 'input'
@@ -215,7 +215,7 @@ export default class ConfigDimensionList extends NHComponent {
       : this.configMethods.filter(method => matchesMethodOutputDimension(dimension, method))
 
     const method = linkedMethods[0];
-    const inputDimension: InboundDimension | false = this.dimensionType == 'output' && method.input_dimensions[0]
+    const inputDimension: InboundDimension | '' = (this.dimensionType == 'output' && method.input_dimensions[0]) || ''
     const [[rangeType, rangeValues]] = Object.entries(range?.kind as RangeKind);
     return {
       ['dimension-name']: capitalize(dimension.name),
@@ -223,7 +223,7 @@ export default class ConfigDimensionList extends NHComponent {
       ['range-min']: rangeValues?.min,
       ['range-max']: rangeValues?.max,
       // For output dimensions
-      ['input-dimension-name']: (inputDimension as InboundDimension)?.name || '',
+      ['input-dimension-name']: (inputDimension as InboundDimension)?.name || inputDimension,
       ['method-operation']: typeof method?.program == 'object' ? Object.keys(method.program)[0] : '',
       ['select']: dimension.selected,
       ['clash']: dimension.clash,
