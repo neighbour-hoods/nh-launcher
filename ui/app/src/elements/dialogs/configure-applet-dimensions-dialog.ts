@@ -104,25 +104,25 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
         <div slot="inner-content" class="dialog-container">
           ${ this.config 
               ? html`
-                      <config-dimension-list
-                        id="applet-input-dimension-list"
-                        .dimensionType=${'input'}
-                        .configDimensions=${(this.config as AppletConfigInput)!.dimensions!.filter(dimension => !dimension.computed)}
-                        .existingDimensions=${this._existingDimensionEntries}
-                        .existingRanges=${this._existingRangeEntries}
-                        .configMethods=${(this.config as AppletConfigInput)!.methods}
-                      >
-                      </config-dimension-list>
-                      <config-dimension-list
-                        id="applet-output-dimension-list"
-                        .dimensionType=${'output'}
-                        .configDimensions=${(this.config as AppletConfigInput)!.dimensions!.filter(dimension => dimension.computed)}
-                        .existingDimensions=${this._existingDimensionEntries}
-                        .existingRanges=${this._existingRangeEntries}
-                        .configMethods=${(this.config as AppletConfigInput)!.methods}
-                      >
-                      </config-dimension-list>
-                  `
+                  <config-dimension-list
+                    id="applet-input-dimension-list"
+                    .dimensionType=${'input'}
+                    .configDimensions=${(this.config as AppletConfigInput)!.dimensions!.filter(dimension => !dimension.computed)}
+                    .existingDimensions=${this._existingDimensionEntries}
+                    .existingRanges=${this._existingRangeEntries}
+                    .configMethods=${(this.config as AppletConfigInput)!.methods}
+                  >
+                  </config-dimension-list>
+                  <config-dimension-list
+                    id="applet-output-dimension-list"
+                    .dimensionType=${'output'}
+                    .configDimensions=${(this.config as AppletConfigInput)!.dimensions!.filter(dimension => dimension.computed)}
+                    .existingDimensions=${this._existingDimensionEntries}
+                    .existingRanges=${this._existingRangeEntries}
+                    .configMethods=${(this.config as AppletConfigInput)!.methods}
+                  >
+                  </config-dimension-list>
+                `
               : html`No config!` // TODO: replace with nh-spinner once that feature branch is merged.
             } 
         </div>
