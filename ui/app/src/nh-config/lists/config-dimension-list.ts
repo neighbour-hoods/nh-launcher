@@ -15,8 +15,8 @@ type InputDimensionTableRecord = {
   ['range-type']: string,
   ['range-min']: number,
   ['range-max']: number,
-  ['select']: boolean, // Is this row selected, due to be created?
-  ['clash']: boolean, // Is this a ro
+  ['selected']: boolean, // Is this row selected, due to be created?
+  ['duplicated']: boolean, // Is this an existing dimension with a duplicate inbound dimension?
 }
 
 type OutputDimensionTableRecord = InputDimensionTableRecord & {
@@ -24,7 +24,14 @@ type OutputDimensionTableRecord = InputDimensionTableRecord & {
   ['method-operation'] : string,
 }
 
-type DimensionTableRecord = InputDimensionTableRecord | OutputDimensionTableRecord;
+type DimensionTableRecord = InputDimensionTableRecord & OutputDimensionTableRecord;
+
+type DimensionEntry = Dimension & { dimension_eh: EntryHash };
+type RangeEntry = Range & { range_eh: EntryHash };
+
+type InboundDimension = ConfigDimension & {selected?: boolean };
+type PossibleDuplicateInboundDimension = InboundDimension & {isDuplicate?: boolean, duplicateOf?: Array<DimensionEntry>};
+type DuplicateInboundDimension = PossibleDuplicateInboundDimension & { isDuplicate: true, existing_dimension_ehs: EntryHash[]};
 
 class ExtendedTable extends Table { // Allows custom elements to be rendered within table-web-component
   static elementDefinitions = {
@@ -33,10 +40,6 @@ class ExtendedTable extends Table { // Allows custom elements to be rendered wit
     "nh-button": NHButton,
   }
 }
-
-type DimensionEntry = Dimension & { dimension_eh: EntryHash };
-
-type InboundDimension = ConfigDimension & {selected?: boolean, duplicateOf?: Array<DimensionEntry>};
 
 // Helpers for reaching into table DOM and adding/removing selected state
 function showRowSelected(row: HTMLElement, isDuplicated: boolean) {
@@ -80,8 +83,8 @@ function matchesMethodInputDimension(dimension: InboundDimension, method: Config
 }
 function matchesMethodOutputDimension(dimension: InboundDimension, method: ConfigMethod) {
   return method.output_dimension.name == dimension.name 
-  && method.output_dimension.range.name == dimension.range.name 
-  && rangeKindEqual(method.output_dimension.range.kind, dimension.range.kind)
+    && method.output_dimension.range.name == dimension.range.name 
+    && rangeKindEqual(method.output_dimension.range.kind, dimension.range.kind)
 }
 
 export default class ConfigDimensionList extends NHComponent {
@@ -91,51 +94,55 @@ export default class ConfigDimensionList extends NHComponent {
 
   @query('wc-table') _table!: Table;
 
-  @property() configDimensions!: Array<InboundDimension & {dimension_eh?: EntryHash, clash?: boolean}>;
+  @property() configDimensions!: Array<PossibleDuplicateInboundDimension>;
 
-  @property() inboundDimensionDuplicates: Array<InboundDimension & {existing_dimension_eh?: EntryHash}> = [];
+  @property() inboundDimensionDuplicates: Array<PossibleDuplicateInboundDimension | DuplicateInboundDimension> = [];
 
   @property() existingDimensions!: Array<DimensionEntry>;
-  @property() existingRanges!: Array<Range & { range_eh: EntryHash }>;
+  @property() existingRanges!: Array<RangeEntry>;
 
   @property() configMethods!: Array<ConfigMethod>;
 
   protected updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    // Logic for detecting clashes between incoming config dimensions and existing config dimensions, 
-    // then updating table records with rows for existing dimensions underneath each clashing config dimensions
+    // Logic for detecting inbound config dimensions that  are duplicates of existing dimension entries
     if(changedProperties.has('configDimensions') && !!this.configDimensions && !!this.configMethods) {  
       try {
-        const newTableRecords = [] as any;
-
         if(this.inboundDimensionDuplicates.length == 0 && typeof this.existingDimensions !== 'undefined' && typeof this.existingRanges !== 'undefined' && this.existingDimensions.length > 0 && this.existingRanges.length > 0) {
-          // Add config dimensions that have clashes with existing dimensions to an array in local state
-          this.inboundDimensionDuplicates = this.configDimensions.filter((configDimension) => {
-            // Find the existing dimension entries for those clashing config dimensions
-            const existingDimensionClashes : Array<Dimension & { dimension_eh: EntryHash }> = this.filterExistingDimensionsByInboundClash(configDimension);
 
-            // If there exists a filtered list, add that as a property on the config dimension so we can add it below in the table 
+          // Add duplicates of existing dimensions to an array in local state
+          this.inboundDimensionDuplicates = this.configDimensions.filter((inboundDimension: PossibleDuplicateInboundDimension | DuplicateInboundDimension) => {
+            // Find the existing dimension entries for the possible duplicate
+            const existingDimensionClashes: Array<DimensionEntry> = this.filterExistingDimensionsByInboundClash(inboundDimension);
+
             if(existingDimensionClashes.length > 0) {
-              configDimension.duplicateOf = existingDimensionClashes
-              // As a side effect, add the dimension entry hash to the config dimension, so that we can pair them with the existing entry
-              configDimension.duplicateOf.forEach(existingDimensionClash => configDimension.dimension_eh = existingDimensionClash.dimension_eh);
+              // If they exist, concretize the type of this inboundDimension as DuplicateInboundDimension by adding relevant properties
+              inboundDimension.isDuplicate = true;
+              inboundDimension.duplicateOf = existingDimensionClashes;
+              
+              (inboundDimension as DuplicateInboundDimension).existing_dimension_ehs = [];
+              inboundDimension.duplicateOf.forEach(existingDimension => (inboundDimension as DuplicateInboundDimension)!.existing_dimension_ehs.push(existingDimension.dimension_eh));
               return true
             }
             return false
           })
-          // Now add the properties need to make the clashes their own table records.
-
         }
-        this.configDimensions.forEach((configDimension)=> {
-          newTableRecords.push(configDimension as any); // First add the incoming config dimension
-          if(!configDimension?.duplicateOf) return;
-          // Iterate through the clashes and add them so they appear underneath, and have a property 'clash' to indicate they already exist
-          const range = configDimension.range;
-          for(let clashingDimension of configDimension.duplicateOf as Array<Dimension & { dimension_eh: EntryHash,  duplicateOf?: Array<DimensionEntry> }>) {
-              newTableRecords.push({...(clashingDimension as any), clash: true, clashes: undefined, range, selected: true } as any)
-            }
+
+        const newTableRecords = [] as any;
+        this.configDimensions.forEach((inboundDimension: PossibleDuplicateInboundDimension)=> {
+          newTableRecords.push(inboundDimension as PossibleDuplicateInboundDimension); // First add the inbound dimension
+          if(!inboundDimension?.duplicateOf) return;
+          // The remainder will be of type DuplicateInboundDimension
+
+          const range = inboundDimension.range;
+          // Iterate through the duplicated and add them as rows beneath,
+          // and add a property 'duplicated' to indicate they already exist
+          for(let duplicated of inboundDimension.duplicateOf) {
+            newTableRecords.push({...(duplicated as DimensionEntry), range, duplicated: true, selected: true } as Partial<DimensionTableRecord>)
+          }
         })
-        // Update the table records so we have clashes underneath incoming config dimensions
-        this.tableStore.records = (newTableRecords.length > 0 ? newTableRecords : this.configDimensions) // If not new clashing table records just use all config dimensions
+        
+        // Update the table records so we have the duplicated underneath the inbound duplicates
+        this.tableStore.records = (newTableRecords.length > 0 ? newTableRecords : this.configDimensions)
           .map((r) => this.toTableRecord(r));
 
         this.requestUpdate('inboundDimensionDuplicates')
@@ -143,13 +150,27 @@ export default class ConfigDimensionList extends NHComponent {
         console.log('Error mapping dimensions and ranges to table values: ', error)
       }
     }
-
+    // TODO: test this logic as it is not being triggered the same as before the refactor
     // Logic for dom manipulation of rows based on selected and incoming/outgoing state as determined above
-    if(changedProperties.has('inboundDimensionDuplicates') && this.inboundDimensionDuplicates.length > 0 && !(this.configDimensions.some((configDimension: any) => configDimension?.clash))) {  
+    if(changedProperties.has('inboundDimensionDuplicates') 
+        && this.inboundDimensionDuplicates.length > 0 
+        && !(this.configDimensions
+              .some((inboundDimension: PossibleDuplicateInboundDimension) => inboundDimension?.isDuplicate))
+      ) {  
       const table = this._table?.renderRoot?.children?.[1];
+      console.log('table :>> ', table);
       if(typeof table == 'undefined') return
       const rows = [...table.querySelectorAll('tr')].slice(1); // Omit the header row
-      rows.forEach((row, idx) => {this.tableStore.records[idx]['select'] ? showRowSelected(row,  this.tableStore.records[idx]['clash']) : showRowSelectedWarning(row)})
+      rows.forEach((row, idx) => {
+        console.log('this.tableStore.records[idx][] :>> ', this.tableStore.records[idx]['duplicated']);
+        if(this.tableStore.records[idx]['duplicated']) {
+          row.dataset.duplicated = "true" 
+        }
+
+        this.tableStore.records[idx]['selected']
+          ? showRowSelected(row, !!row.dataset.duplicated)
+          : showRowSelectedWarning(row)    
+      })
     }
   }
 
@@ -162,33 +183,28 @@ export default class ConfigDimensionList extends NHComponent {
       const selectedRowIndex = allRows.findIndex(r => r == row);
       const configDimensionsRowIndex = inboundRows.findIndex(r => r == row); // Get this specific row's index as it would be in this.configDimensions
 
-      const dimensionToSelect = this.configDimensions[configDimensionsRowIndex] as InboundDimension  & {dimension_eh?: EntryHash, clash?: boolean};
-      if (!dimensionToSelect) throw new Error('Could not select config dimension');
+      const dimensionToSelect = this.configDimensions[configDimensionsRowIndex] as PossibleDuplicateInboundDimension;
+      if (!dimensionToSelect) throw new Error('Could not find selected config dimension');
 
       // Update local state of selected config dimensions
-      const currentRowState = !!(dimensionToSelect.selected);
+      const currentRowState: boolean = !!(dimensionToSelect.selected);
       dimensionToSelect.selected = !currentRowState as boolean;
 
-      // Deselect each original dimension entry row for which this config row is a duplicate
-      dimensionToSelect.duplicateOf?.forEach((_, idx) => {
-        const rowToDeselect = allRows[selectedRowIndex + (idx + 1)];
-        this.uncheckRow(rowToDeselect)
-      })
-
-      if(!dimensionToSelect?.clash) { // Handled by adding this to a list of dimensions to create in the parent component's state
-        this.dispatchEvent(
-          new CustomEvent("config-dimension-selected", {
-            detail: { dimension: dimensionToSelect },
-            bubbles: true,
-            composed: true,
-          })
-        );
+      if(!dimensionToSelect?.isDuplicate) {
+        // Deselect each original dimension entry row for which this config row is a duplicate
+        dimensionToSelect.duplicateOf?.forEach((_, idx) => {
+          const rowToDeselect = allRows[selectedRowIndex + (idx + 1)];
+          this.uncheckRow(rowToDeselect)
+        })
+        // Event will be handled by adding this to a list of dimensions to create in the parent component's state
+        this.dispatchEvent(new CustomEvent("config-dimension-selected", { detail: { dimension: dimensionToSelect }, bubbles: true, composed: true }));
       }
 
-      ((e.target as NHCheckbox).value)
-        ? showRowSelected(row)
-        : showRowNotSelected(row)
-      
+      const rowIsChecked: boolean = !!((e.target as NHCheckbox).value);
+      if(rowIsChecked) {
+        showRowSelected(row, !!dimensionToSelect.isDuplicate)
+      } else showRowNotSelected(row)
+
     } catch (error) {
       console.error('Could not perform row selection logic: ', error)
     } 
@@ -208,7 +224,7 @@ export default class ConfigDimensionList extends NHComponent {
   }
 
   // Map to field values and update selected state of in memory config dimensions
-  private toTableRecord = (dimension: InboundDimension & {clash?: boolean}) => {
+  private toTableRecord = (dimension: PossibleDuplicateInboundDimension & {duplicated?: boolean}) => {
     dimension.selected = !!(typeof dimension?.duplicateOf == 'undefined'); // By default select all dimensions which are not duplicates of existing dimension entries
 
     const range = dimension.range
@@ -227,8 +243,8 @@ export default class ConfigDimensionList extends NHComponent {
       // For output dimensions
       ['input-dimension-name']: (inputDimension as InboundDimension)?.name || inputDimension,
       ['method-operation']: typeof method?.program == 'object' ? Object.keys(method.program)[0] : '',
-      ['select']: dimension.selected,
-      ['clash']: dimension.clash,
+      ['selected']: dimension.selected,
+      ['duplicated']: dimension.duplicated,
     }
   }
 
@@ -239,10 +255,10 @@ export default class ConfigDimensionList extends NHComponent {
         'range-type': new FieldDefinition<DimensionTableRecord>({heading: 'Type'}),
         'range-min': new FieldDefinition<DimensionTableRecord>({heading: 'Min'}),
         'range-max': new FieldDefinition<DimensionTableRecord>({heading: 'Max'}),
-        'select': new FieldDefinition<DimensionTableRecord>({heading: 'Select',
+        'selected': new FieldDefinition<DimensionTableRecord>({heading: 'Select',
           decorator: (value) => html`<nh-checkbox class="checkbox-only" @change=${(e) => this.handleRowSelection(e)} .label=${""} .value=${!!value}></nh-checkbox>`}),
         
-        'clash': new FieldDefinition<DimensionTableRecord>({heading: '', decorator: this.clashInfoDecorator })
+        'duplicated': new FieldDefinition<DimensionTableRecord>({heading: '', decorator: this.clashInfoDecorator })
       }
       : {
         'dimension-name': new FieldDefinition<DimensionTableRecord>({heading: 'Name'}),
@@ -251,10 +267,10 @@ export default class ConfigDimensionList extends NHComponent {
         'method-operation': new FieldDefinition<DimensionTableRecord>({heading: 'Operation'}),
         'range-min': new FieldDefinition<DimensionTableRecord>({heading: 'Min'}),
         'range-max': new FieldDefinition<DimensionTableRecord>({heading: 'Max'}),
-        'select': new FieldDefinition<DimensionTableRecord>({heading: 'Select',
+        'selected': new FieldDefinition<DimensionTableRecord>({heading: 'Select',
           decorator: (value) => html`<nh-checkbox class="checkbox-only" @change=${(e) => this.handleRowSelection(e)} .label=${""} .value=${!!value}></nh-checkbox>`}),
         
-        'clash': new FieldDefinition<DimensionTableRecord>({heading: '', decorator: this.clashInfoDecorator })
+        'duplicated': new FieldDefinition<DimensionTableRecord>({heading: '', decorator: this.clashInfoDecorator })
       }
   }
 
@@ -279,7 +295,7 @@ export default class ConfigDimensionList extends NHComponent {
     row.classList.remove("success-outline");
     row.classList.remove("warning-outline");
 
-    const cb = row.querySelector("td.select nh-checkbox") as NHCheckbox
+    const cb = row.querySelector("td.selected nh-checkbox") as NHCheckbox
     if(!cb) return;
     cb.value = false;
     cb.disabled = true;
@@ -291,17 +307,17 @@ export default class ConfigDimensionList extends NHComponent {
       .slice(1) // Excluding the header rows;
 
     const inboundRows = allRows
-      .filter(row => row.dataset.clash !== "true") // Which are not clashes
+      .filter(row => row.dataset.duplicated !== "true") // Which are not existing dimension entries
 
     return { row, allRows, inboundRows }
   }
 
-  private clashInfoDecorator(existsClash: boolean) : TemplateResult {
-    return existsClash ? html`` : html`
+  private clashInfoDecorator(duplicated: boolean) : TemplateResult {
+    return !duplicated ? html`` : html`
       <nh-tooltip
         class="tooltip-info left super-extend"
         .variant=${"warning"}
-        .text=${"Are you sure you want to add this dimension? There is already a configured dimensions with the same NAME/RANGE. If you wish to use it, check its box."}
+        .text=${"One of your applet's dimensions duplicates this existing dimension! If you wish to create it anyway, check its box above and will be created."}
       >
       <svg slot="hoverable" style="cursor:pointer; margin-top: 12px;" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path fill-rule="evenodd" clip-rule="evenodd" d="M2 12C2 6.47715 6.47715 2 12 2C17.5229 2 22 6.47715 22 12C22 17.5229 17.5229 22 12 22C6.47715 22 2 17.5229 2 12ZM4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12ZM12.7071 15.2929C13.0976 15.6834 13.0976 16.3166 12.7071 16.7071C12.3166 17.0976 11.6834 17.0976 11.2929 16.7071C10.9024 16.3166 10.9024 15.6834 11.2929 15.2929C11.6834 14.9024 12.3166 14.9024 12.7071 15.2929ZM11 8C11 7.44771 11.4477 7 12 7C12.5523 7 13 7.44772 13 8V13C13 13.5523 12.5523 14 12 14C11.4477 14 11 13.5523 11 13V8Z" fill="currentColor"/>
@@ -310,19 +326,19 @@ export default class ConfigDimensionList extends NHComponent {
   }
 
   // Helpers for filtering/matching dimensions with methods
-  private findRangeForDimension(dimension: Dimension & { dimension_eh: EntryHash }): Range | null {
+  private findRangeForDimension(dimension: DimensionEntry): Range | null {
     if(!this.existingRanges || this.existingRanges?.length === 0) return null;
-    return this.existingRanges.find(range => compareUint8Arrays(range.range_eh, dimension.range_eh)) as Range & { range_eh: EntryHash } || null
+    return this.existingRanges.find(range => compareUint8Arrays(range.range_eh, dimension.range_eh)) as RangeEntry || null
   }
 
-  private existingDimensionRangeMatchesConfigDimensionRange(existingDimension: Dimension & { dimension_eh: EntryHash }, newDimension: InboundDimension) {
+  private existingDimensionRangeMatchesConfigDimensionRange(existingDimension: DimensionEntry, newDimension: InboundDimension) {
     const foundRange = this.findRangeForDimension(existingDimension);
 
     return foundRange?.name == newDimension.range.name
       || rangeKindEqual(newDimension.range.kind, foundRange!.kind)
   }
 
-  private filterExistingDimensionsByInboundClash(configDimension: InboundDimension): Array<Dimension & { dimension_eh: EntryHash }> {
+  private filterExistingDimensionsByInboundClash(configDimension: PossibleDuplicateInboundDimension): Array<DimensionEntry> {
     if(!configDimension.range?.name || !this.existingDimensions) return [];
     // TODO: alter the following if clashing only by range values and not name needs to be flagged
     return this.existingDimensions.filter((existingDimension) => existingDimension.name == configDimension.name && this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension))
@@ -417,12 +433,12 @@ export default class ConfigDimensionList extends NHComponent {
         --table-dimensions-input-row-even-background-color: var(--nh-theme-bg-element); 
         --table-dimensions-output-row-even-background-color: var(--nh-theme-bg-element); 
 
-        --table-dimensions-input-select-width: 48px;
-        --table-dimensions-output-select-width: 48px;
-        --table-dimensions-input-select-min-width: 48px;
-        --table-dimensions-output-select-min-width: 48px;
-        --table-dimensions-input-select-max-width: 48px;
-        --table-dimensions-output-select-max-width: 48px;
+        --table-dimensions-input-selected-width: 48px;
+        --table-dimensions-output-selected-width: 48px;
+        --table-dimensions-input-selected-min-width: 48px;
+        --table-dimensions-output-selected-min-width: 48px;
+        --table-dimensions-input-selected-max-width: 48px;
+        --table-dimensions-output-selected-max-width: 48px;
         
         
         --table-dimensions-output-input-dimension-name-min-width: 3rem;
@@ -467,12 +483,12 @@ export default class ConfigDimensionList extends NHComponent {
         --table-dimensions-input-info-max-width: 0.5rem;
         --table-dimensions-output-info-max-width: 0.5rem;
 
-        --table-dimensions-input-clash-width: 0.25rem;
-        --table-dimensions-output-clash-width: 0.25rem;
-        --table-dimensions-input-clash-min-width: 0.25rem;
-        --table-dimensions-output-clash-min-width: 0.25rem;
-        --table-dimensions-input-clash-max-width: 0.25rem;
-        --table-dimensions-output-clash-max-width: 0.25rem;
+        --table-dimensions-input-duplicated-width: 0.25rem;
+        --table-dimensions-output-duplicated-width: 0.25rem;
+        --table-dimensions-input-duplicated-min-width: 0.25rem;
+        --table-dimensions-output-duplicated-min-width: 0.25rem;
+        --table-dimensions-input-duplicated-max-width: 0.25rem;
+        --table-dimensions-output-duplicated-max-width: 0.25rem;
 
         --table-dimensions-input-cell-height: 58px;
         --table-dimensions-output-cell-height: 58px;
