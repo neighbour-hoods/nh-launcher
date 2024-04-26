@@ -39,37 +39,39 @@ type DimensionEntry = Dimension & { dimension_eh: EntryHash };
 type InboundDimension = ConfigDimension & {selected?: boolean, duplicateOf?: Array<DimensionEntry>};
 
 // Helpers for reaching into table DOM and adding/removing selected state
-function showRowSelected(row: HTMLElement, isClash: boolean = false) {
-  row.dataset.clash = "true"; // Used for filtering out these rows from the checkbox handling login 
-
-  // TODO: separate out into classes and toggle them instead of adding to style object
-  row.style.outline = "2px solid rgb(93, 195, 137)";
-  row.style.borderRadius = isClash ? "16px" : "8px";
-  row.style.position = isClash ? "relative" : "initial";
-  row.style.top = isClash ? "-.25rem" : "initial";
-  row.style.left = isClash ? ".5rem" : "initial";
-  const selectCell = (row.querySelector('.select') as HTMLElement);
-  const nameCell = (row.querySelector('.dimension-name') as HTMLElement);
-  selectCell!.style.backgroundColor = "rgb(93, 195, 137)";
-  if(isClash) { // Style differently so that association with 
-    row!.style.outlineOffset = "-8px";
-    nameCell.style.width = "8rem";
-    row.querySelectorAll("td").forEach(cell => {
-      cell.style.backgroundColor = "transparent";
-      cell.style.paddingRight = "24px";
-    })
-  }
-
+function showRowSelected(row: HTMLElement, isDuplicated: boolean) {
+  row.classList.add(isDuplicated ? "duplicated" : "duplicate")
+  
+    // TODO: The above does not work, figure out how to add this to wc-table without so much hackery
+    // row.style.outline = "2px solid rgb(93, 195, 137)";
+    // row.style.borderRadius = isClash ? "16px" : "8px";
+    // row.style.position = isClash ? "relative" : "initial";
+    // row.style.top = isClash ? "-.25rem" : "initial";
+    // row.style.left = isClash ? ".5rem" : "initial";
+    // const selectCell = (row.querySelector('.select') as HTMLElement);
+    // const nameCell = (row.querySelector('.dimension-name') as HTMLElement);
+    // selectCell!.style.backgroundColor = "rgb(93, 195, 137)";
+    // if(isClash) { // Style differently so that association with 
+    //   row!.style.outlineOffset = "-8px";
+    //   nameCell.style.width = "8rem";
+    //   row.querySelectorAll("td").forEach(cell => {
+    //     cell.style.backgroundColor = "transparent";
+    //     cell.style.paddingRight = "24px";
+    //   })
+    // }
 }
 function showRowSelectedWarning(row: HTMLElement) {
-  row.style.outline = "2px solid #ffcf74";
-  row.style.borderRadius = "8px";
-  (row.querySelector('.select') as HTMLElement)!.style.backgroundColor = "#ffcf74";
+  row.classList.add("warning-outline")
+  // row.style.outline = "2px solid #ffcf74";
+  // row.style.borderRadius = "8px";
+  // (row.querySelector('.selected') as HTMLElement)!.style.backgroundColor = "#ffcf74";
 }
 function showRowNotSelected(row: HTMLElement) {
-  row.style.outline = "";
-  row.style.borderRadius = "";
-  (row.querySelector('.select') as HTMLElement)!.style.backgroundColor = "transparent";
+
+  row.classList.add("no-outline");
+  // row.style.outline = "";
+  // row.style.borderRadius = "";
+  // (row.querySelector('.selected') as HTMLElement)!.style.backgroundColor = "transparent";
 }
 
 // Helpers for filtering/matching dimensions with methods
@@ -357,16 +359,47 @@ export default class ConfigDimensionList extends NHComponent {
 
       /* Select/deselected row styles */
 
-      .success-outline {
-        
+      .duplicated, .duplicate {
+        outline: 2px solid rgb(93, 195, 137);
+      }
+
+      .duplicated {
+        outline-offset: 16px;
+        border-radius: 16px;
+        position: relative;
+        left: .5rem;
+        top: -0.25rem
+      }
+      
+      .duplicate {
+        border-radius: 8px;
       }
 
       .warning-outline {
+        outline-color: #ffcf74;
+        border-radius: 8px;
+      }
 
+      .warning-outline td.selected {
+        background-color: #ffcf74;
+      }
+
+      .duplicated td.dimension-name {
+        width: 8rem;
+      }
+      .duplicated td {
+        background-color: transparent;
+        padding-right: 24px;
+      }
+      .duplicated td.selected {
+        background-color: rgb(93, 195, 137);
       }
 
       .no-outline {
-
+        outline: none;
+      }
+      .no-outline td.selected {
+        background-color: transparent;
       }
 
       :host {
