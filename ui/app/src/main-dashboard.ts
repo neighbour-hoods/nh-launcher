@@ -33,7 +33,7 @@ import NHSpinner from '@neighbourhoods/design-system-components/spinner';
 import NHTooltip from '@neighbourhoods/design-system-components/tooltip';
 import NHDialog from '@neighbourhoods/design-system-components/dialog';
 import NHProfileCard from '@neighbourhoods/design-system-components/profile/profile-card';
-import { b64images } from '@neighbourhoods/design-system-styles';
+import { b64images, SensemakerStore } from '@neighbourhoods/design-system-styles';
 import { ConfigPage } from './nh-config/types';
 
 export class MainDashboard extends ScopedRegistryHost(LitElement) {
@@ -88,7 +88,10 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
   @state() userProfileMenuVisible: boolean = false;
 
   async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
-      if(changedProperties.has('_selectedAppletInstanceId') && !!this._selectedWeGroupId && !!this._selectedAppletInstanceId) {
+    // Cache appInfo here to prevent cachedAppInfo issue (sensemaker.0 cell could not be found)
+    this._selectedWeGroupId && this._matrixStore?.sensemakerStore(this._selectedWeGroupId).subscribe(s => {(s as SensemakerStore).client.appInfo(); console.log("Cached appInfo!")});
+
+    if(changedProperties.has('_selectedAppletInstanceId') && !!this._selectedWeGroupId && !!this._selectedAppletInstanceId) {
         if(this.haveCreatedDimensions) {
           this.haveCreatedDimensions = false;
           // No need to reassign applet info to local state
