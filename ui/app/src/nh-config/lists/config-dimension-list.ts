@@ -150,19 +150,16 @@ export default class ConfigDimensionList extends NHComponent {
         console.log('Error mapping dimensions and ranges to table values: ', error)
       }
     }
-    // TODO: test this logic as it is not being triggered the same as before the refactor
     // Logic for dom manipulation of rows based on selected and incoming/outgoing state as determined above
     if(changedProperties.has('inboundDimensionDuplicates') 
         && this.inboundDimensionDuplicates.length > 0 
-        && !(this.configDimensions
+        && (this.configDimensions
               .some((inboundDimension: PossibleDuplicateInboundDimension) => inboundDimension?.isDuplicate))
       ) {  
       const table = this._table?.renderRoot?.children?.[1];
-      console.log('table :>> ', table);
       if(typeof table == 'undefined') return
       const rows = [...table.querySelectorAll('tr')].slice(1); // Omit the header row
       rows.forEach((row, idx) => {
-        console.log('this.tableStore.records[idx][] :>> ', this.tableStore.records[idx]['duplicated']);
         if(this.tableStore.records[idx]['duplicated']) {
           row.dataset.duplicated = "true" 
         }
@@ -179,7 +176,7 @@ export default class ConfigDimensionList extends NHComponent {
       if(!this.configDimensions) throw new Error('Do not have config dimensions loaded');
 
       const { row, allRows, inboundRows } = this.getRowRefs(e.target as HTMLElement);
-      
+  
       const selectedRowIndex = allRows.findIndex(r => r == row);
       const configDimensionsRowIndex = inboundRows.findIndex(r => r == row); // Get this specific row's index as it would be in this.configDimensions
 
@@ -190,7 +187,7 @@ export default class ConfigDimensionList extends NHComponent {
       const currentRowState: boolean = !!(dimensionToSelect.selected);
       dimensionToSelect.selected = !currentRowState as boolean;
 
-      if(!dimensionToSelect?.isDuplicate) {
+      if(dimensionToSelect?.isDuplicate) {
         // Deselect each original dimension entry row for which this config row is a duplicate
         dimensionToSelect.duplicateOf?.forEach((_, idx) => {
           const rowToDeselect = allRows[selectedRowIndex + (idx + 1)];
