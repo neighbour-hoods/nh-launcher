@@ -80,7 +80,16 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
 
   @state()
   userProfileMenuVisible: boolean = false;
+
   private _appletName: string | undefined;
+  
+  @state() userProfileMenuVisible: boolean = false;
+
+  async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
+    // Cache appInfo here to prevent cachedAppInfo issue (sensemaker.0 cell could not be found)
+    this._selectedWeGroupId && this._matrixStore?.sensemakerStore(this._selectedWeGroupId).subscribe(s => {(s as SensemakerStore).client.appInfo(); console.log("Cached appInfo!")});
+    
+  }
 
   async refreshProfileCard(weGroupId: DnaHash) {
     if(!this._withProfile?.agentProfile?.value) {
