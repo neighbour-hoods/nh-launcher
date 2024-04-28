@@ -37,7 +37,7 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
     for(let dim of this._configDimensionsToCreate) {
           const rangeEntryRecord = await this._sensemakerStore.value?.createRange(dim.range);
           // Assign entry hash to config dimensions ready for creation of dimensions
-          dim.range_eh = rangeEntryRecord?.entryHash;
+          dim.range_eh = rangeEntryRecord;
         }
     console.log('ranges created for config dimensions')
   }
@@ -47,10 +47,12 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
       if(!(dimension.range_eh)) throw new Error("Could not find created range for dimension");
       return async () => {return this._sensemakerStore.value?.createDimension(({name: dimension.name, computed: dimension.computed, range_eh: (dimension!.range_eh)} as Dimension))}
     }))
+
+    console.log('config dimensions created')
   }
 
   async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
-    if(changedProperties.has("handleSubmit")) { // By now we should have a Sensemaker store value
+    if(changedProperties.has("config")) { // By now we should have a Sensemaker store value
       if(!this._sensemakerStore?.value) return;
       await this.fetchDimensionEntries();
     }
