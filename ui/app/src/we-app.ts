@@ -1,94 +1,122 @@
-import { tree_test } from './yaati-tree';
-import { provide } from "@lit/context";
 import { state, query, customElement } from "lit/decorators.js";
 import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
-import { LitElement, html, css, TemplateResult, PropertyValueMap } from "lit";
-import './global-toast-styles.css'
+import { LitElement, html, css } from "lit";
 
-import { sharedStyles } from "./sharedStyles";
 import { MatrixStore } from "./matrix-store";
-import { matrixContext } from "./context";
-import { MainDashboard } from "./main-dashboard";
+import { GetPath } from "typed-object-tweezers";
 import { connectHolochainApp } from "@neighbourhoods/app-loader";
 import { NHAlert } from "@neighbourhoods/design-system-components";
-import { SlAlert } from "@scoped-elements/shoelace";
-import { TreeStore } from "yaati";
-import { StoreSubscriber } from 'lit-svelte-stores';
+import { TreeState, TreeStore } from "yaati";
+import { get } from 'svelte/store';
+import { CreateNeighbourhoodDialog } from './elements/dialogs/create-nh-dialog';
 
-import { yaati } from './yaati-decorator';
+enum AppState { // Listed in chronological order, followed by those injected dependencies that have a meaningful value by this point
+  Boot = "boot",
+    // has:
+  WeConnected = "we-connected",
+    // has: adminWebsocket, appWebsocket, weAppInfo 
+  InitMatrix = "init-matrix",
+    // has: MatrixStore
+  LoadedNeighbourhoods = "loaded-neighbourhoods",
+    // has: allWeGroupInfos
+  InNeighbourhood = "in-neighbourhood",
+  LoadedApplets = "loaded-applets",
+  InApplet = "in-applet"
+}
 
 @customElement('we-app')
 export class WeApp extends ScopedRegistryHost(LitElement) {
-  @provide({context: matrixContext})
-  private _matrixStore!: MatrixStore;
+  @state() appState: AppState = AppState.Boot;
 
-  _allWeGroupInfos;
-  
-  @state()
-  loading = true;
+  @state() store: TreeStore;
+
+  @state() selectedNhId!: Uint8Array;
+
+  @query("create-nh-dialog") _createNHDialog;
 
   async firstUpdated() {
-    const {
-      adminWebsocket,
-      appWebsocket,
-      appInfo: weAppInfo
-    } = await connectHolochainApp('we');
+    const weConnection = await connectHolochainApp('we');
+    this.appState = AppState.WeConnected;
 
-    this._matrixStore = await MatrixStore.connect(appWebsocket, adminWebsocket, weAppInfo);
-
-    this._allWeGroupInfos = new StoreSubscriber(this, () => this._matrixStore.weGroupInfos());
-
-    this.store = new TreeStore(tree_test);
-    this.loading = false;
+    this.initStore(weConnection)
   }
 
-  protected updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    this._alert = this.renderRoot.querySelector('nh-alert') as NHAlert;
-
-debugger;
+  private async initStore(connection) {
+    const bootTree = await this.buildTree({id: "boot", path: "boot"}, {[AppState.WeConnected]: {id: AppState.WeConnected,  path: "boot.we-connected", connection}});
+    this.store = new TreeStore(bootTree);
   }
 
-  @state() store : TreeStore;
-  @yaati({path: "root.a.3"}) accessor path1!: undefined | any;
-
-  @state() _alertTitle!: string | undefined;
-  @state() _alertMsg!: string | undefined;
-  @state() _alertClosable: boolean = true;
-  @state() _alertType!: "success" | "danger" | undefined;
-  @state() _alert!: NHAlert;
-
-  renderAlert(): TemplateResult {
-    return html`
-      <nh-alert
-        id="alert"
-        .title=${this._alertTitle}
-        .description=${this._alertMsg}
-        .type=${this._alertType}
-        .closable=${this._alertClosable}
-        .isToast=${true}
-        .open=${false}
-      >
-      </nh-alert>
-    `
+  private updateStore(): void {
+    debugger;
+    this.store.setLocal(this.buildTree())
   }
 
-  render() {
-    if (this.loading)
+  private async buildTree(init?: TreeState<string, any>, update?: TreeState<string, any>): TreeState<string, any> {
+    let tree: TreeState = init;
+    let newTree: TreeState;
+
+    switch (this.appState) {
+      case AppState.WeConnected:
+        const { appWebsocket, adminWebsocket, weAppInfo } = update[AppState.WeConnected].connection; 
+        const matrixStore = await MatrixStore.connect(appWebsocket, adminWebsocket, weAppInfo);
+
+        newTree = {...tree, ...update };
+        this.appState = AppState.InitMatrix;
+        return this.buildTree({...newTree}, { [AppState.InitMatrix]: { id: AppState.InitMatrix, path: "boot.we-connected.init-matrix", matrixStore} })
+
+      case AppState.InitMatrix:
+        newTree = { ...tree, [AppState.WeConnected]: {...tree[AppState.WeConnected], ...update} };
+        const neighbourhoods = get(update[AppState.InitMatrix].matrixStore.weGroupInfos())
+        this.appState = AppState.LoadedNeighbourhoods;
+        return this.buildTree({...newTree}, {[AppState.LoadedNeighbourhoods]: { id: AppState.LoadedNeighbourhoods,  path: "boot.we-connected.init-matrix.loaded-neighbourhoods", neighbourhoods} })
+
+      case AppState.LoadedNeighbourhoods:
+        newTree = { ...tree, [AppState.WeConnected]: {...tree[AppState.WeConnected], [AppState.InitMatrix]: {...tree[AppState.WeConnected][AppState.InitMatrix], ...update}} };
+        return newTree
+
+      default:
+        return tree
+    }
+  }
+
+  renderPage() {
+    // Emulation of different main-dashboard states and providing a yaati tree instance to several components,
+    // each component will use different parts of the tree for each use case,
+    // You can imagine there being a top level state machine that will only allow you to route to a certain page
+    // once the prerequisites for that branch of the yaati tree being fully populated with values is met,
+    // but for now I will just use conditionals.  
+    if (this.appState == AppState.Boot || this.appState == AppState.WeConnected)
       return html`<div class="row center-content" style="flex: 1;">
         <mwc-circular-progress indeterminate></mwc-circular-progress>
       </div>`;
+      
+      console.log('this.appState :>> ', this.store?.getSnapshot());
 
-    return html`<p>${this.path1.id}</p><button @click=${() => this.path1 = "whatever"}>Click Me</button>`;
+      if (this.appState == AppState.LoadedNeighbourhoods) return html`
+        <create-nh-dialog @we-added=${({detail: selectedNhId}) => {
+          this.selectedNhId = selectedNhId;
+          this.appState = AppState.InNeighbourhood;
+          this.updateStore()
+        }}> </create-nh-dialog>
+      `;
+
+    // return html`<p>${this.path1}</p><button @click=${() => this.path1 = "whatever"}>Click Me</button>`;
+  }
+  render() {
+    return html`
+      <button class="create" @click=${() => {if(this._createNHDialog) this._createNHDialog.dialog._dialog.show() }}>Create NH</button>
+      ${this.renderPage()}
+      `
+
   }
 
   static elementDefinitions = {
-      "main-dashboard": MainDashboard,
+      'create-nh-dialog': CreateNeighbourhoodDialog,
       'nh-alert': NHAlert
   }
 
   static get styles() {
     return [
-      sharedStyles,
       css`
         :host {
           margin: 0px;

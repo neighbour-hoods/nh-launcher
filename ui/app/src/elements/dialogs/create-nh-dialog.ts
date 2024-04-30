@@ -1,21 +1,18 @@
 import { html, css, CSSResult} from "lit";
-import { state, property } from "lit/decorators.js";
+import { state, property, query } from "lit/decorators.js";
 
-import { consume } from "@lit/context";
 import { SlInput, SlTooltip} from '@scoped-elements/shoelace';
 
-import { matrixContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 import { NHComponentShoelace, NHDialog, NHSelectAvatar } from "@neighbourhoods/design-system-components";
 import { b64images } from "@neighbourhoods/design-system-styles";
 import { InferType, object, string } from "yup";
+import { yaati } from "../../yaati-decorator";
 
 const NH_DEFAULT_LOGO = b64images.nhIcons.logoCol;
 
 export class CreateNeighbourhoodDialog extends NHComponentShoelace {
-  @consume({ context: matrixContext , subscribe: true })
-  @property({attribute: false})
-  _matrixStore!: MatrixStore;
+  @yaati({path: "init-matrix"}) accessor matrixStore!: undefined | MatrixStore;
 
   _neighbourhoodSchema = object({
     name: string().min(3, "Must be at least 3 characters").required(),
@@ -24,8 +21,8 @@ export class CreateNeighbourhoodDialog extends NHComponentShoelace {
 
   _neighbourhood: InferType<typeof this._neighbourhoodSchema> = { name: "", image: "" };
 
-  @property()
-  openDialogButton!: HTMLElement;
+  @query("nh-dialog")
+  dialog!: HTMLElement;
   @property()
   _primaryButtonDisabled: boolean = false;
   @state()
@@ -42,12 +39,13 @@ export class CreateNeighbourhoodDialog extends NHComponentShoelace {
     if(!this._neighbourhood.image) {
       this._neighbourhood.image = `data:image/svg+xml;base64,${NH_DEFAULT_LOGO}`
     }
+
     this._neighbourhoodSchema.validate(this._neighbourhood)
       .then(async valid => {
         if(!valid) throw new Error("Neighbourhood input data invalid");
 
         this.dispatchEvent(new CustomEvent("creating-we", {})); // required to display loading screen in the dashboard
-        const weId = await this._matrixStore.createWeGroup(this._neighbourhood.name!, this._neighbourhood.image!);
+        const weId = await this.matrixStore!.createWeGroup(this._neighbourhood.name!, this._neighbourhood.image!);
 
         this.dispatchEvent(
           new CustomEvent("we-added", {
@@ -83,8 +81,7 @@ export class CreateNeighbourhoodDialog extends NHComponentShoelace {
         id="dialog"
         dialogType="create-neighbourhood"
         title="Create Neighbourhood"
-        .handleOk=${this.onSubmit.bind(this)}
-        openButtonRef=${this.openDialogButton}
+        .handleOk=${(e) => this.onSubmit.call(this, e)}
         .primaryButtonDisabled=${!this._neighbourhoodSchema.isValidSync(this._neighbourhood)}
       >
         <div slot="inner-content" class="row">
