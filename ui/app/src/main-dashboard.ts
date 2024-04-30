@@ -133,7 +133,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
       return html` <home-screen style="display: flex; flex: 1;"></home-screen> `;
     } else if (this._dashboardMode === DashboardMode.NHGlobalConfig) {
       return html`
-        <we-group-context .weGroupId=${this._selectedWeGroupId} @return-home=${() =>{
+        <we-group-context .weGrInvestigating yaati and Lit Element implementation for custom Lit decorator taskoupId=${this._selectedWeGroupId} @return-home=${() =>{
           this._dashboardMode = DashboardMode.WeGroupHome;
         }}>
           <nh-global-config></nh-global-config>
