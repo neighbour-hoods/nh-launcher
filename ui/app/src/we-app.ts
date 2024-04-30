@@ -1,3 +1,4 @@
+import { tree_test } from './yaati-tree';
 import { provide } from "@lit/context";
 import { state, query, customElement } from "lit/decorators.js";
 import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
@@ -11,12 +12,18 @@ import { MainDashboard } from "./main-dashboard";
 import { connectHolochainApp } from "@neighbourhoods/app-loader";
 import { NHAlert } from "@neighbourhoods/design-system-components";
 import { SlAlert } from "@scoped-elements/shoelace";
+import { TreeStore } from "yaati";
+import { StoreSubscriber } from 'lit-svelte-stores';
+
+import { yaati } from './yaati-decorator';
 
 @customElement('we-app')
 export class WeApp extends ScopedRegistryHost(LitElement) {
   @provide({context: matrixContext})
   private _matrixStore!: MatrixStore;
 
+  _allWeGroupInfos;
+  
   @state()
   loading = true;
 
@@ -29,13 +36,20 @@ export class WeApp extends ScopedRegistryHost(LitElement) {
 
     this._matrixStore = await MatrixStore.connect(appWebsocket, adminWebsocket, weAppInfo);
 
-    // TODO: add code to prefetch groups and register applets here.
+    this._allWeGroupInfos = new StoreSubscriber(this, () => this._matrixStore.weGroupInfos());
+
+    this.store = new TreeStore(tree_test);
     this.loading = false;
   }
 
   protected updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     this._alert = this.renderRoot.querySelector('nh-alert') as NHAlert;
+
+debugger;
   }
+
+  @state() store : TreeStore;
+  @yaati({path: "root.a.3"}) accessor path1!: undefined | any;
 
   @state() _alertTitle!: string | undefined;
   @state() _alertMsg!: string | undefined;
@@ -64,29 +78,7 @@ export class WeApp extends ScopedRegistryHost(LitElement) {
         <mwc-circular-progress indeterminate></mwc-circular-progress>
       </div>`;
 
-    return html` <main-dashboard  
-      @trigger-alert=${async (e: CustomEvent) =>{
-        const {title, msg, closable, type} = e.detail;
-        this._alertTitle = title;
-        this._alertMsg = msg;
-        this._alertType = type;
-        this._alertClosable = closable;
-        this.requestUpdate()
-        await this.updateComplete;
-
-        const newAlert = this._alert?.cloneNode(true) as NHAlert;
-        const newSlAlert = this._alert.alert?.cloneNode(true) as SlAlert;
-        newAlert.title = title;
-        newAlert.description = msg;
-        newSlAlert.variant = type;
-        newAlert.alert = newSlAlert;
-        document.body.querySelector('.sl-toast-stack')?.replaceChildren(newAlert.alert)
-        newAlert.alert?.toast()
-        this._alert = newAlert;
-      }} 
-      >
-      ${this.renderAlert()}
-      </main-dashboard> `;
+    return html`<p>${this.path1.id}</p><button @click=${() => this.path1 = "whatever"}>Click Me</button>`;
   }
 
   static elementDefinitions = {
