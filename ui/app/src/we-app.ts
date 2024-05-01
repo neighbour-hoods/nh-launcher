@@ -42,36 +42,49 @@ export class WeApp extends ScopedRegistryHost(LitElement) {
   }
 
   private async initStore(connection) {
-    const bootTree = await this.buildTree({id: "boot", path: "boot"}, {[AppState.WeConnected]: {id: AppState.WeConnected,  path: "boot.we-connected", connection}});
+    const bootTree = await this.buildTree({'boot':{id: "boot", path: "boot"}}, {[AppState.WeConnected]: {id: AppState.WeConnected,  path: "boot.we-connected",  data: connection}});
     this.store = new TreeStore(bootTree);
   }
 
-  private updateStore(): void {
-    debugger;
-    this.store.setLocal(this.buildTree())
+  private async updateStore(update?: object) {
+    // Currently updates the whole tree but would be better to do it on a branch by branch basis
+    const newTree = await this.buildTree(null, update);
+    console.log('newTree :>> ', newTree);
+    this.store.setLocal(newTree.boot)
   }
 
   private async buildTree(init?: TreeState<string, any>, update?: TreeState<string, any>): TreeState<string, any> {
-    let tree: TreeState = init;
+    let tree: TreeState = init || this.store.getSnapshot();
     let newTree: TreeState;
-
+// TODO: use immutable.js to simpify all of this
     switch (this.appState) {
       case AppState.WeConnected:
-        const { appWebsocket, adminWebsocket, weAppInfo } = update[AppState.WeConnected].connection; 
+        const { appWebsocket, adminWebsocket, appInfo: weAppInfo } = update[AppState.WeConnected].data; 
         const matrixStore = await MatrixStore.connect(appWebsocket, adminWebsocket, weAppInfo);
 
-        newTree = {...tree, ...update };
+        newTree = { boot: { ...tree.boot, ...(update || tree.boot[AppState.WeConnected]) } };
         this.appState = AppState.InitMatrix;
-        return this.buildTree({...newTree}, { [AppState.InitMatrix]: { id: AppState.InitMatrix, path: "boot.we-connected.init-matrix", matrixStore} })
+        return this.buildTree({...newTree}, { [AppState.InitMatrix]: { id: AppState.InitMatrix, path: "boot.we-connected.init-matrix", data: matrixStore} })
 
       case AppState.InitMatrix:
-        newTree = { ...tree, [AppState.WeConnected]: {...tree[AppState.WeConnected], ...update} };
-        const neighbourhoods = get(update[AppState.InitMatrix].matrixStore.weGroupInfos())
+        newTree = { boot: { ...tree.boot, [AppState.WeConnected]: {...tree.boot[AppState.WeConnected], ...(update ||  { [AppState.InitMatrix]: tree.boot[AppState.WeConnected][AppState.InitMatrix] })}} };
+        const neighbourhoods = get(newTree.boot[AppState.WeConnected][AppState.InitMatrix].data.weGroupInfos());
         this.appState = AppState.LoadedNeighbourhoods;
-        return this.buildTree({...newTree}, {[AppState.LoadedNeighbourhoods]: { id: AppState.LoadedNeighbourhoods,  path: "boot.we-connected.init-matrix.loaded-neighbourhoods", neighbourhoods} })
+        return this.buildTree({...newTree}, {[AppState.LoadedNeighbourhoods]: { id: AppState.LoadedNeighbourhoods,  path: "boot.we-connected.init-matrix.loaded-neighbourhoods", data: neighbourhoods} })
 
       case AppState.LoadedNeighbourhoods:
-        newTree = { ...tree, [AppState.WeConnected]: {...tree[AppState.WeConnected], [AppState.InitMatrix]: {...tree[AppState.WeConnected][AppState.InitMatrix], ...update}} };
+        const neighbourhoodEntries = Object.fromEntries(update[AppState.LoadedNeighbourhoods].data._map.entries())
+        newTree = { boot: { ...tree.boot, [AppState.WeConnected]: {...tree.boot[AppState.WeConnected], [AppState.InitMatrix]: {...tree.boot[AppState.WeConnected][AppState.InitMatrix], ...(update ||  { [AppState.LoadedNeighbourhoods]: tree.boot[AppState.WeConnected][AppState.InitMatrix][AppState.LoadedNeighbourhoods] })}}} };
+        
+        if(Object.keys(neighbourhoodEntries).length > 0) {
+          newTree.boot[AppState.WeConnected][AppState.InitMatrix][AppState.LoadedNeighbourhoods] = {...newTree.boot[AppState.WeConnected][AppState.InitMatrix][AppState.LoadedNeighbourhoods], ...neighbourhoodEntries}
+        }
+        return newTree
+
+      case AppState.InNeighbourhood:
+
+      debugger;
+        newTree = { boot: { ...tree.boot, [AppState.WeConnected]: {...tree.boot[AppState.WeConnected], [AppState.InitMatrix]: {...tree.boot[AppState.WeConnected][AppState.InitMatrix], ...(update ||  { [AppState.LoadedNeighbourhoods]: tree.boot[AppState.WeConnected][AppState.InitMatrix][AppState.LoadedNeighbourhoods] })}}} };
         return newTree
 
       default:
@@ -89,14 +102,15 @@ export class WeApp extends ScopedRegistryHost(LitElement) {
       return html`<div class="row center-content" style="flex: 1;">
         <mwc-circular-progress indeterminate></mwc-circular-progress>
       </div>`;
-      
-      console.log('this.appState :>> ', this.store?.getSnapshot());
 
       if (this.appState == AppState.LoadedNeighbourhoods) return html`
-        <create-nh-dialog @we-added=${({detail: selectedNhId}) => {
+        <create-nh-dialog .store=${this.store} @we-added=${async ({detail: selectedNhId}) => {
+          this.appState = AppState.InitMatrix;
+          await this.updateStore(); // Refetches the neighbourhoods
+          
           this.selectedNhId = selectedNhId;
           this.appState = AppState.InNeighbourhood;
-          this.updateStore()
+          await this.updateStore({[AppState.InNeighbourhood]: { id: AppState.InNeighbourhood,  path: "boot.we-connected.init-matrix.loaded-neighbourhoods.in-neighbourhood", data: "would this be the applets?"} })
         }}> </create-nh-dialog>
       `;
 

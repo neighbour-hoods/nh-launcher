@@ -23,13 +23,13 @@ export function yaati({ path } : { path: string }) : YaatiDecorator & any {
     const descriptor = {
       get(this: HTMLElement & { store: TreeStore }) {
         if(!this.store) return;
-        return this.store.getCursor(path).id
+        return this.store.getCursor(path)?.data
       },
-      set(this: HTMLElement & { store: TreeStore }, newId) {
+      set(this: HTMLElement & { store: TreeStore }, payload) {
         if(!this.store || typeof this.store.setLocal !== 'function') return;
         const oldValue = this.store.getCursor(path);
         try {
-          this.store.setLocal({ id: newId, path })
+          this.store.setLocal({ data: payload, path })
         } catch (error) {
           console.error('Error updating Yaati store at path :>> ', error);
         }
