@@ -33,6 +33,19 @@ type InboundDimension = ConfigDimension & {selected?: boolean };
 type PossibleDuplicateInboundDimension = InboundDimension & {isDuplicate?: boolean, duplicateOf?: Array<DimensionEntry>};
 type DuplicateInboundDimension = PossibleDuplicateInboundDimension & { isDuplicate: true, existing_dimension_ehs: EntryHash[]};
 
+enum PartialOverlapField {
+  Name,
+  Range,
+  Operation,
+  InputDimension,
+}
+
+enum Overlap {
+  CompleteInput,
+  CompleteOutput,
+  Partial,
+}
+
 class ExtendedTable extends Table { // Allows custom elements to be rendered within table-web-component
   static elementDefinitions = {
     "nh-checkbox": NHCheckbox,
@@ -63,6 +76,7 @@ function showRowSelected(row: HTMLElement, isDuplicated: boolean) {
     //   })
     // }
 }
+
 function showRowSelectedWarning(row: HTMLElement) {
   row.classList.add("warning-outline")
   // row.style.outline = "2px solid #ffcf74";
