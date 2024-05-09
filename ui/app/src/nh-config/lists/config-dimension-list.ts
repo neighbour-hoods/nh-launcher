@@ -128,11 +128,15 @@ export default class ConfigDimensionList extends NHComponent {
             // Find the existing dimension entries for the possible duplicate
             const existingDimensionClashes: Array<DimensionEntry> = this.filterExistingDimensionsByInboundClash(inboundDimension);
 
+            this.categorizeDimensionsByInboundClashType(inboundDimension, existingDimensionClashes);
+
             if(existingDimensionClashes.length > 0) {
               // If they exist, concretize the type of this inboundDimension as DuplicateInboundDimension by adding relevant properties
               inboundDimension.isDuplicate = true;
               inboundDimension.duplicateOf = existingDimensionClashes;
               
+              // TODO: add method to find overlapping fields,
+              // and assign the correct enum types to the inbound dimension here so that we can give different options to the user
               (inboundDimension as DuplicateInboundDimension).existing_dimension_ehs = [];
               inboundDimension.duplicateOf.forEach(existingDimension => (inboundDimension as DuplicateInboundDimension)!.existing_dimension_ehs.push(existingDimension.dimension_eh));
               return true
@@ -288,16 +292,17 @@ export default class ConfigDimensionList extends NHComponent {
   render() : TemplateResult {
     return html`
       <div class="content">
-        <div class="title-bar">
-          <h1>${capitalize(this.dimensionType)} Dimensions</h1>
-          <slot class="action" name="action-button"></slot>
-        </div>  
-        ${this.tableStore.records && this.tableStore.records.length > 0
-          ? html`<wc-table .tableStore=${this.tableStore}></wc-table>`
-          : 'No dimensions present'
-        }
+        ${JSON.stringify(this.inboundDimensionDuplicates, null, 2)}
       </div>
     `;
+    //   <div class="title-bar">
+    //     <h1>${capitalize(this.dimensionType)} Dimensions</h1>
+    //     <slot class="action" name="action-button"></slot>
+    //   </div>  
+    //   ${this.tableStore.records && this.tableStore.records.length > 0
+    //     ? html`<wc-table .tableStore=${this.tableStore}></wc-table>`
+    //     : 'No dimensions present'
+    //   }
   }
 
   private uncheckRow(row: HTMLElement) {
@@ -349,10 +354,37 @@ export default class ConfigDimensionList extends NHComponent {
       || rangeKindEqual(newDimension.range.kind, foundRange!.kind)
   }
 
+  private categorizeDimensionsByInboundClashType(configDimension: PossibleDuplicateInboundDimension, existingDimensions: Array<DimensionEntry>): void {
+    existingDimensions.forEach(existingDimension => {
+      const overlapDetails = getOverlapType(existingDimension)
+      console.log('existingDimension :>> ',  existingDimension, configDimension,);
+    })
+
+    function getOverlapType(existingDimension: DimensionEntry) : { type: Overlap, fields?: PartialOverlapField[] } {
+      
+      return {
+        type: Overlap.CompleteInput,
+      }
+    }
+  } 
+
+  // Helpers for determining dimension overlap:
+  private matchesCompletely(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
+    return true
+  }
+  private justMatchesName(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
+    return true
+  }
+  private justMatchesRange(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
+    return true
+  }
+
   private filterExistingDimensionsByInboundClash(configDimension: PossibleDuplicateInboundDimension): Array<DimensionEntry> {
     if(!configDimension.range?.name || !this.existingDimensions) return [];
     // TODO: alter the following if clashing only by range values and not name needs to be flagged
-    return this.existingDimensions.filter((existingDimension) => existingDimension.name == configDimension.name && this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension))
+    return this.existingDimensions.filter((existingDimension) => {
+      return existingDimension.name == configDimension.name && this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension)
+    })
   } 
 
   static elementDefinitions = {
