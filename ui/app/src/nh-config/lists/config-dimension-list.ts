@@ -370,20 +370,19 @@ export default class ConfigDimensionList extends NHComponent {
 
   // Helpers for determining dimension overlap:
   private matchesCompletely(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
-    return true
+    return existingDimension.name == configDimension.name && this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension)
   }
   private justMatchesName(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
-    return true
+    return existingDimension.name == configDimension.name && !this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension)
   }
   private justMatchesRange(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
-    return true
+    return this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension) && !(existingDimension.name == configDimension.name)
   }
 
   private filterExistingDimensionsByInboundClash(configDimension: PossibleDuplicateInboundDimension): Array<DimensionEntry> {
     if(!configDimension.range?.name || !this.existingDimensions) return [];
-    // TODO: alter the following if clashing only by range values and not name needs to be flagged
     return this.existingDimensions.filter((existingDimension) => {
-      return existingDimension.name == configDimension.name && this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension)
+      return this.justMatchesName(configDimension, existingDimension) || this.justMatchesRange(configDimension, existingDimension) || this.matchesCompletely(configDimension, existingDimension)
     })
   } 
 
