@@ -7,7 +7,7 @@ import { NHButton, NHCard, NHCheckbox, NHComponent, NHTooltip } from "@neighbour
 import { capitalize } from "../../elements/components/helpers/functions";
 import { FieldDefinition, FieldDefinitions, Table, TableStore } from "@adaburrows/table-web-component";
 import { rangeKindEqual } from "../../utils";
-import { EntryHash } from "@holochain/client";
+import { EntryHash, encodeHashToBase64 } from "@holochain/client";
 import { compareUint8Arrays } from "@neighbourhoods/app-loader";
 
 type InputDimensionTableRecord = {
@@ -26,7 +26,7 @@ type OutputDimensionTableRecord = InputDimensionTableRecord & {
 
 type DimensionTableRecord = InputDimensionTableRecord & OutputDimensionTableRecord;
 
-type DimensionEntry = Dimension & { dimension_eh: EntryHash };
+type DimensionEntry = Dimension & { dimension_eh: EntryHash, overlap?: { type: Overlap, fields?: PartialOverlapField[] } };
 type RangeEntry = Range & { range_eh: EntryHash };
 
 type InboundDimension = ConfigDimension & {selected?: boolean };
@@ -34,16 +34,16 @@ type PossibleDuplicateInboundDimension = InboundDimension & {isDuplicate?: boole
 type DuplicateInboundDimension = PossibleDuplicateInboundDimension & { isDuplicate: true, existing_dimension_ehs: EntryHash[]};
 
 enum PartialOverlapField {
-  Name,
-  Range,
-  Operation,
-  InputDimension,
+  Name = "name",
+  Range = "range",
+  Operation = "operation",
+  InputDimension = "input-dimension",
 }
 
 enum Overlap {
-  CompleteInput,
-  CompleteOutput,
-  Partial,
+  CompleteInput = "complete-input",
+  CompleteOutput = "complete-output",
+  Partial = "partial",
 }
 
 class ExtendedTable extends Table { // Allows custom elements to be rendered within table-web-component
@@ -95,6 +95,7 @@ function showRowNotSelected(row: HTMLElement) {
 function matchesMethodInputDimension(dimension: InboundDimension, method: ConfigMethod) {
   return method.input_dimensions.some(d => dimension.name == d.name && (dimension.range.name == d.range.name) && rangeKindEqual(dimension.range.kind, d.range.kind))
 }
+
 function matchesMethodOutputDimension(dimension: InboundDimension, method: ConfigMethod) {
   return method.output_dimension.name == dimension.name 
     && method.output_dimension.range.name == dimension.range.name 
@@ -134,9 +135,7 @@ export default class ConfigDimensionList extends NHComponent {
               // If they exist, concretize the type of this inboundDimension as DuplicateInboundDimension by adding relevant properties
               inboundDimension.isDuplicate = true;
               inboundDimension.duplicateOf = existingDimensionClashes;
-              
-              // TODO: add method to find overlapping fields,
-              // and assign the correct enum types to the inbound dimension here so that we can give different options to the user
+
               (inboundDimension as DuplicateInboundDimension).existing_dimension_ehs = [];
               inboundDimension.duplicateOf.forEach(existingDimension => (inboundDimension as DuplicateInboundDimension)!.existing_dimension_ehs.push(existingDimension.dimension_eh));
               return true
@@ -289,10 +288,23 @@ export default class ConfigDimensionList extends NHComponent {
       }
   }
 
+  renderOverlaps() : TemplateResult {
+    return html`${this.inboundDimensionDuplicates.map(inboundDimension => { 
+      return html`<h3>${inboundDimension.name}</h3>
+        ${(inboundDimension as any).duplicateOf.some(duplicateOf => duplicateOf.overlap.type.match("complete"))
+          ? "Do not create inbound dimension!" 
+          : html`${
+            (inboundDimension as any).duplicateOf.map(duplicateOf => 
+              html`<span>EH:  ${encodeHashToBase64(duplicateOf.dimension_eh)}</span><br />
+                  <span>OVERLAP: ${JSON.stringify(duplicateOf.overlap, null, 2)}</span><br />`)}`}
+      `})
+    }`
+  }
+
   render() : TemplateResult {
     return html`
       <div class="content">
-        ${JSON.stringify(this.inboundDimensionDuplicates, null, 2)}
+        ${this.renderOverlaps()}
       </div>
     `;
     //   <div class="title-bar">
@@ -349,24 +361,48 @@ export default class ConfigDimensionList extends NHComponent {
 
   private existingDimensionRangeMatchesConfigDimensionRange(existingDimension: DimensionEntry, newDimension: InboundDimension) {
     const foundRange = this.findRangeForDimension(existingDimension);
-
+    // TODO: determine if this kind of range comparison is sufficient.
     return foundRange?.name == newDimension.range.name
       || rangeKindEqual(newDimension.range.kind, foundRange!.kind)
   }
 
   private categorizeDimensionsByInboundClashType(configDimension: PossibleDuplicateInboundDimension, existingDimensions: Array<DimensionEntry>): void {
     existingDimensions.forEach(existingDimension => {
-      const overlapDetails = getOverlapType(existingDimension)
-      console.log('existingDimension :>> ',  existingDimension, configDimension,);
+      this.setOverlapDetails(existingDimension, configDimension)
     })
+  }
 
-    function getOverlapType(existingDimension: DimensionEntry) : { type: Overlap, fields?: PartialOverlapField[] } {
-      
-      return {
-        type: Overlap.CompleteInput,
+  private getOverlapType(newDimension: InboundDimension, overlapFields: PartialOverlapField[]) : Overlap {
+    if(newDimension.computed) { // Check output dimension partial overlaps
+      if(overlapFields.includes(PartialOverlapField.Name) && overlapFields.includes(PartialOverlapField.Operation) && overlapFields.includes(PartialOverlapField.Range) && overlapFields.includes(PartialOverlapField.Operation)) {
+        return Overlap.CompleteOutput
       }
+    } else if(overlapFields.includes(PartialOverlapField.Name) && overlapFields.includes(PartialOverlapField.Range)) {
+       // Check input dimension partial overlaps
+      return Overlap.CompleteInput
     }
-  } 
+    return Overlap.Partial
+  }
+
+  private setOverlapDetails(existingDimension: DimensionEntry, newDimension: InboundDimension) {
+    const overlap = {fields: [] as PartialOverlapField[]} as any;
+
+    if(this.matchesName(newDimension, existingDimension)) {
+      overlap.fields.push(PartialOverlapField.Name)
+    }
+    if(this.matchesRange(newDimension, existingDimension)) {
+      overlap.fields.push(PartialOverlapField.Range)
+    }
+    if(this.matchesOperation(newDimension, existingDimension)) {
+      overlap.fields.push(PartialOverlapField.Operation)
+    }
+    if(this.matchesInputDimension(newDimension, existingDimension)) {
+      overlap.fields.push(PartialOverlapField.InputDimension)
+    }
+    
+    overlap.type = this.getOverlapType(newDimension, overlap.fields)
+    existingDimension.overlap = overlap
+  }
 
   // Helpers for determining dimension overlap:
   private matchesCompletely(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
@@ -377,6 +413,18 @@ export default class ConfigDimensionList extends NHComponent {
   }
   private justMatchesRange(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
     return this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension) && !(existingDimension.name == configDimension.name)
+  }
+  private matchesName(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
+    return existingDimension.name == configDimension.name
+  }
+  private matchesRange(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
+    return this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension)
+  }
+  private matchesOperation(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
+    return configDimension.computed && false // TODO: get linked method and check.. && (existingDimension.o == configDimension.o)
+  }
+  private matchesInputDimension(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
+    return configDimension && false // TODO
   }
 
   private filterExistingDimensionsByInboundClash(configDimension: PossibleDuplicateInboundDimension): Array<DimensionEntry> {
