@@ -1,9 +1,9 @@
 import { html, css, PropertyValueMap, CSSResult, TemplateResult } from "lit";
-import { property, query, state } from "lit/decorators.js";
+import { property, query, queryAll, state } from "lit/decorators.js";
 
 import { ConfigDimension, ConfigMethod,  Dimension, RangeKind, Range, Method } from "@neighbourhoods/client";
 
-import { NHButton, NHCard, NHCheckbox, NHComponent, NHTooltip } from "@neighbourhoods/design-system-components";
+import { NHButton, NHCard, NHCheckbox, NHComponent, NHDialog, NHTooltip } from "@neighbourhoods/design-system-components";
 import { capitalize } from "../../elements/components/helpers/functions";
 import { FieldDefinition, FieldDefinitions, Table, TableStore } from "@adaburrows/table-web-component";
 import { rangeKindEqual } from "../../utils";
@@ -119,6 +119,8 @@ export default class ConfigDimensionList extends NHComponent {
   @property() existingMethods!: Array<MethodEntry>;
 
   @property() configMethods!: Array<ConfigMethod>;
+
+  @queryAll('.change-dimension-name-dialog') private _changeDimensionNameDialogs!: HTMLElement;
 
   protected updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     // Logic for detecting inbound config dimensions that  are duplicates of existing dimension entries
@@ -294,13 +296,14 @@ return //temp
       }
   }
 
-  renderOverlappingDimensionFieldAction(duplicateOf) : TemplateResult {
-    if(duplicateOf.overlap.type.match("complete")) return html``
-    console.log('duplicateOf :>> ', duplicateOf);
+  renderOverlappingDimensionFieldAction(duplicateOf, idx) : TemplateResult {
+    // if(duplicateOf.overlap.type.match("complete")) return html``
     return html`ACTION: <br />${  
       (() => {switch (true) {
         case duplicateOf.overlap.fields.includes(PartialOverlapField.Name):
-          return html`<input type="text" placeholder="Change the name of the inbound dimension:" /><br /><br />`
+          return html`
+        <button @click=${() => typeof console.log(this._changeDimensionNameDialogs, idx) == 'undefined' && (this._changeDimensionNameDialogs)[idx].showDialog()}>${(this._changeDimensionNameDialogs)[idx]?.dataset?.hasUpdated ? "Updated" : "Rename"}</button><br />
+        `
         case duplicateOf.overlap.fields.includes(PartialOverlapField.Operation) || duplicateOf.overlap.fields.includes(PartialOverlapField.Range):
           return html`<select @change=${(e) => {
             this.dispatchEvent(new CustomEvent((e.target.value == "inbound" ? "config-dimension-selected" : "config-dimension-deselected"),
@@ -319,17 +322,43 @@ return //temp
     }`
   }
 
-  renderOverlappingDimension(inboundDimension) : TemplateResult {
+  renderOverlappingDimension(inboundDimension, idx) : TemplateResult {
     return html`<h3>${inboundDimension.name}</h3>
+        <nh-dialog
+          size="medium"
+          .title=${"Change Dimension Name"}
+          .dialogType=${"confirm"}
+          .handleOk=${function(){
+            console.log('inboundDimension (before) :>> ', inboundDimension);
+            const dialogInput = (this.renderRoot.querySelector("slot").assignedElements()[0].querySelector("input"));
+            if(dialogInput?.value && dialogInput.value !== "") {
+              inboundDimension.name = dialogInput.value;
+              // console.log('inboundDimension (after edited) :>> ', inboundDimension);
+              this.dispatchEvent(new CustomEvent(("config-dimension-selected"),
+                { 
+                  detail: { dimension: {...inboundDimension, name: dialogInput.value} }, bubbles: true, composed: true
+                }
+              ))
+              dialogInput.value = "";
+            }
+            this.dataset.hasUpdated = true;
+            this.requestUpdate()
+          }}
+          class="change-dimension-name-dialog"
+        >
+          <div slot="inner-content" class="container">
+            <input type="text" placeholder="Change the name of the inbound dimension:" />
+          </div>
+        </nh-dialog>
         ${html`${
-          inboundDimension.duplicateOf.map(duplicateOf => 
+          inboundDimension.duplicateOf.map((duplicateOf) => 
             html`<span>DIMENSION:  ${this.existingDimensions.find(dim => compareUint8Arrays(dim.dimension_eh, duplicateOf.dimension_eh))?.name}</span><br />
                 <span>OVERLAP: ${JSON.stringify(duplicateOf.overlap, null, 2)}</span><br />
-                ${this.renderOverlappingDimensionFieldAction(duplicateOf)}
+                ${this.renderOverlappingDimensionFieldAction(duplicateOf, idx)}
             `)}
           ${inboundDimension.duplicateOf.some(duplicateOf => duplicateOf.overlap.type.match("complete"))
             ? html`ACTION: Do not create inbound dimension.<br /><br />` 
-            : this.renderOverlappingDimensionFieldAction(inboundDimension)
+            : null
           }
         `}
       `
@@ -339,10 +368,20 @@ return //temp
     return html`
       ${
         this.inboundDimensionDuplicates.length > 0 && this.inboundDimensionDuplicates.every((inboundDimension: any) => inboundDimension.duplicateOf.some(duplicateOf => duplicateOf.overlap.type.match("complete")))
-          ? html`<h2>INBOUND ${this.dimensionType.toUpperCase()} COMPLETE OVERLAP: Your applet config completely overlaps some existing configuration and won't be created.</h2>`
-          : html`<h2>No overlaps - go ahead and add config dimensions</h2>`
+          ? html`<h2>INBOUND ${this.dimensionType.toUpperCase()} COMPLETE OVERLAP: Your applet config completely overlaps some existing configuration and those dimensions won't be created.</h2>`
+          : html`<h2>No overlaps - select to add config dimensions:</h2>
+            ${this.configDimensions.map(dimension => html`
+              ${dimension.name} : <input type="checkbox" @change=${(e) => {
+                this.dispatchEvent(new CustomEvent((e.target.checked ? "config-dimension-selected" : "config-dimension-deselected"),
+              { 
+                detail: { dimension }, bubbles: true, composed: true
+              }
+            ))
+          }} /><br />
+            `)}
+          `
       }
-      ${html`${this.inboundDimensionDuplicates.map((inboundDimension) => html`${this.renderOverlappingDimension.call(this, inboundDimension)}`)}`}`
+      ${html`${this.inboundDimensionDuplicates.map((inboundDimension, idx) => html`${this.renderOverlappingDimension.call(this, inboundDimension, idx)}`)}`}`
   }
 
   render() : TemplateResult {
@@ -514,6 +553,7 @@ return //temp
     "nh-button": NHButton,
     "nh-card": NHCard,
     'wc-table': ExtendedTable,
+    "nh-dialog": NHDialog,
   }
 
   static styles: CSSResult[] = [
