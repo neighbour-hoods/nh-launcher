@@ -1,7 +1,7 @@
 import { html, css, PropertyValueMap, CSSResult, TemplateResult } from "lit";
 import { property, query, state } from "lit/decorators.js";
 
-import { ConfigDimension, ConfigMethod, Dimension, RangeKind, Range } from "@neighbourhoods/client";
+import { ConfigDimension, ConfigMethod,  Dimension, RangeKind, Range, Method } from "@neighbourhoods/client";
 
 import { NHButton, NHCard, NHCheckbox, NHComponent, NHTooltip } from "@neighbourhoods/design-system-components";
 import { capitalize } from "../../elements/components/helpers/functions";
@@ -28,6 +28,7 @@ type DimensionTableRecord = InputDimensionTableRecord & OutputDimensionTableReco
 
 type DimensionEntry = Dimension & { dimension_eh: EntryHash, overlap?: { type: Overlap, fields?: PartialOverlapField[] } };
 type RangeEntry = Range & { range_eh: EntryHash };
+type MethodEntry = Method & { method_eh: EntryHash };
 
 type InboundDimension = ConfigDimension & {selected?: boolean };
 type PossibleDuplicateInboundDimension = InboundDimension & {isDuplicate?: boolean, duplicateOf?: Array<DimensionEntry>};
@@ -96,7 +97,7 @@ function matchesMethodInputDimension(dimension: InboundDimension, method: Config
   return method.input_dimensions.some(d => dimension.name == d.name && (dimension.range.name == d.range.name) && rangeKindEqual(dimension.range.kind, d.range.kind))
 }
 
-function matchesMethodOutputDimension(dimension: InboundDimension, method: ConfigMethod) {
+function matchesConfigMethodOutputDimension(dimension: InboundDimension, method: ConfigMethod) {
   return method.output_dimension.name == dimension.name 
     && method.output_dimension.range.name == dimension.range.name 
     && rangeKindEqual(method.output_dimension.range.kind, dimension.range.kind)
@@ -115,6 +116,7 @@ export default class ConfigDimensionList extends NHComponent {
 
   @property() existingDimensions!: Array<DimensionEntry>;
   @property() existingRanges!: Array<RangeEntry>;
+  @property() existingMethods!: Array<MethodEntry>;
 
   @property() configMethods!: Array<ConfigMethod>;
 
@@ -143,7 +145,7 @@ export default class ConfigDimensionList extends NHComponent {
             return false
           })
         }
-
+return //temp
         const newTableRecords = [] as any;
         this.configDimensions.forEach((inboundDimension: PossibleDuplicateInboundDimension)=> {
           newTableRecords.push(inboundDimension as PossibleDuplicateInboundDimension); // First add the inbound dimension
@@ -244,7 +246,7 @@ export default class ConfigDimensionList extends NHComponent {
     const range = dimension.range
     const linkedMethods = this.dimensionType == 'input'
       ? this.configMethods.filter(method => matchesMethodInputDimension(dimension, method))
-      : this.configMethods.filter(method => matchesMethodOutputDimension(dimension, method))
+      : this.configMethods.filter(method => matchesConfigMethodOutputDimension(dimension, method))
 
     const method = linkedMethods[0];
     const inputDimension: InboundDimension | '' = (this.dimensionType == 'output' && method.input_dimensions[0]) || ''
@@ -363,7 +365,7 @@ export default class ConfigDimensionList extends NHComponent {
     const foundRange = this.findRangeForDimension(existingDimension);
     // TODO: determine if this kind of range comparison is sufficient.
     return foundRange?.name == newDimension.range.name
-      || rangeKindEqual(newDimension.range.kind, foundRange!.kind)
+      && rangeKindEqual(newDimension.range.kind, foundRange!.kind)
   }
 
   private categorizeDimensionsByInboundClashType(configDimension: PossibleDuplicateInboundDimension, existingDimensions: Array<DimensionEntry>): void {
@@ -393,11 +395,19 @@ export default class ConfigDimensionList extends NHComponent {
     if(this.matchesRange(newDimension, existingDimension)) {
       overlap.fields.push(PartialOverlapField.Range)
     }
-    if(this.matchesOperation(newDimension, existingDimension)) {
-      overlap.fields.push(PartialOverlapField.Operation)
-    }
-    if(this.matchesInputDimension(newDimension, existingDimension)) {
-      overlap.fields.push(PartialOverlapField.InputDimension)
+
+    if(newDimension.computed && this.existingMethods) {
+      const existingDimensionLinkedMethods = this.existingMethods.filter(method => this.matchesMethodEntryOutputDimension(existingDimension, method));
+      const configDimensionLinkedMethods = this.configMethods.filter(method => matchesConfigMethodOutputDimension(newDimension, method));
+      console.log('existingMethods :>> ', this.existingMethods);
+      console.log('existingDimensionLinkedMethods :>> ', existingDimensionLinkedMethods);
+      console.log('configDimensionLinkedMethods :>> ', configDimensionLinkedMethods);
+      if(this.matchesOperation(existingDimensionLinkedMethods, configDimensionLinkedMethods)) {
+        overlap.fields.push(PartialOverlapField.Operation)
+      }
+      if(this.matchesInputDimension(existingDimensionLinkedMethods, configDimensionLinkedMethods)) {
+        overlap.fields.push(PartialOverlapField.InputDimension)
+      }
     }
     
     overlap.type = this.getOverlapType(newDimension, overlap.fields)
@@ -420,13 +430,35 @@ export default class ConfigDimensionList extends NHComponent {
   private matchesRange(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
     return this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension)
   }
-  private matchesOperation(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
-    return configDimension.computed && false // TODO: get linked method and check.. && (existingDimension.o == configDimension.o)
+  private matchesOperation(existingDimensionMethods: MethodEntry[], configDimensionMethods: ConfigMethod[]): boolean {
+    return configDimensionMethods.length > 0 && existingDimensionMethods.length > 0 && configDimensionMethods[0].program && existingDimensionMethods[0].program && Object.keys(configDimensionMethods[0].program)[0] === Object.keys(existingDimensionMethods[0].program)[0]
   }
-  private matchesInputDimension(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
-    return configDimension && false // TODO
+  private matchesInputDimension(existingDimensionMethods: MethodEntry[], configDimensionMethods: ConfigMethod[]): boolean {
+    const bothMethodsHaveInputDimensions = configDimensionMethods.length > 0 && existingDimensionMethods.length > 0 && existingDimensionMethods[0].input_dimension_ehs?.[0] && configDimensionMethods[0].input_dimensions?.[0];
+    if(!bothMethodsHaveInputDimensions) return false;
+    const inputDimensionEntryForMethodEntry = this.existingDimensions.find(dimension => compareUint8Arrays(dimension.dimension_eh, existingDimensionMethods[0].input_dimension_ehs[0] ))
+    if(!inputDimensionEntryForMethodEntry) return false;
+    const inputDimensionRangeEntryForMethodEntry = this.findRangeForDimension(inputDimensionEntryForMethodEntry);
+
+    console.log('inputDimensionEntryForMethodEntry :>> ', inputDimensionEntryForMethodEntry);
+    return !!inputDimensionRangeEntryForMethodEntry
+      && configDimensionMethods[0].input_dimensions[0].name == inputDimensionEntryForMethodEntry.name 
+      && configDimensionMethods[0].input_dimensions[0].range.name == inputDimensionRangeEntryForMethodEntry.name 
+      && rangeKindEqual(configDimensionMethods[0].input_dimensions[0].range.kind, inputDimensionRangeEntryForMethodEntry.kind)
   }
 
+  private matchesMethodEntryOutputDimension(dimension: DimensionEntry, method: MethodEntry) {
+    const methodOutputDimension = this.existingDimensions.find(dimensionEntry => compareUint8Arrays(dimensionEntry.dimension_eh, method.output_dimension_eh));
+    if(!methodOutputDimension) return false;
+    const methodOutputDimensionRange = this.findRangeForDimension(methodOutputDimension);
+    const existingDimensionRange = this.findRangeForDimension(dimension);
+    if(!methodOutputDimensionRange || !existingDimensionRange) return false;
+
+    return methodOutputDimension.name == dimension.name 
+      && methodOutputDimensionRange.name == existingDimensionRange.name 
+      && rangeKindEqual(methodOutputDimensionRange.kind, existingDimensionRange.kind)
+  }
+  
   private filterExistingDimensionsByInboundClash(configDimension: PossibleDuplicateInboundDimension): Array<DimensionEntry> {
     if(!configDimension.range?.name || !this.existingDimensions) return [];
     return this.existingDimensions.filter((existingDimension) => {
