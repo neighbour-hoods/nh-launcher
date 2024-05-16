@@ -94,11 +94,6 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
         }}
         .handleOk=${async () => {
           try {
-            if(this._configDimensionsToCreate.length == 0) { // No duplicates were detected and acted upon in the config dimensions dialog
-              this.config.dimensions?.forEach(dimension => {
-                this._configDimensionsToCreate.push(dimension)
-              })
-            }
             await this.createRangesOfCheckedDimensions()
             await sleep(100);
           } catch (error) {
