@@ -136,7 +136,11 @@ export default class ConfigDimensionList extends NHComponent {
             if(existingDimensionClashes.length > 0) {
               // If they exist, concretize the type of this inboundDimension as DuplicateInboundDimension by adding relevant properties
               inboundDimension.isDuplicate = true;
-              inboundDimension.duplicateOf = existingDimensionClashes;
+              inboundDimension.duplicateOf = existingDimensionClashes.filter(existingDimension => {
+                // Filter out clashes of subjective with objective dimensions and vice versa.
+                if((this.dimensionType == 'input' && existingDimension.computed) || (this.dimensionType == 'output' && !(existingDimension.computed))) return false                
+                return true
+              });
 
               (inboundDimension as DuplicateInboundDimension).existing_dimension_ehs = [];
               inboundDimension.duplicateOf.forEach(existingDimension => (inboundDimension as DuplicateInboundDimension)!.existing_dimension_ehs.push(existingDimension.dimension_eh));
@@ -290,17 +294,55 @@ return //temp
       }
   }
 
-  renderOverlaps() : TemplateResult {
-    return html`${this.inboundDimensionDuplicates.map(inboundDimension => { 
-      return html`<h3>${inboundDimension.name}</h3>
-        ${(inboundDimension as any).duplicateOf.some(duplicateOf => duplicateOf.overlap.type.match("complete"))
-          ? "Do not create inbound dimension!" 
-          : html`${
-            (inboundDimension as any).duplicateOf.map(duplicateOf => 
-              html`<span>EH:  ${encodeHashToBase64(duplicateOf.dimension_eh)}</span><br />
-                  <span>OVERLAP: ${JSON.stringify(duplicateOf.overlap, null, 2)}</span><br />`)}`}
-      `})
+  renderOverlappingDimensionFieldAction(duplicateOf) : TemplateResult {
+    if(duplicateOf.overlap.type.match("complete")) return html``
+    console.log('duplicateOf :>> ', duplicateOf);
+    return html`ACTION: <br />${  
+      (() => {switch (true) {
+        case duplicateOf.overlap.fields.includes(PartialOverlapField.Name):
+          return html`<input type="text" placeholder="Change the name of the inbound dimension:" /><br /><br />`
+        case duplicateOf.overlap.fields.includes(PartialOverlapField.Operation) || duplicateOf.overlap.fields.includes(PartialOverlapField.Range):
+          return html`<select @change=${(e) => {
+            this.dispatchEvent(new CustomEvent((e.target.value == "inbound" ? "config-dimension-selected" : "config-dimension-deselected"),
+              { 
+                detail: { dimension: duplicateOf }, bubbles: true, composed: true
+              }
+            ))
+          }}>
+            <option value="existing">Choose Existing</option>
+            <option value="inbound">Choose Inbound</option>
+          </select><br /><br />`
+        case duplicateOf.overlap.fields.includes(PartialOverlapField.Operation):
+          return html`OPERATION`
+          
+      }})()
     }`
+  }
+
+  renderOverlappingDimension(inboundDimension) : TemplateResult {
+    return html`<h3>${inboundDimension.name}</h3>
+        ${html`${
+          inboundDimension.duplicateOf.map(duplicateOf => 
+            html`<span>DIMENSION:  ${this.existingDimensions.find(dim => compareUint8Arrays(dim.dimension_eh, duplicateOf.dimension_eh))?.name}</span><br />
+                <span>OVERLAP: ${JSON.stringify(duplicateOf.overlap, null, 2)}</span><br />
+                ${this.renderOverlappingDimensionFieldAction(duplicateOf)}
+            `)}
+          ${inboundDimension.duplicateOf.some(duplicateOf => duplicateOf.overlap.type.match("complete"))
+            ? html`ACTION: Do not create inbound dimension.<br /><br />` 
+            : this.renderOverlappingDimensionFieldAction(inboundDimension)
+          }
+        `}
+      `
+  }
+
+  renderOverlaps() : TemplateResult {
+    return html`
+      ${
+        this.inboundDimensionDuplicates.length > 0 && this.inboundDimensionDuplicates.every((inboundDimension: any) => inboundDimension.duplicateOf.some(duplicateOf => duplicateOf.overlap.type.match("complete")))
+          ? html`<h2>INBOUND ${this.dimensionType.toUpperCase()} COMPLETE OVERLAP: Your applet config completely overlaps some existing configuration and won't be created.</h2>`
+          : html`<h2>No overlaps - go ahead and add config dimensions</h2>`
+      }
+      ${html`${this.inboundDimensionDuplicates.map((inboundDimension) => html`${this.renderOverlappingDimension.call(this, inboundDimension)}`)}`}`
   }
 
   render() : TemplateResult {
@@ -370,6 +412,9 @@ return //temp
 
   private categorizeDimensionsByInboundClashType(configDimension: PossibleDuplicateInboundDimension, existingDimensions: Array<DimensionEntry>): void {
     existingDimensions.forEach(existingDimension => {
+      // Filter out clashes between subjective and objective dimensions
+      if((this.dimensionType == 'input' && existingDimension.computed) || (this.dimensionType == 'output' && !existingDimension.computed)) return;
+
       this.setOverlapDetails(existingDimension, configDimension)
     })
   }
@@ -379,7 +424,7 @@ return //temp
       if(overlapFields.includes(PartialOverlapField.Name) && overlapFields.includes(PartialOverlapField.Operation) && overlapFields.includes(PartialOverlapField.Range) && overlapFields.includes(PartialOverlapField.Operation)) {
         return Overlap.CompleteOutput
       }
-    } else if(overlapFields.includes(PartialOverlapField.Name) && overlapFields.includes(PartialOverlapField.Range)) {
+    } else if(overlapFields.includes(PartialOverlapField.Name) && overlapFields.includes(PartialOverlapField.Range) && overlapFields.length == 2) {
        // Check input dimension partial overlaps
       return Overlap.CompleteInput
     }
@@ -399,9 +444,9 @@ return //temp
     if(newDimension.computed && this.existingMethods) {
       const existingDimensionLinkedMethods = this.existingMethods.filter(method => this.matchesMethodEntryOutputDimension(existingDimension, method));
       const configDimensionLinkedMethods = this.configMethods.filter(method => matchesConfigMethodOutputDimension(newDimension, method));
-      console.log('existingMethods :>> ', this.existingMethods);
-      console.log('existingDimensionLinkedMethods :>> ', existingDimensionLinkedMethods);
-      console.log('configDimensionLinkedMethods :>> ', configDimensionLinkedMethods);
+      // console.log('existingMethods :>> ', this.existingMethods);
+      // console.log('existingDimensionLinkedMethods :>> ', existingDimensionLinkedMethods);
+      // console.log('configDimensionLinkedMethods :>> ', configDimensionLinkedMethods);
       if(this.matchesOperation(existingDimensionLinkedMethods, configDimensionLinkedMethods)) {
         overlap.fields.push(PartialOverlapField.Operation)
       }
@@ -415,15 +460,6 @@ return //temp
   }
 
   // Helpers for determining dimension overlap:
-  private matchesCompletely(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
-    return existingDimension.name == configDimension.name && this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension)
-  }
-  private justMatchesName(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
-    return existingDimension.name == configDimension.name && !this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension)
-  }
-  private justMatchesRange(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
-    return this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension) && !(existingDimension.name == configDimension.name)
-  }
   private matchesName(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
     return existingDimension.name == configDimension.name
   }
@@ -440,7 +476,6 @@ return //temp
     if(!inputDimensionEntryForMethodEntry) return false;
     const inputDimensionRangeEntryForMethodEntry = this.findRangeForDimension(inputDimensionEntryForMethodEntry);
 
-    console.log('inputDimensionEntryForMethodEntry :>> ', inputDimensionEntryForMethodEntry);
     return !!inputDimensionRangeEntryForMethodEntry
       && configDimensionMethods[0].input_dimensions[0].name == inputDimensionEntryForMethodEntry.name 
       && configDimensionMethods[0].input_dimensions[0].range.name == inputDimensionRangeEntryForMethodEntry.name 
@@ -461,8 +496,17 @@ return //temp
   
   private filterExistingDimensionsByInboundClash(configDimension: PossibleDuplicateInboundDimension): Array<DimensionEntry> {
     if(!configDimension.range?.name || !this.existingDimensions) return [];
+    
     return this.existingDimensions.filter((existingDimension) => {
-      return this.justMatchesName(configDimension, existingDimension) || this.justMatchesRange(configDimension, existingDimension) || this.matchesCompletely(configDimension, existingDimension)
+      if(this.matchesName(configDimension, existingDimension)) return true;
+      if(this.matchesRange(configDimension, existingDimension)) return true;
+      if(!existingDimension.computed) return false;
+// TODO: stop methods automatically being created? Otherwise existingDimensionLinkedMethods will be polluted
+      const existingDimensionLinkedMethods = this.existingMethods.filter(method => this.matchesMethodEntryOutputDimension(existingDimension, method));
+      const configDimensionLinkedMethods = this.configMethods.filter(method => matchesConfigMethodOutputDimension(configDimension, method));
+      if(this.matchesOperation(existingDimensionLinkedMethods, configDimensionLinkedMethods)) return true;
+      if(this.matchesInputDimension(existingDimensionLinkedMethods, configDimensionLinkedMethods)) return true;
+      return false;
     })
   } 
 
