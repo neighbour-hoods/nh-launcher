@@ -3,7 +3,7 @@ import { property, query, state } from "lit/decorators.js";
 
 import { NHComponentShoelace, NHDialog, NHForm } from "@neighbourhoods/design-system-components";
 import { ConfigDimensionList } from "../../nh-config";
-import { AppletConfigInput, ConfigDimension, Dimension, serializeAsyncActions } from "@neighbourhoods/client";
+import { AppletConfigInput, ConfigDimension, Dimension, Method, serializeAsyncActions } from "@neighbourhoods/client";
 import { DnaHash, EntryHash } from "@holochain/client";
 import { StoreSubscriber } from "lit-svelte-stores";
 import { MatrixStore } from "../../matrix-store";
@@ -32,6 +32,7 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
   @state() private _configDimensionsToCreate: Array<ConfigDimension & { range_eh?: EntryHash }> = [];
   @state() private _existingDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
   @state() private _existingRangeEntries!: Array<Range & { range_eh: EntryHash }>;
+  @state() private _existingMethodEntries!: Array<Method & { method_eh: EntryHash }>;
 
   async createRangesOfCheckedDimensions() {
     for(let dim of this._configDimensionsToCreate) {
@@ -57,6 +58,7 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
       await this.fetchDimensionEntries();
     }
     if(changedProperties.has("_existingDimensionEntries") && this._existingDimensionEntries?.length > 0) {
+      await this.fetchMethodEntries();
       await this.fetchRangeEntriesFromHashes(this._existingDimensionEntries.map((dimension: Dimension) => dimension.range_eh));
     }
   }
@@ -112,6 +114,7 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
                     .configDimensions=${(this.config as AppletConfigInput)!.dimensions!.filter(dimension => !dimension.computed)}
                     .existingDimensions=${this._existingDimensionEntries}
                     .existingRanges=${this._existingRangeEntries}
+                    .existingMethods=${this._existingMethodEntries}
                     .configMethods=${(this.config as AppletConfigInput)!.methods}
                   >
                   </config-dimension-list>
@@ -121,6 +124,7 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
                     .configDimensions=${(this.config as AppletConfigInput)!.dimensions!.filter(dimension => dimension.computed)}
                     .existingDimensions=${this._existingDimensionEntries}
                     .existingRanges=${this._existingRangeEntries}
+                    .existingMethods=${this._existingMethodEntries}
                     .configMethods=${(this.config as AppletConfigInput)!.methods}
                   >
                   </config-dimension-list>
@@ -153,6 +157,20 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
       })
     } catch (error) {
       console.log('Error fetching dimension details: ', error);
+    }
+  }
+
+  async fetchMethodEntries() {
+    try {
+      const entryRecords = await this._sensemakerStore.value?.getMethods();
+      this._existingMethodEntries = entryRecords!.map(entryRecord => {
+        return {
+          ...entryRecord.entry,
+          method_eh: entryRecord.entryHash
+        }
+      })
+    } catch (error) {
+      console.log('Error fetching method details: ', error);
     }
   }
 
