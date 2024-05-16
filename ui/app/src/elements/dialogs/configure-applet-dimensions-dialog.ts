@@ -73,8 +73,16 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
         @config-dimension-selected=${(e: CustomEvent) => {
           const newDimension = e.detail.dimension;
           if(!newDimension) return;
-          const alreadyInList = this._configDimensionsToCreate.find(dimension => dimension.name == newDimension.name && rangeKindEqual(dimension.range.kind, newDimension.range.kind))
+          const alreadyInList = this._configDimensionsToCreate.find(dimension => dimension.name == newDimension.name) // Assume name uniqueness based on new dimension clash renaming validation
           if(!alreadyInList) this._configDimensionsToCreate.push(e.detail.dimension);
+          console.log('this._configDimensionsToCreate :>> ', this._configDimensionsToCreate);
+        }}
+        @config-dimension-deselected=${(e: CustomEvent) => {
+          const newDimension = e.detail.dimension;
+          if(!newDimension) return;
+          const alreadyInListIdx = this._configDimensionsToCreate.findIndex(dimension => dimension.name == newDimension.name) // Assume name uniqueness based on new dimension clash renaming validation
+          this._configDimensionsToCreate.splice(alreadyInListIdx, 1)
+          console.log('this._configDimensionsToCreate :>> ', this._configDimensionsToCreate);
         }}
         .handleClose=${() => {
           if(!this.dimensionsCreated) this.dispatchEvent(
