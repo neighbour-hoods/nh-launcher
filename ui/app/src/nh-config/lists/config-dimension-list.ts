@@ -297,7 +297,7 @@ return //temp
       }
   }
 
-  renderOverlappingDimensionFieldAction(duplicateOf, idx) : TemplateResult {
+  renderOverlappingDimensionFieldAction(duplicateOf, idx, inboundDimension) : TemplateResult {
     if(duplicateOf.overlap.type.match("complete")) return html`` // NOTE: the best way of currently test the UI with partial overlaps is to comment out this line.
     return html`ACTION: <br />${  
       (() => {switch (true) {
@@ -309,7 +309,7 @@ return //temp
           return html`<select @change=${(e) => {
             this.dispatchEvent(new CustomEvent((e.target.value == "inbound" ? "config-dimension-selected" : "config-dimension-deselected"),
               { 
-                detail: { dimension: duplicateOf }, bubbles: true, composed: true
+                detail: { dimension: inboundDimension }, bubbles: true, composed: true
               }
             ))
           }}>
@@ -361,7 +361,7 @@ return //temp
           inboundDimension.duplicateOf.map((duplicateOf) => 
             html`<span>DIMENSION:  ${this.existingDimensions.find(dim => compareUint8Arrays(dim.dimension_eh, duplicateOf.dimension_eh))?.name}</span><br />
                 <span>OVERLAP: ${JSON.stringify(duplicateOf.overlap, null, 2)}</span><br />
-                ${this.renderOverlappingDimensionFieldAction(duplicateOf, idx)}
+                ${this.renderOverlappingDimensionFieldAction(duplicateOf, idx, inboundDimension)}
             `)}
           ${inboundDimension.duplicateOf.some(duplicateOf => duplicateOf.overlap.type.match("complete"))
             ? html`ACTION: Do not create inbound dimension.<br /><br />` 
@@ -376,15 +376,17 @@ return //temp
       ${
         this.inboundDimensionDuplicates.length > 0 && this.inboundDimensionDuplicates.every((inboundDimension: any) => inboundDimension.duplicateOf.some(duplicateOf => duplicateOf.overlap.type.match("complete")))
           ? html`<h2>INBOUND ${this.dimensionType.toUpperCase()} COMPLETE OVERLAP: Your applet config completely overlaps some existing configuration and those dimensions won't be created.</h2>`
-          : html`<h2>No overlaps - select to add config dimensions:</h2>
-            ${this.configDimensions.map(dimension => html`
-              ${dimension.name} : <input type="checkbox" @change=${(e) => {
-                this.dispatchEvent(new CustomEvent((e.target.checked ? "config-dimension-selected" : "config-dimension-deselected"),
-              { 
-                detail: { dimension }, bubbles: true, composed: true
-              }
-            ))
-          }} /><br />
+          : html`<h2>No complete overlaps - select/edit config dimensions:</h2>
+            ${this.configDimensions
+              .filter(dimension => !(this.inboundDimensionDuplicates.some(dup => dup.name == dimension.name)))
+              .map(dimension => html`
+                ${dimension.name} : <input type="checkbox" @change=${(e) => {
+                  this.dispatchEvent(new CustomEvent((e.target.checked ? "config-dimension-selected" : "config-dimension-deselected"),
+                { 
+                  detail: { dimension }, bubbles: true, composed: true
+                }
+              ))
+            }} /><br />
             `)}
           `
       }
