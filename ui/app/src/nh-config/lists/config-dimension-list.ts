@@ -303,7 +303,7 @@ return //temp
       (() => {switch (true) {
         case duplicateOf.overlap.fields.includes(PartialOverlapField.Name):
           return html`
-            <button @click=${() => typeof console.log(this._changeDimensionNameDialogs, idx) == 'undefined' && (this._changeDimensionNameDialogs)[idx].showDialog()}>${(this._changeDimensionNameDialogs)[idx]?.dataset?.hasUpdated ? "Updated" : "Rename"}</button><br />
+            <button @click=${() => (this._changeDimensionNameDialogs)[idx].showDialog()}>${(this._changeDimensionNameDialogs)[idx]?.dataset?.hasUpdated ? "Updated" : "Rename"}</button><br />
           `
         case duplicateOf.overlap.fields.includes(PartialOverlapField.Operation) || duplicateOf.overlap.fields.includes(PartialOverlapField.Range):
           return html`<select @change=${(e) => {
