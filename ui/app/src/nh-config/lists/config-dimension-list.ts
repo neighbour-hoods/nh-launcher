@@ -9,6 +9,7 @@ import { FieldDefinition, FieldDefinitions, Table, TableStore } from "@adaburrow
 import { rangeKindEqual } from "../../utils";
 import { EntryHash, encodeHashToBase64 } from "@holochain/client";
 import { compareUint8Arrays } from "@neighbourhoods/app-loader";
+import { repeat } from "lit/directives/repeat.js";
 
 type InputDimensionTableRecord = {
   ['dimension-name']: string,
@@ -120,7 +121,7 @@ export default class ConfigDimensionList extends NHComponent {
 
   @property() configMethods!: Array<ConfigMethod>;
 
-  @queryAll('.change-dimension-name-dialog') private _changeDimensionNameDialogs!: HTMLElement;
+  @queryAll('.change-dimension-name-dialog') private _changeDimensionNameDialogs!: HTMLElement[];
 
   protected updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     // Logic for detecting inbound config dimensions that  are duplicates of existing dimension entries
@@ -297,13 +298,13 @@ return //temp
   }
 
   renderOverlappingDimensionFieldAction(duplicateOf, idx) : TemplateResult {
-    // if(duplicateOf.overlap.type.match("complete")) return html``
+    if(duplicateOf.overlap.type.match("complete")) return html`` // NOTE: the best way of currently test the UI with partial overlaps is to comment out this line.
     return html`ACTION: <br />${  
       (() => {switch (true) {
         case duplicateOf.overlap.fields.includes(PartialOverlapField.Name):
           return html`
-        <button @click=${() => typeof console.log(this._changeDimensionNameDialogs, idx) == 'undefined' && (this._changeDimensionNameDialogs)[idx].showDialog()}>${(this._changeDimensionNameDialogs)[idx]?.dataset?.hasUpdated ? "Updated" : "Rename"}</button><br />
-        `
+            <button @click=${() => typeof console.log(this._changeDimensionNameDialogs, idx) == 'undefined' && (this._changeDimensionNameDialogs)[idx].showDialog()}>${(this._changeDimensionNameDialogs)[idx]?.dataset?.hasUpdated ? "Updated" : "Rename"}</button><br />
+          `
         case duplicateOf.overlap.fields.includes(PartialOverlapField.Operation) || duplicateOf.overlap.fields.includes(PartialOverlapField.Range):
           return html`<select @change=${(e) => {
             this.dispatchEvent(new CustomEvent((e.target.value == "inbound" ? "config-dimension-selected" : "config-dimension-deselected"),
@@ -323,17 +324,23 @@ return //temp
   }
 
   renderOverlappingDimension(inboundDimension, idx) : TemplateResult {
+    const self = this;
     return html`<h3>${inboundDimension.name}</h3>
         <nh-dialog
           size="medium"
           .title=${"Change Dimension Name"}
           .dialogType=${"confirm"}
           .handleOk=${function(){
-            console.log('inboundDimension (before) :>> ', inboundDimension);
-            const dialogInput = (this.renderRoot.querySelector("slot").assignedElements()[0].querySelector("input"));
+            if(this.dataset.hasUpdated) {
+              this.dispatchEvent(new CustomEvent(("config-dimension-deselected"),
+                { 
+                  detail: { dimension: inboundDimension }, bubbles: true, composed: true
+                }
+              ))
+            }
+            const dialogInput = (this.renderRoot.querySelector("slot").assignedElements()[0].querySelector("input")); // Targets inner-content slot (the only slot) and finds only input
             if(dialogInput?.value && dialogInput.value !== "") {
               inboundDimension.name = dialogInput.value;
-              // console.log('inboundDimension (after edited) :>> ', inboundDimension);
               this.dispatchEvent(new CustomEvent(("config-dimension-selected"),
                 { 
                   detail: { dimension: {...inboundDimension, name: dialogInput.value} }, bubbles: true, composed: true
@@ -342,7 +349,7 @@ return //temp
               dialogInput.value = "";
             }
             this.dataset.hasUpdated = true;
-            this.requestUpdate()
+            self.requestUpdate()
           }}
           class="change-dimension-name-dialog"
         >
@@ -381,7 +388,7 @@ return //temp
             `)}
           `
       }
-      ${html`${this.inboundDimensionDuplicates.map((inboundDimension, idx) => html`${this.renderOverlappingDimension.call(this, inboundDimension, idx)}`)}`}`
+      ${html`${repeat(this.inboundDimensionDuplicates, (_el, idx) => idx, ((inboundDimension, idx) => html`${this.renderOverlappingDimension.call(this, inboundDimension, idx)}`))}`}`
   }
 
   render() : TemplateResult {
