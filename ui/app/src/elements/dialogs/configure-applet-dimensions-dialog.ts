@@ -3,7 +3,7 @@ import { property, query, state } from "lit/decorators.js";
 
 import { NHComponentShoelace, NHDialog, NHForm } from "@neighbourhoods/design-system-components";
 import { ConfigDimensionList } from "../../nh-config";
-import { AppletConfigInput, ConfigDimension, Dimension, Method, serializeAsyncActions } from "@neighbourhoods/client";
+import { AppletConfigInput, ConfigDimension, ConfigMethod, Dimension, Method, serializeAsyncActions } from "@neighbourhoods/client";
 import { DnaHash, EntryHash } from "@holochain/client";
 import { StoreSubscriber } from "lit-svelte-stores";
 import { MatrixStore } from "../../matrix-store";
@@ -34,6 +34,22 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
   @state() private _existingRangeEntries!: Array<Range & { range_eh: EntryHash }>;
   @state() private _existingMethodEntries!: Array<Method & { method_eh: EntryHash }>;
 
+  findConfigMethodsForDimensions() : Method[] {
+    const methodsToCreate: ConfigMethod[] = []
+    for(let dim of this._configDimensionsToCreate) {
+      if(dim.computed) {
+        const method = this.config.methods!.find(method => method.output_dimension == dim);
+        if(method) methodsToCreate.push(method as ConfigMethod)
+          //TODO: add eh's of dimensions
+      } else {
+        const method = this.config.methods!.find(method => method.input_dimensions.includes(dim));
+        //TODO: add eh's of dimensions
+        if(method) methodsToCreate.push(method as ConfigMethod)
+      }
+      }
+    return methodsToCreate
+  }
+
   async createRangesOfCheckedDimensions() {
     for(let dim of this._configDimensionsToCreate) {
           const rangeEntryRecord = await this._sensemakerStore.value?.createRange(dim.range);
@@ -47,6 +63,15 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
     serializeAsyncActions(this._configDimensionsToCreate.map((dimension: (ConfigDimension & { range_eh?: EntryHash })) => {
       if(!(dimension.range_eh)) throw new Error("Could not find created range for dimension");
       return async () => {return this._sensemakerStore.value?.createDimension(({name: dimension.name, computed: dimension.computed, range_eh: (dimension!.range_eh)} as Dimension))}
+    }))
+
+    console.log('config dimensions created')
+  }
+
+  createMethodsOfCheckedDimensions() {
+    const methodsToCreate = this.findConfigMethodsForDimensions()
+    serializeAsyncActions(methodsToCreate.map((method: ConfigMethod) => {
+      return async () => {return this._sensemakerStore.value?.createMethod(method)}
     }))
 
     console.log('config dimensions created')
@@ -101,13 +126,19 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
           }
           try {
             this.createCheckedDimensions()
+            await sleep(100);
+          } catch (error) {
+            console.error("Could not create dimensions from config: ", error)
+          }
+          try {
+            await this.createMethodsOfCheckedDimensions()
             this._configDimensionsToCreate = [];
             this.dimensionsCreated = true;
             await sleep(100);
             this.requestUpdate();
             await this.updateComplete;
           } catch (error) {
-            console.error("Could not create dimensions from config: ", error)
+            console.error("Could not create methods from config: ", error)
           }
 
           this.handleSubmit();
