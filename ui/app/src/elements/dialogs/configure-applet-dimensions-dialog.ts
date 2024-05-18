@@ -9,7 +9,7 @@ import { StoreSubscriber } from "lit-svelte-stores";
 import { MatrixStore } from "../../matrix-store";
 import { consume } from "@lit/context";
 import { matrixContext, weGroupContext } from "../../context";
-import { rangeKindEqual, sleep } from "../../utils";
+import { sleep } from "../../utils";
 
 export class ConfigureAppletDimensions extends NHComponentShoelace {
   @consume({ context: matrixContext , subscribe: true })
@@ -29,21 +29,19 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
   @query('nh-dialog') dialog!: NHDialog;
 
   @state() private dimensionsCreated: boolean = false;
-  @state() private _configDimensionsToCreate: Array<ConfigDimension & { range_eh?: EntryHash }> = [];
+  @state() private _configDimensionsToCreate: Array<ConfigDimension & { range_eh?: EntryHash, dimension_eh?: EntryHash }> = [];
   @state() private _existingDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
   @state() private _existingRangeEntries!: Array<Range & { range_eh: EntryHash }>;
   @state() private _existingMethodEntries!: Array<Method & { method_eh: EntryHash }>;
 
-  findConfigMethodsForDimensions() : Method[] {
+  findConfigMethodsForDimensions() : ConfigMethod[] {
     const methodsToCreate: ConfigMethod[] = []
     for(let dim of this._configDimensionsToCreate) {
       if(dim.computed) {
         const method = this.config.methods!.find(method => method.output_dimension == dim);
         if(method) methodsToCreate.push(method as ConfigMethod)
-          //TODO: add eh's of dimensions
       } else {
         const method = this.config.methods!.find(method => method.input_dimensions.includes(dim));
-        //TODO: add eh's of dimensions
         if(method) methodsToCreate.push(method as ConfigMethod)
       }
       }
@@ -60,21 +58,25 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
   }
 
   createCheckedDimensions() {
-    serializeAsyncActions(this._configDimensionsToCreate.map((dimension: (ConfigDimension & { range_eh?: EntryHash })) => {
+    serializeAsyncActions(this._configDimensionsToCreate.map((dimension: (ConfigDimension & { range_eh?: EntryHash, dimension_eh?: EntryHash,  })) => {
       if(!(dimension.range_eh)) throw new Error("Could not find created range for dimension");
-      return async () => {return this._sensemakerStore.value?.createDimension(({name: dimension.name, computed: dimension.computed, range_eh: (dimension!.range_eh)} as Dimension))}
+      return async () => {
+        const eH = await this._sensemakerStore.value?.createDimension(({name: dimension.name, computed: dimension.computed, range_eh: (dimension!.range_eh)} as Dimension))
+        if(!eH) return eH;
+        dimension.dimension_eh = eH;
+        return eH
+      }
     }))
 
     console.log('config dimensions created')
   }
 
-  createMethodsOfCheckedDimensions() {
-    const methodsToCreate = this.findConfigMethodsForDimensions()
-    serializeAsyncActions(methodsToCreate.map((method: ConfigMethod) => {
+  createMethodsOfCheckedDimensions(updatedConfigMethods: Method[]) {
+    serializeAsyncActions(updatedConfigMethods.map((method: Method) => {
       return async () => {return this._sensemakerStore.value?.createMethod(method)}
     }))
 
-    console.log('config dimensions created')
+    console.log('config methods created')
   }
 
   async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
@@ -126,12 +128,32 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
           }
           try {
             this.createCheckedDimensions()
-            await sleep(100);
+            await sleep(250);
           } catch (error) {
             console.error("Could not create dimensions from config: ", error)
           }
           try {
-            await this.createMethodsOfCheckedDimensions()
+            const methodsToCreate = this.findConfigMethodsForDimensions();
+            if(methodsToCreate && methodsToCreate.length > 0) {
+              const updatedConfigMethods: Array<Method | null> = methodsToCreate.map((configMethod: ConfigMethod) => {
+                const linkedInputDimension = this._configDimensionsToCreate.find(dim => !dim.computed && configMethod.input_dimensions[0].name == dim.name)// TODO: also check ranges
+                const linkedOutputDimension = this._configDimensionsToCreate.find(dim => dim.computed && configMethod.output_dimension.name == dim.name);
+                if(!linkedInputDimension || !linkedOutputDimension) return null
+                if(!linkedInputDimension?.dimension_eh || !linkedOutputDimension?.dimension_eh) throw new Error("Linked dimension entry hashes not available")
+
+                const updatedMethod: Method = {
+                  name: configMethod.name,
+                  program: configMethod.program,
+                  can_compute_live: configMethod.can_compute_live,
+                  requires_validation: configMethod.requires_validation,
+                  input_dimension_ehs: [linkedInputDimension.dimension_eh as EntryHash],
+                  output_dimension_eh: linkedOutputDimension.dimension_eh as EntryHash
+                }
+                return updatedMethod;
+              })
+
+              await this.createMethodsOfCheckedDimensions(updatedConfigMethods.filter(m => m !== null) as Method[])
+            } 
             this._configDimensionsToCreate = [];
             this.dimensionsCreated = true;
             await sleep(100);

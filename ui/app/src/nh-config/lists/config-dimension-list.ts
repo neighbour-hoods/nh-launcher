@@ -94,11 +94,11 @@ function showRowNotSelected(row: HTMLElement) {
 }
 
 // Helpers for filtering/matching dimensions with methods
-function matchesMethodInputDimension(dimension: InboundDimension, method: ConfigMethod) {
+export function matchesMethodInputDimension(dimension: InboundDimension, method: ConfigMethod) {
   return method.input_dimensions.some(d => dimension.name == d.name && (dimension.range.name == d.range.name) && rangeKindEqual(dimension.range.kind, d.range.kind))
 }
 
-function matchesConfigMethodOutputDimension(dimension: InboundDimension, method: ConfigMethod) {
+export function matchesConfigMethodOutputDimension(dimension: InboundDimension, method: ConfigMethod) {
   return method.output_dimension.name == dimension.name 
     && method.output_dimension.range.name == dimension.range.name 
     && rangeKindEqual(method.output_dimension.range.kind, dimension.range.kind)
