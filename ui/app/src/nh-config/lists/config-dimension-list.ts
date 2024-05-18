@@ -520,8 +520,10 @@ return //temp
   private matchesInputDimension(existingDimensionMethods: MethodEntry[], configDimensionMethods: ConfigMethod[]): boolean {
     const bothMethodsHaveInputDimensions = configDimensionMethods.length > 0 && existingDimensionMethods.length > 0 && existingDimensionMethods[0].input_dimension_ehs?.[0] && configDimensionMethods[0].input_dimensions?.[0];
     if(!bothMethodsHaveInputDimensions) return false;
+
     const inputDimensionEntryForMethodEntry = this.existingDimensions.find(dimension => compareUint8Arrays(dimension.dimension_eh, existingDimensionMethods[0].input_dimension_ehs[0] ))
     if(!inputDimensionEntryForMethodEntry) return false;
+
     const inputDimensionRangeEntryForMethodEntry = this.findRangeForDimension(inputDimensionEntryForMethodEntry);
 
     return !!inputDimensionRangeEntryForMethodEntry
@@ -533,6 +535,7 @@ return //temp
   private matchesMethodEntryOutputDimension(dimension: DimensionEntry, method: MethodEntry) {
     const methodOutputDimension = this.existingDimensions.find(dimensionEntry => compareUint8Arrays(dimensionEntry.dimension_eh, method.output_dimension_eh));
     if(!methodOutputDimension) return false;
+
     const methodOutputDimensionRange = this.findRangeForDimension(methodOutputDimension);
     const existingDimensionRange = this.findRangeForDimension(dimension);
     if(!methodOutputDimensionRange || !existingDimensionRange) return false;
@@ -549,7 +552,7 @@ return //temp
       if(this.matchesName(configDimension, existingDimension)) return true;
       if(this.matchesRange(configDimension, existingDimension)) return true;
       if(!existingDimension.computed) return false;
-// TODO: stop methods automatically being created? Otherwise existingDimensionLinkedMethods will be polluted
+
       const existingDimensionLinkedMethods = this.existingMethods.filter(method => this.matchesMethodEntryOutputDimension(existingDimension, method));
       const configDimensionLinkedMethods = this.configMethods.filter(method => matchesConfigMethodOutputDimension(configDimension, method));
       if(this.matchesOperation(existingDimensionLinkedMethods, configDimensionLinkedMethods)) return true;
