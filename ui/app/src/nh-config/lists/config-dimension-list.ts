@@ -6,7 +6,7 @@ import { ConfigDimension, ConfigMethod,  Dimension, RangeKind, Range, Method } f
 import { NHButton, NHCard, NHCheckbox, NHComponent, NHDialog, NHTooltip } from "@neighbourhoods/design-system-components";
 import { capitalize } from "../../elements/components/helpers/functions";
 import { FieldDefinition, FieldDefinitions, Table, TableStore } from "@adaburrows/table-web-component";
-import { rangeKindEqual } from "../../utils";
+import { dimensionIncludesControlRange, rangeKindEqual } from "../../utils";
 import { EntryHash, encodeHashToBase64 } from "@holochain/client";
 import { compareUint8Arrays } from "@neighbourhoods/app-loader";
 import { repeat } from "lit/directives/repeat.js";
@@ -316,9 +316,31 @@ return //temp
             <option value="existing">Choose Existing</option>
             <option value="inbound">Choose Inbound</option>
           </select><br /><br />`
-        case duplicateOf.overlap.fields.includes(PartialOverlapField.Operation):
-          return html`OPERATION`
-          
+        case duplicateOf.overlap.fields.includes(PartialOverlapField.InputDimension):
+          return html`Select input dimension with overlapping range: <br />
+            <select @change=${(e) => {
+              debugger;
+              this.dispatchEvent(new CustomEvent((e.target.value == "inbound" ? "config-dimension-selected" : "config-dimension-deselected"),
+                { 
+                  detail: { dimension: inboundDimension }, bubbles: true, composed: true
+                }
+              ))
+            }}>
+            ${
+              html`${
+                this.existingDimensions
+                  .filter(dim => {
+                    if(dim.computed) return false;
+                    const range: Range | null = this.findRangeForDimension(dim);
+                    if(!range) return false;
+
+                    return dimensionIncludesControlRange(range.kind, inboundDimension.range.kind)
+                  })
+                  .map(dim => html`<option value=${dim.name}>${dim.name}</option>`)
+              }`
+            }
+            </select><br /><br />
+          `
       }})()
     }`
   }
@@ -553,6 +575,7 @@ return //temp
       if(this.matchesRange(configDimension, existingDimension)) return true;
       if(!existingDimension.computed) return false;
 
+      // Find linked methods for output dimension comparison
       const existingDimensionLinkedMethods = this.existingMethods.filter(method => this.matchesMethodEntryOutputDimension(existingDimension, method));
       const configDimensionLinkedMethods = this.configMethods.filter(method => matchesConfigMethodOutputDimension(configDimension, method));
       if(this.matchesOperation(existingDimensionLinkedMethods, configDimensionLinkedMethods)) return true;
