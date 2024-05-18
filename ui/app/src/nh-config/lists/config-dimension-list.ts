@@ -121,7 +121,7 @@ export default class ConfigDimensionList extends NHComponent {
 
   @property() configMethods!: Array<ConfigMethod>;
 
-  @queryAll('.change-dimension-name-dialog') private _changeDimensionNameDialogs!: HTMLElement[];
+  @queryAll('.change-dimension-name-dialog') private _changeDimensionNameDialogs!: NHDialog[];
 
   protected updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     // Logic for detecting inbound config dimensions that  are duplicates of existing dimension entries
