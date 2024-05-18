@@ -43,8 +43,8 @@ pub fn check_if_applet_config_exists(applet_name: String) -> ExternResult<Option
 
     if let Some(link) = maybe_last_link {
         let maybe_record = get(link.target.clone().into_entry_hash()
-          .ok_or(wasm_error!(WasmErrorInner::Guest(String::from("Invalid link target"))))?,
-          GetOptions::default()
+            .ok_or(wasm_error!(WasmErrorInner::Guest(String::from("Invalid link target"))))?,
+            GetOptions::default()
         )?;
         if let Some(record) = maybe_record {
             Ok(Some(entry_from_record::<AppletConfig>(record)?))
@@ -73,7 +73,7 @@ pub fn create_entries_from_applet_config(
         ranges.insert(range.name.clone(), entry_hash_from_record(create_range(range)?)?);
     }
 
-    // dimensions -- pass an empty vector as dimensions need't always be accepted in the config
+    // dimensions -- pass an empty vector as dimensions needn't always be accepted in the config
     let dimensions: BTreeMap<String, EntryHash> = BTreeMap::new();
 
     // resource defs
