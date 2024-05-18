@@ -133,7 +133,12 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
             console.error("Could not create dimensions from config: ", error)
           }
           try {
+            let remainingConfigMethods = [];
             const methodsToCreate = this.findConfigMethodsForDimensions();
+            // The rest of the config methods should be stored in state so we can create them, bound to existing dimensions instead
+            this.config.methods?.forEach(method => !methodsToCreate.includes(method) ? remainingConfigMethods.push(method) : null);
+
+            // Create methods linked to newly created inbound dimensions
             if(methodsToCreate && methodsToCreate.length > 0) {
               const updatedConfigMethods: Array<Method | null> = methodsToCreate.map((configMethod: ConfigMethod) => {
                 const linkedInputDimension = this._configDimensionsToCreate.find(dim => !dim.computed && configMethod.input_dimensions[0].name == dim.name)// TODO: also check ranges
@@ -153,7 +158,30 @@ export class ConfigureAppletDimensions extends NHComponentShoelace {
               })
 
               await this.createMethodsOfCheckedDimensions(updatedConfigMethods.filter(m => m !== null) as Method[])
-            } 
+            }
+
+            // Create methods not linked to newly created inbound dimensions but to existing dimension entries
+            if(remainingConfigMethods.length > 0) {
+              const updatedRemainingConfigMethods: Array<Method | null> = remainingConfigMethods.map((configMethod: ConfigMethod) => {
+                const linkedInputDimension = this._existingDimensionEntries.find(dim => !dim.computed && configMethod.input_dimensions[0].name == dim.name)// TODO: update this criteria by checking linked ranges for equality. This simplified version will do for COMPLETE overlaps only
+                const linkedOutputDimension = this._existingDimensionEntries.find(dim => dim.computed && configMethod.output_dimension.name == dim.name);
+                if(!linkedInputDimension || !linkedOutputDimension) return null
+                if(!linkedInputDimension?.dimension_eh || !linkedOutputDimension?.dimension_eh) throw new Error("Linked dimension entry hashes not available")
+
+                const updatedMethod: Method = {
+                  name: configMethod.name,
+                  program: configMethod.program,
+                  can_compute_live: configMethod.can_compute_live,
+                  requires_validation: configMethod.requires_validation,
+                  input_dimension_ehs: [linkedInputDimension.dimension_eh as EntryHash],
+                  output_dimension_eh: linkedOutputDimension.dimension_eh as EntryHash
+                }
+                console.log('updatedMethod :>> ', updatedMethod);
+                return updatedMethod;
+              })
+
+              await this.createMethodsOfCheckedDimensions(updatedRemainingConfigMethods.filter(m => m !== null) as Method[])
+            }
             this._configDimensionsToCreate = [];
             this.dimensionsCreated = true;
             await sleep(100);
