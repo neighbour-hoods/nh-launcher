@@ -85,14 +85,8 @@ pub fn create_entries_from_applet_config(
         );
     }
 
-    // methods
+    // methods -- pass an empty vector as output dimension dependent methods needn't always be accepted in the config
     let mut methods: BTreeMap<String, EntryHash> = BTreeMap::new();
-    for config_method in config.methods {
-        methods.insert(
-            config_method.name.clone(),
-            entry_hash_from_record(create_method(Method::try_from(config_method)?)?)?,
-        );
-    }
 
     // CCs
     let mut cultural_contexts: BTreeMap<String, EntryHash> = BTreeMap::new();
