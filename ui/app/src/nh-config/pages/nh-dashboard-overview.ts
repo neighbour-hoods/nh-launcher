@@ -178,7 +178,7 @@ export default class NHDashBoardOverview extends NHComponent {
         place-content: start;
         color: var(--nh-theme-fg-default);
         grid-template-columns: 2fr 1fr;
-        grid-template-rows: 3rem auto;
+        grid-template-rows: auto auto;
         padding: calc(1px * var(--nh-spacing-xl));
         gap: calc(1px * var(--nh-spacing-sm));
       }
