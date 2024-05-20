@@ -429,16 +429,14 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     if(!this._workingWidgetControls || !(this._workingWidgetControls.length > 0)) throw Error('Nothing to persist, try adding another widget to the config.')
     const resource_def_eh = this.resourceDef?.resource_def_eh;
 
-    let successful;
     try {
-      successful = await (
+      await (
         this.sensemakerStore as SensemakerStore
       ).setAssessmentWidgetTrayConfig(resource_def_eh, this.getCombinedWorkingAndFetchedWidgets());
+      console.log('successfully set the widget tray config');
     } catch (error) {
       return Promise.reject('Error setting assessment widget config');
     }
-    if (!successful) return;
-    console.log('successfully set the widget tray config? ', successful);
     await this.updateComplete;
     this._form.dispatchEvent(
       new CustomEvent('assessment-widget-config-set', {

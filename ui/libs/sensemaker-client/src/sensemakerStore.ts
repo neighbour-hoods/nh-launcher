@@ -398,9 +398,8 @@ export class SensemakerStore {
     return await this.service.getAssessmentWidgetTrayConfig(resourceDefEh)
   }
 
-  async setAssessmentWidgetTrayConfig(resourceDefEh: EntryHash, widgetConfigs: Array<AssessmentWidgetBlockConfig>): Promise<Boolean> {
-    await this.service.setAssessmentWidgetTrayConfig(resourceDefEh, widgetConfigs) // returns an array of config hashes, but not useful as yet
-    return true
+  async setAssessmentWidgetTrayConfig(resourceDefEh: EntryHash, widgetConfigs: Array<AssessmentWidgetBlockConfig>): Promise<Array<EntryHash>> {
+    return this.service.setAssessmentWidgetTrayConfig(resourceDefEh, widgetConfigs)
   }
 
   async updateAppletConfig(appletConfig: AppletConfig): Promise<AppletConfig> {
