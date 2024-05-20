@@ -157,7 +157,6 @@ export class DashboardTable extends NHComponent {
     :host {
       /** Global Table **/
       color: var(--nh-theme-fg-default);
-      --table-assessmentsForResource-height: 100%;
       --table-assessmentsForResource-overflow-x: auto;
       --table-assessmentsForResource-overflow-y: auto;
       --table-assessmentsForResource-max-height: calc(
