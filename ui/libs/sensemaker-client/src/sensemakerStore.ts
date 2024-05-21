@@ -28,7 +28,7 @@ import {
   GetMethodsForDimensionQueryParams,
 } from './index';
 import { derived, Readable, Writable, writable } from 'svelte/store';
-import { getLatestAssessment, Option, serializeAsyncActions } from './utils';
+import { compareUint8Arrays, getLatestAssessment, Option, serializeAsyncActions } from './utils';
 import { createContext } from '@lit/context';
 import { get } from "svelte/store";
 import { EntryRecord } from '@holochain-open-dev/utils';
@@ -304,6 +304,16 @@ export class SensemakerStore {
       return resourceAssessmentsNew;
     });
     return resourceAssessments;
+  }
+
+  async getMyAssessmentsForResources(getAssessmentsInput: GetAssessmentsForResourceInput): Promise<Record<EntryHashB64, Array<Assessment>>> {
+    const resourceAssessments: Record<string, Assessment[]> = await this.getAssessmentsForResources(getAssessmentsInput);
+    const deconstructed = Object.entries(resourceAssessments);
+
+    return Object.fromEntries(deconstructed.map(([resourceEh, assessments]: ([string, Assessment[]])) => {
+      const myAssessments = assessments.filter(assessment => compareUint8Arrays(assessment.author, this.myAgentPubKey))
+      return [resourceEh, myAssessments]
+    })) as Record<string, Assessment[]>
   }
 
   async createMethod(method: Method): Promise<EntryRecord<Method>> {

@@ -155,7 +155,7 @@ export function createInputAssessmentWidgetDelegate(
     async getLatestAssessmentForUser(): Promise<Assessment | undefined> {
       let assessments: Record<string, Assessment[]>;
       try {
-        assessments = await sensemakerStore.getAssessmentsForResources({
+        assessments = await sensemakerStore.getMyAssessmentsForResources({
           resource_ehs: [resourceEh],
           dimension_ehs: [dimensionEh],
         });
@@ -163,7 +163,7 @@ export function createInputAssessmentWidgetDelegate(
         console.warn('Could not retrieve assessments for the specified resources and dimensions.');
         return
       }
-      return assessment || getLatest(assessments as Record<string, Assessment[]>)
+      return getLatest(assessments as Record<string, Assessment[]>)
     },
 
     /**
