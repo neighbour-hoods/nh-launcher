@@ -52,13 +52,13 @@ interface FileUploadFieldConfig extends BaseFieldConfig {
   extension: string;
 }
 // Define the interface for image upload field configuration
-interface ImageploadFieldConfig extends BaseFieldConfig {
+interface ImageUploadFieldConfig extends BaseFieldConfig {
   shape: "circle" | "square"
   customPlaceholder?: string;
 }
 
 // Use a type union for the FieldConfig/Field types
-type FieldConfig = BaseFieldConfig | SelectFieldConfig | RadioGroupFieldConfig | CheckboxFieldConfig | FileUploadFieldConfig| ImageploadFieldConfig;
+type FieldConfig = BaseFieldConfig | SelectFieldConfig | RadioGroupFieldConfig | CheckboxFieldConfig | FileUploadFieldConfig| ImageUploadFieldConfig;
 
 type NHField = NHTextInput | NHRadioGroup | NHCheckbox | NHSelect| NHSelectAvatar;
 
@@ -455,7 +455,7 @@ export default class NHForm extends NHBaseForm {
             `;
 
       case "image":
-        const avatarConfig = fieldConfig as ImageploadFieldConfig; 
+        const avatarConfig = fieldConfig as ImageUploadFieldConfig; 
         return html`
           <nh-tooltip
             .variant=${'danger'}
