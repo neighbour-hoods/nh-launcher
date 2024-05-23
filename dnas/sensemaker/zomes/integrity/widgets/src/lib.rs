@@ -12,7 +12,6 @@ pub enum DimensionWidgetBinding {
 #[serde(rename_all = "camelCase")]
 pub struct DimensionStandaloneWidgetBinding {
     pub dimension_eh: EntryHash,
-    // Widget Registration object that has all data needed to load the component from the matrix
     pub widget_registry_eh: EntryHash,
 }
 
@@ -26,9 +25,8 @@ pub struct DimensionAppletWidgetBinding {
     pub component_name: String,
 }
 
-#[hdk_entry_helper]
+#[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
 #[serde(rename_all = "camelCase")]
-#[derive(Clone)]
 pub struct AssessmentWidgetBlockConfig {
     input_assessment_widget: DimensionWidgetBinding,
     output_assessment_widget: DimensionWidgetBinding,
