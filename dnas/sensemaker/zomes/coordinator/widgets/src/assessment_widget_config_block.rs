@@ -45,6 +45,29 @@ struct UpdateParams {
 
 #[hdk_extern]
 fn set_assessment_widget_tray_config(UpdateParams { resource_def_eh, widget_configs }: UpdateParams) -> ExternResult<Vec<EntryHash>> {
+// Changes to make in rust code:
+//  -   Create a struct in integrity zome AssessmentTrayConfig
+//      - fields: name: string
+//                widget_configs: string
+// 
+//  - update input struct UpdateParams to be an AssessmentTrayConfig instead of widget_configs
+//  - update the tests to reflect this
+//  - change this fn name to set_assessment_tray_for_resource_def?
+//  - this function changes: 
+    // - make a link type for resource_def -> assessmenttrayconfig entries.
+    // - create entry
+    // - create link to the entry from the resource def 
+    // - if we need named /searchable paths to each config then create anchor/path links
+    // Return a record of the entry
+
+// - New tests: 
+//  TBD
+
+// - Do we need a delete/update zome functionality at this point? if so this will be where the link deletion code now lives
+
+// Frontend changes:
+// TBD
+
     // check existing configuration links
     let existing_links = get_links(
         resource_def_eh.to_owned(),
