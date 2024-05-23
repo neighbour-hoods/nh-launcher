@@ -96,6 +96,8 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   @state() _workingWidgetControlRendererCache: Map<string, (delegate?: InputAssessmentWidgetDelegate, component?: unknown) => TemplateResult> = new Map();
 
   @state() private _trayName!: string; // Text input value for the name
+  @state() private _trayNameFieldErrored: boolean = false; // Flag for errored status on name field
+  
   // AssessmentWidgetBlockConfig (group) and AssessmentWidgetRegistrationInputs (individual)
   @state() private _fetchedConfig!: AssessmentWidgetBlockConfig[];
   @state() private _updateToFetchedConfig!: AssessmentWidgetBlockConfig[];
@@ -245,6 +247,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
               .size=${"medium"}
               .placeholder=${"Enter a name"}
               .required=${true}
+              .errored=${this._trayNameFieldErrored}
               @change=${(e) => (this._trayName = e.target.value)}
             ></nh-text-input>
           </div>
@@ -325,8 +328,13 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
               .disabled=${!this.loading && this._fetchedConfig && this.configuredWidgetsPersisted}
               .size=${'md'}
               @click=${async () => {
+                if(!this._trayName || this._trayName == "") {
+                  this._trayNameFieldErrored = true;
+                  return
+                }
                 try {
                   await this.createEntries();
+                  this._trayNameFieldErrored = false;
                 } catch (error) {
                   console.warn('error :>> ', error);
                 }
