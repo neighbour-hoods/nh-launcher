@@ -6,25 +6,25 @@ use nh_zome_sensemaker_widgets_integrity::*;
 fn register_assessment_widget(registration_input: AssessmentWidgetRegistrationInput) -> ExternResult<Record> {
     let action_hash;
 
-        let input: AssessmentWidgetRegistration = registration_input.clone().try_into()?;
-        // Create entry
-        action_hash = create_entry(&EntryTypes::AssessmentWidgetRegistration(input.clone()))?;
+    let input: AssessmentWidgetRegistration = registration_input.clone().try_into()?;
+    // Create entry
+    action_hash = create_entry(&EntryTypes::AssessmentWidgetRegistration(input.clone()))?;
 
-        let eh = hash_entry(EntryTypes::AssessmentWidgetRegistration(input.clone()))?;
-        // Create link
-        // - widget_registrations anchor to new entry hash
-        create_link(
-            registrations_typed_path()?.path_entry_hash()?,
-            eh.clone(),
-            LinkTypes::WidgetRegistrations,
-            (),
-        )?;
+    let eh = hash_entry(EntryTypes::AssessmentWidgetRegistration(input.clone()))?;
+    // Create link
+    // - widget_registrations anchor to new entry hash
+    create_link(
+        registrations_typed_path()?.path_entry_hash()?,
+        eh.clone(),
+        LinkTypes::WidgetRegistrations,
+        (),
+    )?;
 
-        let record = get(action_hash.clone(), GetOptions::default())?
-            .ok_or(wasm_error!(WasmErrorInner::Guest("AssessmentWidgetRegistration could not be retrieved after creation".into())))?;
+    let record = get(action_hash.clone(), GetOptions::default())?
+        .ok_or(wasm_error!(WasmErrorInner::Guest("AssessmentWidgetRegistration could not be retrieved after creation".into())))?;
 
-        // debug!("_+_+_+_+_+_+_+_+_+_ Created record: {:#?}", record);
-        Ok(record)
+    // debug!("_+_+_+_+_+_+_+_+_+_ Created record: {:#?}", record);
+    Ok(record)
 }
 
 #[hdk_extern]
