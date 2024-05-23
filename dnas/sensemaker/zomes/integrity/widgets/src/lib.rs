@@ -32,11 +32,19 @@ pub struct AssessmentWidgetBlockConfig {
     output_assessment_widget: DimensionWidgetBinding,
 }
 
+#[hdk_entry_helper]
+#[serde(rename_all = "camelCase")]
+#[derive(Clone)]
+pub struct AssessmentWidgetTrayConfig {
+    pub name: String,
+    pub assessment_widget_blocks: Vec<AssessmentWidgetBlockConfig>,
+}
+
 #[hdk_entry_defs]
 #[unit_enum(UnitEntryTypes)]
 pub enum EntryTypes {
     #[entry_def()]
-    AssessmentWidgetBlockConfig(AssessmentWidgetBlockConfig),
+    AssessmentWidgetTrayConfig(AssessmentWidgetTrayConfig),
     AssessmentWidgetRegistration(AssessmentWidgetRegistration),
 }
 
