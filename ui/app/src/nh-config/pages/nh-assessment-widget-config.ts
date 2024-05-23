@@ -25,6 +25,7 @@ import NHResourceAssessmentTray from '@neighbourhoods/design-system-components/w
 import NHSpinner from '@neighbourhoods/design-system-components/spinner';
 import NHTooltip from '@neighbourhoods/design-system-components/tooltip';
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+import NHTextInput from '@neighbourhoods/design-system-components/input/text';
 import { b64images } from '@neighbourhoods/design-system-styles';
 
 import { property, query, queryAll, state } from 'lit/decorators.js';
@@ -96,6 +97,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   @state() _workingWidgetControls: AssessmentWidgetBlockConfig[] = [];
   @state() _workingWidgetControlRendererCache: Map<string, (delegate?: InputAssessmentWidgetDelegate, component?: unknown) => TemplateResult> = new Map();
 
+  @state() private _trayName!: string; // Text input value for the name
   // AssessmentWidgetBlockConfig (group) and AssessmentWidgetRegistrationInputs (individual)
   @state() private _fetchedConfig!: AssessmentWidgetBlockConfig[];
   @state() private _updateToFetchedConfig!: AssessmentWidgetBlockConfig[];
@@ -206,7 +208,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     container.requestUpdate()
   }
   resetAssessmentControlsSelected() {
-      this._assessmentContainers 
+      this._assessmentContainers
         .forEach((container) => container.selected = false);
   }
   reselectPlaceholderControl() {
@@ -237,6 +239,17 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
           <p>Add as many widgets as you need - the changes won't be saved until the Update Config button is pressed</p>
         </div>
         <div>
+          <div class="tray-name-field">
+            <nh-text-input
+              id="tray-name"
+              .name="tray-name"
+              .label=${"Name:"}
+              .size=${"medium"}
+              .placeholder=${"Enter a name"}
+              .required=${true}
+              @change=${(e) => (this._trayName = e.target.value)}
+            ></nh-text-input>
+          </div>
           <div class="widget-block-config">
             <assessment-widget-tray
               .editable=${true}
@@ -652,7 +665,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
             ],
           ],
           submitOverload: model => this.editMode ? this.replaceInMemoryWidgetControl(model) : this.pushToInMemoryWidgetControls(model),
-          progressiveValidation: true,
           schema: object({
             assessment_widget: string()
               .min(1, 'Must be at least 1 characters')
@@ -681,6 +693,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     'nh-dropdown-accordion': NHDropdownAccordion,
     'nh-spinner': NHSpinner,
     'nh-alert': NHAlert,
+    'nh-text-input': NHTextInput,
     'assessment-widget-tray': NHResourceAssessmentTray,
     'input-assessment-renderer': InputAssessmentRenderer,
     'assessment-container': NHAssessmentContainer,
@@ -707,6 +720,11 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
         flex-direction: column;  
         padding: calc(1px * var(--nh-spacing-xl));
         box-sizing: border-box;
+      }
+
+      div.tray-name-field {
+        width: 18rem;
+        margin: 0 auto 1rem auto;
       }
 
       nh-page-header-card {
