@@ -113,6 +113,14 @@ export interface AssessmentWidgetBlockConfig {
 }
 
 /**
+ * A named assessment tray config
+ */
+export interface AssessmentWidgetTrayConfig {
+  name: string,
+  assessmentWidgetBlocks: AssessmentWidgetBlockConfig[]
+}
+
+/**
  * This is currently associated with each resource type.
  * In the future, it may be matched by [resource def, context].
  */
