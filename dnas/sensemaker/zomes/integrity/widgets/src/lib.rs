@@ -2,22 +2,8 @@ use hdi::prelude::*;
 use sensemaker_integrity_structs::{Properties, AssessmentWidgetRegistration};
 
 #[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
-#[serde(tag = "type", rename_all = "camelCase")]
-pub enum DimensionWidgetBinding {
-    Standalone(DimensionStandaloneWidgetBinding),
-    Applet(DimensionAppletWidgetBinding),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
 #[serde(rename_all = "camelCase")]
-pub struct DimensionStandaloneWidgetBinding {
-    pub dimension_eh: EntryHash,
-    pub widget_registry_eh: EntryHash,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
-#[serde(rename_all = "camelCase")]
-pub struct DimensionAppletWidgetBinding {
+pub struct DimensionControlMapping {
     pub dimension_eh: EntryHash,
     // id of the AppletConfig stored in companion zome
     pub applet_id: EntryHash,
@@ -28,8 +14,8 @@ pub struct DimensionAppletWidgetBinding {
 #[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
 #[serde(rename_all = "camelCase")]
 pub struct AssessmentWidgetBlockConfig {
-    input_assessment_widget: DimensionWidgetBinding,
-    output_assessment_widget: DimensionWidgetBinding,
+    input_assessment_widget: DimensionControlMapping,
+    output_assessment_widget: DimensionControlMapping,
 }
 
 #[hdk_entry_helper]
@@ -50,10 +36,9 @@ pub enum EntryTypes {
 
 #[hdk_link_types]
 pub enum LinkTypes {
-    WidgetTrayConfigs,
-    WidgetRegistrations,
-    ResourceDefToWidgetTrayConfig,
-    // AppletToWidgetRegistration,
+    AssessmentTrayConfig
+    WidgetRegistration
+    ResourceDefDefaultAssessmentTrayConfig,
 }
 
 // :DUPE: ca_validation_callback
