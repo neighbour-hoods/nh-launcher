@@ -16,7 +16,7 @@ fn register_assessment_widget(registration_input: AssessmentWidgetRegistrationIn
     create_link(
         registrations_typed_path()?.path_entry_hash()?,
         eh.clone(),
-        LinkTypes::WidgetRegistrations,
+        LinkTypes::WidgetRegistration,
         (),
     )?;
 
@@ -42,7 +42,7 @@ fn get_assessment_widget_registration(assessment_widget_registration_eh: EntryHa
 fn get_assessment_widget_registrations(_:()) -> ExternResult<Vec<Record>> {
     let links = get_links(
         registrations_typed_path()?.path_entry_hash()?,
-        LinkTypes::WidgetRegistrations,
+        LinkTypes::WidgetRegistration,
         None,
     )?;
     match links.last() {
@@ -64,7 +64,7 @@ fn get_assessment_widget_registrations(_:()) -> ExternResult<Vec<Record>> {
 }
 
 fn registrations_typed_path() -> ExternResult<TypedPath> {
-    Path::from("widget_registrations").typed(LinkTypes::WidgetRegistrations)
+    Path::from("widget_registrations").typed(LinkTypes::WidgetRegistration)
 }
 
 #[hdk_extern]
