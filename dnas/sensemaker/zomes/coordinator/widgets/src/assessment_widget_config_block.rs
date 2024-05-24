@@ -10,7 +10,7 @@ struct QueryParams {
 }
 
 #[hdk_extern]
-fn get_assessment_widget_tray_config(QueryParams { resource_def_eh }: QueryParams) -> ExternResult<Vec<AssessmentWidgetBlockConfig>> {
+fn get_assessment_tray_config() -> ExternResult<Record>> {
     let links = get_links(
         resource_def_eh,
         LinkTypes::WidgetConfigs,
@@ -36,15 +36,8 @@ fn get_assessment_widget_tray_config(QueryParams { resource_def_eh }: QueryParam
     )
 }
 
-#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone)]
-#[serde(rename_all = "camelCase")]
-struct UpdateParams {
-    pub resource_def_eh: EntryHash,
-    pub widget_configs: Vec<AssessmentWidgetBlockConfig>,
-}
-
 #[hdk_extern]
-fn set_assessment_widget_tray_config(UpdateParams { resource_def_eh, widget_configs }: UpdateParams) -> ExternResult<Vec<EntryHash>> {
+fn set_assessment_tray_config(AssessmentWidgetTrayConfig { name, assessment_widget_blocks }: AssessmentWidgetTrayConfig) -> ExternResult<Record> {
 // Changes to make in rust code:
 //  -   Create a struct in integrity zome AssessmentTrayConfig
 //      - fields: name: string
@@ -56,9 +49,12 @@ fn set_assessment_widget_tray_config(UpdateParams { resource_def_eh, widget_conf
 //  - this function changes: 
     // - make a link type for resource_def -> assessmenttrayconfig entries.
     // - create entry
-    // - create link to the entry from the resource def 
-    // - if we need named /searchable paths to each config then create anchor/path links
+    // - create link to the entry from the anchor
     // Return a record of the entry
+
+// GET/SET default config
+  // get - create a link from the resource_def_eh to the default config with the ResourceDefDefaultAssessmentTrayConfig link type
+  // set - delete the existing link if it exists and create a new one. 
 
 // - New tests: 
 //  TBD
