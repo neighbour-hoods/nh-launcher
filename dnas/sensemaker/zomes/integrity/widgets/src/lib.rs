@@ -36,8 +36,8 @@ pub enum EntryTypes {
 
 #[hdk_link_types]
 pub enum LinkTypes {
-    AssessmentTrayConfig
-    WidgetRegistration
+    AssessmentTrayConfig,
+    WidgetRegistration,
     ResourceDefDefaultAssessmentTrayConfig,
 }
 
