@@ -2,112 +2,55 @@ use hdk::prelude::*;
 use nh_sensemaker_zome_lib::*;
 use nh_zome_sensemaker_widgets_integrity::*;
 
+#[hdk_extern]
+fn get_assessment_tray_config(assessment_tray_eh: EntryHash) -> ExternResult<Option<Record>> {
+    let maybe_tray = get(assessment_tray_eh, GetOptions::default())?;
+    Ok(maybe_tray)
+}
 
-#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone)]
-#[serde(rename_all = "camelCase")]
-struct QueryParams {
-    pub resource_def_eh: EntryHash,
+impl TryFrom<AssessmentWidgetTrayConfigInput> for AssessmentWidgetTrayConfig {
+    type Error = WasmError;
+    fn try_from(value: AssessmentWidgetTrayConfigInput) -> Result<Self, Self::Error> {
+        let registration = AssessmentWidgetTrayConfig {
+            name: value.name,
+            assessment_widget_blocks: value.assessment_widget_blocks,
+        };
+        Ok(registration)
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
+pub struct AssessmentWidgetTrayConfigInput {
+    pub name: String,
+    pub assessment_widget_blocks: Vec<AssessmentWidgetBlockConfig>,
 }
 
 #[hdk_extern]
-fn get_assessment_tray_config() -> ExternResult<Record>> {
-    let links = get_links(
-        resource_def_eh,
-        LinkTypes::WidgetConfigs,
-        None,
+fn set_assessment_tray_config(tray_config_input: AssessmentWidgetTrayConfigInput) -> ExternResult<Record> {
+    let input: AssessmentWidgetTrayConfig = tray_config_input.clone().try_into()?;
+    let action_hash = create_entry(&EntryTypes::AssessmentWidgetTrayConfig(input.clone()))?;
+
+    let eh = hash_entry(EntryTypes::AssessmentWidgetTrayConfig(input.clone()))?;
+
+    create_link(
+        tray_configs_typed_path()?.path_entry_hash()?,
+        eh.clone(),
+        LinkTypes::AssessmentTrayConfig,
+        (),
     )?;
 
-    Ok(links.iter()
-        .filter_map(|link| {
-            let maybe_record = get(
-                link.target.clone().into_entry_hash()?,
-                GetOptions::default(),
-            );
+    let record = get(action_hash.clone(), GetOptions::default())?
+        .ok_or(wasm_error!(WasmErrorInner::Guest("AssessmentWidgetTrayConfig could not be retrieved after creation".into())))?;
 
-            match maybe_record {
-                Err(_) => None, // :TODO: error handling
-                Ok(None) => None,
-                Ok(Some(record)) =>
-                    entry_from_record::<AssessmentWidgetBlockConfig>(record)
-                        .map_or(None, |f| Some(f))
-            }
-        })
-        .collect()
-    )
+    Ok(record)
 }
 
-#[hdk_extern]
-fn set_assessment_tray_config(AssessmentWidgetTrayConfig { name, assessment_widget_blocks }: AssessmentWidgetTrayConfig) -> ExternResult<Record> {
-// Changes to make in rust code:
-//  -   Create a struct in integrity zome AssessmentTrayConfig
-//      - fields: name: string
-//                widget_configs: string
-// 
-//  - update input struct UpdateParams to be an AssessmentTrayConfig instead of widget_configs
 //  - update the tests to reflect this
-//  - change this fn name to set_assessment_tray_for_resource_def?
-//  - this function changes: 
-    // - make a link type for resource_def -> assessmenttrayconfig entries.
-    // - create entry
-    // - create link to the entry from the anchor
-    // Return a record of the entry
 
 // GET/SET default config
   // get - create a link from the resource_def_eh to the default config with the ResourceDefDefaultAssessmentTrayConfig link type
   // set - delete the existing link if it exists and create a new one. 
 
-// - New tests: 
-//  TBD
-
-// - Do we need a delete/update zome functionality at this point? if so this will be where the link deletion code now lives
-
-// Frontend changes:
-// TBD
-
-    // check existing configuration links
-    let existing_links = get_links(
-        resource_def_eh.to_owned(),
-        LinkTypes::WidgetConfigs,
-        None,
-    )?;
-    // find EntryHashes the links point to, and unlink them
-    let _link_targets: Vec<Option<EntryHash>> = existing_links.iter()
-        .map(|l| {
-            // remove the link as a side-effect; this is a lazy way
-            // of ensuring that link ordering is honoured upon updates
-            let dr = delete_link(l.create_link_hash.clone());
-            debug!("link deletion for block config {:?} returned {:?}", l.target, dr);
-
-            l.target.to_owned().into_entry_hash()
-        })
-        .collect();
-
-    // process & link all passed configs
-    let widget_config_hashes = widget_configs.iter()
-        .filter_map(|c| {
-            let config_hash = hash_entry(c).ok();
-
-            // ignore unhashable values; should never happen
-            if config_hash == None {
-                // return hash for comparing when removing stale configs
-                return config_hash.to_owned()
-            }
-
-            // store new config blocks and link to Resource Def
-            // :TODO: error handling
-            let er = create_entry(&EntryTypes::AssessmentWidgetBlockConfig(c.clone()));
-            debug!("entry creation for block config {:?} returned {:?}", config_hash, er);
-            let lr = create_link(
-                resource_def_eh.to_owned(),
-                config_hash.clone().unwrap(),
-                LinkTypes::WidgetConfigs,
-                (),
-            );
-            debug!("link creation for block config {:?} returned {:?}", config_hash, lr);
-
-            config_hash
-        })
-        .collect();
-
-    Ok(widget_config_hashes)
+fn tray_configs_typed_path() -> ExternResult<TypedPath> {
+    Path::from("assessment_tray_config").typed(LinkTypes::AssessmentTrayConfig)
 }
