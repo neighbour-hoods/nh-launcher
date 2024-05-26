@@ -78,42 +78,42 @@ export default () => {
         );
         t.equal(config, null, "Get assessment tray config when there is none at that eh returns null")
 
-        // // create a config
-        // const testWidgetConfig1 = {
-        //   inputAssessmentWidget: {
-        //     type: 'standalone',
-        //     dimensionEh: dummyEntryHash,
-        //     widgetRegistryEh: dummyEntryHash,
-        //   },
-        //   outputAssessmentWidget: {
-        //     type: 'standalone',
-        //     dimensionEh: dummyEntryHash,
-        //     widgetRegistryEh: dummyEntryHash,
-        //   },
-        // };
-        // const testWidgetConfig2 = {
-        //   inputAssessmentWidget: {
-        //     type: 'standalone',
-        //     dimensionEh: dummyEntryHash,
-        //     widgetRegistryEh: dummyEntryHash,
-        //   },
-        //   outputAssessmentWidget: {
-        //     type: 'standalone',
-        //     dimensionEh: dummyEntryHash,
-        //     widgetRegistryEh: dummyEntryHash,
-        //   },
-        // };
+        // create a config
+        const testWidgetConfig1 = {
+          inputAssessmentWidget: {
+            dimensionEh: dummyEntryHash,
+            appletId: dummyEntryHash,
+            componentName: 'test-component',
+          },
+          outputAssessmentWidget: {
+            dimensionEh: dummyEntryHash,
+            appletId: dummyEntryHash,
+            componentName: 'test-component',
+          },
+        };
+        const testWidgetConfig2 = {
+          inputAssessmentWidget: {
+            dimensionEh: dummyEntryHash,
+            appletId: dummyEntryHash,
+            componentName: 'test-component',
+          },
+          outputAssessmentWidget: {
+            dimensionEh: dummyEntryHash,
+            appletId: dummyEntryHash,
+            componentName: 'test-component',
+          },
+        };
         
-        // const update1 = await callZomeAlice(
-        //   "widgets",
-        //   "set_assessment_widget_tray_config",
-        //   {
-        //     resourceDefEh: dummyEntryHash,
-        //     widgetConfigs: [testWidgetConfig1, testWidgetConfig2],
-        //   }
-        // );
-        // t.ok(update1, "creating a new tray config succeeds");
-        // await pause(pauseDuration);
+        const create1 = await callZomeAlice(
+          "widgets",
+          "set_assessment_tray_config",
+          {
+            name: 'test config',
+            assessmentWidgetBlocks: [testWidgetConfig1, testWidgetConfig2],
+          }
+        );
+        t.ok(create1, "creating a new tray config succeeds");
+        await pause(pauseDuration);
 
         // // read config back out & check for correctness
         // const configCheck1: AssessmentWidgetBlockConfig[] = await callZomeBob(

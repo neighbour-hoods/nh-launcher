@@ -20,6 +20,7 @@ impl TryFrom<AssessmentWidgetTrayConfigInput> for AssessmentWidgetTrayConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
+#[serde(rename_all = "camelCase")]
 pub struct AssessmentWidgetTrayConfigInput {
     pub name: String,
     pub assessment_widget_blocks: Vec<AssessmentWidgetBlockConfig>,
