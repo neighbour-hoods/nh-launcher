@@ -8,6 +8,13 @@ fn get_assessment_tray_config(assessment_tray_eh: EntryHash) -> ExternResult<Opt
     Ok(maybe_tray)
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
+#[serde(rename_all = "camelCase")]
+pub struct AssessmentWidgetTrayConfigInput {
+    pub name: String,
+    pub assessment_widget_blocks: Vec<AssessmentWidgetBlockConfig>,
+}
+
 impl TryFrom<AssessmentWidgetTrayConfigInput> for AssessmentWidgetTrayConfig {
     type Error = WasmError;
     fn try_from(value: AssessmentWidgetTrayConfigInput) -> Result<Self, Self::Error> {
@@ -17,13 +24,6 @@ impl TryFrom<AssessmentWidgetTrayConfigInput> for AssessmentWidgetTrayConfig {
         };
         Ok(registration)
     }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
-#[serde(rename_all = "camelCase")]
-pub struct AssessmentWidgetTrayConfigInput {
-    pub name: String,
-    pub assessment_widget_blocks: Vec<AssessmentWidgetBlockConfig>,
 }
 
 #[hdk_extern]
@@ -45,8 +45,6 @@ fn set_assessment_tray_config(tray_config_input: AssessmentWidgetTrayConfigInput
 
     Ok(record)
 }
-
-//  - update the tests to reflect this
 
 // GET/SET default config
   // get - create a link from the resource_def_eh to the default config with the ResourceDefDefaultAssessmentTrayConfig link type
