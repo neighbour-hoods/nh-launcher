@@ -1,3 +1,4 @@
+import { EntryRecord } from '@holochain-open-dev/utils';
 import { EntryHash } from "@holochain/client";
 import {
   pause,
@@ -71,12 +72,12 @@ export default () => {
           false,
         );
 
-        let config: AssessmentWidgetTrayConfig = await callZomeAlice(
+        let getEmpty: AssessmentWidgetTrayConfig = await callZomeAlice(
           "widgets",
           "get_assessment_tray_config",
           dummyEntryHash
         );
-        t.equal(config, null, "Get assessment tray config when there is none at that eh returns null")
+        t.equal(getEmpty, null, "Get assessment tray config when there is none at that eh returns null")
 
         // create a config
         const testWidgetConfig1 = {
@@ -103,7 +104,7 @@ export default () => {
             componentName: 'test-component',
           },
         };
-        
+
         const create1 = await callZomeAlice(
           "widgets",
           "set_assessment_tray_config",
@@ -115,18 +116,23 @@ export default () => {
         t.ok(create1, "creating a new tray config succeeds");
         await pause(pauseDuration);
 
-        // // read config back out & check for correctness
-        // const configCheck1: AssessmentWidgetBlockConfig[] = await callZomeBob(
-        //   "widgets",
-        //   "get_assessment_widget_tray_config",
-        //   { resourceDefEh: dummyEntryHash }
-        // );
-        // t.deepEqual(configCheck1, [testWidgetConfig1, testWidgetConfig2], "tray config retrievable by other agent");
+        const entryRecordCreate1 = new EntryRecord<AssessmentWidgetTrayConfig>(create1);
+
+        // read config back out & check for correctness
+        const read1 = await callZomeBob(
+          "widgets",
+          "get_assessment_tray_config",
+          entryRecordCreate1.entryHash
+        );
+        const entryRecordRead1 = new EntryRecord<AssessmentWidgetTrayConfig>(read1);
+        t.ok(entryRecordRead1.entry, "Tray config retrievable by other agent");
+        t.equal(entryRecordRead1.entry.name, "test config", "retrieved tray config name is the same");
+        t.deepEqual(entryRecordRead1.entry.assessmentWidgetBlocks, [testWidgetConfig1, testWidgetConfig2], "retrieved tray config blocks are the same, have same order");
 
         // // swap the configs
         // const update2: EntryHash[] = await callZomeAlice(
         //   "widgets",
-        //   "set_assessment_widget_tray_config",
+        //   "set_assessment_tray_config",
         //   {
         //     resourceDefEh: dummyEntryHash,
         //     widgetConfigs: [testWidgetConfig2, testWidgetConfig1],
@@ -137,12 +143,12 @@ export default () => {
         // await pause(pauseDuration);
 
         // // read config back out & check for correctness
-        // const configCheck2: AssessmentWidgetBlockConfig[] = await callZomeAlice(
+        // const read2: AssessmentWidgetBlockConfig[] = await callZomeAlice(
         //   "widgets",
-        //   "get_assessment_widget_tray_config",
+        //   "get_assessment_tray_config",
         //   { resourceDefEh: dummyEntryHash }
         // );
-        // t.deepEqual(configCheck2, [testWidgetConfig2, testWidgetConfig1], "tray config reordering succeeded");
+        // t.deepEqual(read2, [testWidgetConfig2, testWidgetConfig1], "tray config reordering succeeded");
 
         // // create a new widget config and replace one of the prior ones with it
         // const testWidgetConfig1b = {
@@ -159,7 +165,7 @@ export default () => {
         // };
         // const update3: EntryHash[] = await callZomeAlice(
         //   "widgets",
-        //   "set_assessment_widget_tray_config",
+        //   "set_assessment_tray_config",
         //   {
         //     resourceDefEh: dummyEntryHash,
         //     widgetConfigs: [testWidgetConfig2, testWidgetConfig1b, testWidgetConfig1],
@@ -171,7 +177,7 @@ export default () => {
         // // read config back out & check for correctness
         // const configCheck3: AssessmentWidgetBlockConfig[] = await callZomeBob(
         //   "widgets",
-        //   "get_assessment_widget_tray_config",
+        //   "get_assessment_tray_config",
         //   { resourceDefEh: dummyEntryHash }
         // );
         // console.log('configCheck3 ====== test', configCheck3, [testWidgetConfig2, testWidgetConfig1b, testWidgetConfig1])
@@ -181,7 +187,7 @@ export default () => {
         // try {
         //   let config: AssessmentWidgetBlockConfig = await callZomeBob(
         //     "widgets",
-        //     "set_assessment_widget_tray_config",
+        //     "set_assessment_tray_config",
         //     {
         //       resourceDefEh: dummyEntryHash,
         //       widgetConfigs: [testWidgetConfig2, testWidgetConfig1],
