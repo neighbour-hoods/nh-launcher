@@ -8,7 +8,7 @@ import {
   addAllAgentsToAllConductors,
   cleanAllConductors,
 } from "@holochain/tryorama";
-import { AssessmentWidgetTrayConfig, AssessmentWidgetBlockConfig } from "#client";
+import { AssessmentWidgetTrayConfig } from "#client";
 import { setUpAliceandBob } from "../../utils";
 
 import pkg from "tape-promise/tape";
@@ -129,76 +129,23 @@ export default () => {
         t.equal(entryRecordRead1.entry.name, "test config", "retrieved tray config name is the same");
         t.deepEqual(entryRecordRead1.entry.assessmentWidgetBlocks, [testWidgetConfig1, testWidgetConfig2], "retrieved tray config blocks are the same, have same order");
 
-        // // swap the configs
-        // const update2: EntryHash[] = await callZomeAlice(
-        //   "widgets",
-        //   "set_assessment_tray_config",
-        //   {
-        //     resourceDefEh: dummyEntryHash,
-        //     widgetConfigs: [testWidgetConfig2, testWidgetConfig1],
-        //   }
-        // );
-        // t.ok(update2, "updating tray config with a new ordering succeeds");
-        // console.info('AssessmentWidgetBlockConfig hashes: ', update2);
-        // await pause(pauseDuration);
-
-        // // read config back out & check for correctness
-        // const read2: AssessmentWidgetBlockConfig[] = await callZomeAlice(
-        //   "widgets",
-        //   "get_assessment_tray_config",
-        //   { resourceDefEh: dummyEntryHash }
-        // );
-        // t.deepEqual(read2, [testWidgetConfig2, testWidgetConfig1], "tray config reordering succeeded");
-
-        // // create a new widget config and replace one of the prior ones with it
-        // const testWidgetConfig1b = {
-        //   inputAssessmentWidget: {
-        //     type: 'standalone',
-        //     dimensionEh: dummyEntryHash,
-        //     widgetRegistryEh: dummyEntryHash,
-        //   },
-        //   outputAssessmentWidget: {
-        //     type: 'standalone',
-        //     dimensionEh: dummyEntryHash,
-        //     widgetRegistryEh: dummyEntryHash,
-        //   },
-        // };
-        // const update3: EntryHash[] = await callZomeAlice(
-        //   "widgets",
-        //   "set_assessment_tray_config",
-        //   {
-        //     resourceDefEh: dummyEntryHash,
-        //     widgetConfigs: [testWidgetConfig2, testWidgetConfig1b, testWidgetConfig1],
-        //   }
-        // );
-        // t.ok(update3, "updating tray config with a newly inserted widget block succeeds");
-        // await pause(pauseDuration);
-
-        // // read config back out & check for correctness
-        // const configCheck3: AssessmentWidgetBlockConfig[] = await callZomeBob(
-        //   "widgets",
-        //   "get_assessment_tray_config",
-        //   { resourceDefEh: dummyEntryHash }
-        // );
-        // console.log('configCheck3 ====== test', configCheck3, [testWidgetConfig2, testWidgetConfig1b, testWidgetConfig1])
-        // t.deepEqual(configCheck3, [testWidgetConfig2, testWidgetConfig1b, testWidgetConfig1], "tray config reordering preserved upon injecting blocks");
-
-        // // assert 'permission denied' error, only the CA can create
-        // try {
-        //   let config: AssessmentWidgetBlockConfig = await callZomeBob(
-        //     "widgets",
-        //     "set_assessment_tray_config",
-        //     {
-        //       resourceDefEh: dummyEntryHash,
-        //       widgetConfigs: [testWidgetConfig2, testWidgetConfig1],
-        //     }
-        //   );
-        // } catch (e) {
-        //   //@ts-ignore
-        //   console.info(e.message)
-        //   //@ts-ignore
-        //   t.ok(e.message.match("only the community activator can create this entry"), "only network CA can configure resource widget trays; more complex permission structures planned in future");
-        // }
+        // bob creates config
+        // assert 'permission denied' error, only the CA can create
+        try {
+          let config: AssessmentWidgetTrayConfig = await callZomeBob(
+            "widgets",
+            "set_assessment_tray_config",
+            {
+              name: 'test config',
+              assessmentWidgetBlocks: [testWidgetConfig1, testWidgetConfig2],
+            }
+          );
+        } catch (e) {
+          //@ts-ignore
+          console.info(e.message)
+          //@ts-ignore
+          t.ok(e.message.match("only the community activator can create this entry"), "only network CA can configure resource widget trays; more complex permission structures planned in future");
+        }
       } catch (e) {
         console.error(e);
         t.ok(null);
