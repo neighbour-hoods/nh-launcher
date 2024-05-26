@@ -50,6 +50,23 @@ fn set_assessment_tray_config(tray_config_input: AssessmentWidgetTrayConfigInput
   // get - create a link from the resource_def_eh to the default config with the ResourceDefDefaultAssessmentTrayConfig link type
   // set - delete the existing link if it exists and create a new one. 
 
+#[hdk_extern]
+fn get_default_assessment_tray_config_for_resource_def(resource_def_eh: EntryHash) -> ExternResult<Option<AssessmentWidgetTrayConfig>> {
+    Ok(None)
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
+#[serde(rename_all = "camelCase")]
+pub struct SetAssessmentTrayDefaultInput {
+    pub resource_def_eh: EntryHash,
+    pub assessment_tray_eh: EntryHash,
+}
+
+#[hdk_extern]
+fn set_default_assessment_tray_config_for_resource_def(SetAssessmentTrayDefaultInput {resource_def_eh, assessment_tray_eh}: SetAssessmentTrayDefaultInput) -> ExternResult<AssessmentWidgetTrayConfig> {
+    unimplemented!()
+}
+
 fn tray_configs_typed_path() -> ExternResult<TypedPath> {
     Path::from("assessment_tray_config").typed(LinkTypes::AssessmentTrayConfig)
 }
