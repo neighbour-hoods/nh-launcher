@@ -11,6 +11,7 @@ import { consume } from "@lit/context";
 import { DnaHash } from "@holochain/client";
 import { matrixContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
+import { alertEvent } from "../../decorators/alert-event";
 
 export class LeaveNeighbourhood extends NHComponent {
   @consume({ context: matrixContext , subscribe: true })
@@ -30,36 +31,23 @@ export class LeaveNeighbourhood extends NHComponent {
     this._dialog.showDialog();
   }
 
+  @alertEvent() success;
+  @alertEvent() danger;
+
   async leaveGroup() {
     const weGroupName = this._matrixStore.getNeighbourhoodInfo(this.weGroupId)?.name;
     try {
       await this._matrixStore.leaveWeGroup(this.weGroupId, true);
       await this.updateComplete;
-      this.dispatchEvent(
-        new CustomEvent("trigger-alert", {
-          detail: { 
-            title: "Neighbourhood Left Successfully",
-            msg: "You will no longer be a part of this Neighbourhood.",
-            type: "success",
-            closable: true,
-          },
-          bubbles: true,
-          composed: true,
-        })
-      );
+      this.success.emit({
+        title: "Neighbourhood Left Successfully",
+        msg: "You will no longer be a part of this Neighbourhood."
+      })
     } catch (e) {
-      this.dispatchEvent(
-        new CustomEvent("trigger-alert", {
-          detail: { 
-            title: "Error while leaving Neighbourhood",
-            msg: "Check your developer console for more information.",
-            type: "success",
-            closable: true,
-          },
-          bubbles: true,
-          composed: true,
-        })
-      );
+      this.danger.emit({
+        title: "Error while leaving Neighbourhood",
+        msg: "Check your developer console for more information."
+      })
       console.log("Error while leaving neighbourhood:", e);
     };
 
