@@ -17,6 +17,7 @@ import NHButtonGroup from '@neighbourhoods/design-system-components/button-group
 import NHCard from '@neighbourhoods/design-system-components/card';
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 import { b64images } from '@neighbourhoods/design-system-styles';
+import { alertEvent } from '../../decorators/alert-event';
 
 export class JoinGroupCard extends NHComponent {
   @consume({ context: matrixContext , subscribe: true })
@@ -28,6 +29,9 @@ export class JoinGroupCard extends NHComponent {
     () => this.matrixStore.membraneInvitationsStore.myInvitations,
     () => [this.matrixStore],
   );
+
+  @alertEvent() success;
+  @alertEvent() danger;
 
   async joinGroup(invitationActionHash: ActionHash, invitation: JoinMembraneInvitation) {
     const properties = decode(invitation.clone_dna_recipe.properties) as any;
@@ -51,18 +55,10 @@ export class JoinGroupCard extends NHComponent {
       .catch(e => {
         if (e.data) {
           if (e.data.includes('AppAlreadyInstalled')) {
-            this.dispatchEvent(
-              new CustomEvent("trigger-alert", {
-                detail: { 
-                  title: "Already Installed",
-                  msg: "This applet has already been installed.",
-                  type: "danger",
-                  closable: true,
-                },
-                bubbles: true,
-                composed: true,
-              })
-            )
+            this.danger.emit({
+              title: "Already Installed",
+              msg: "This applet has already been installed."
+            })
           }
         }
       });
@@ -227,22 +223,13 @@ export class JoinGroupCard extends NHComponent {
                   .size=${"auto"}
                   .iconImageB64=${b64images.icons.copy}
                   @click=${() => {
-                    navigator.clipboard.writeText(
-                      encodeHashToBase64(this.matrixStore.myAgentPubKey),
-                      );
-                      this.dispatchEvent(
-                        new CustomEvent("trigger-alert", {
-                          detail: { 
-                            title: "Copied!",
-                            msg: "Now send this to a Neighbour and they will be able to invite you in.",
-                            type: "success",
-                            closable: true,
-                          },
-                          bubbles: true,
-                          composed: true,
-                        })
-                      )
-                      this.requestUpdate();
+                      navigator.clipboard.writeText(
+                        encodeHashToBase64(this.matrixStore.myAgentPubKey),
+                        );
+                      this.success.emit({
+                        title: "Copied!",
+                        msg: "Now send this to a Neighbour and they will be able to invite you in."
+                      })
                     }}
                   >
                   ${generateHashHTML(encodeHashToBase64(this.matrixStore.myAgentPubKey))}

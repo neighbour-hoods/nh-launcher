@@ -12,6 +12,7 @@ import NHSkeleton from '@neighbourhoods/design-system-components/skeleton';
 import { b64images } from '@neighbourhoods/design-system-styles';
 
 import TabbedContextTables from '../lists/tabbed-context-tables';
+import { alertEvent } from '../../decorators/alert-event';
 import { property, state } from 'lit/decorators.js';
 import { SensemakerStore, AppletConfig } from '@neighbourhoods/client';
 import {
@@ -38,22 +39,16 @@ export default class NHDashBoardOverview extends NHComponent {
   sensemakerStore!: SensemakerStore;
 
   @state() currentAppletInstanceId : string = '';
-
+    
+  @alertEvent() success;
+  
   protected updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    if(this.loaded && (this._currentAppletInstances?.value && Object.values(this._currentAppletInstances.value).length == 0)) {
-      
-      this.dispatchEvent(
-        new CustomEvent("trigger-alert", {
-          detail: { 
-            title: "No Applets Installed",
-            msg: "You cannot use the Sensemaker dashboard without installing and using applets.",
-            type: "success",
-            closable: true,
-          },
-          bubbles: true,
-          composed: true,
-        })
-      );
+
+    if(this.loaded && !(this._currentAppletInstances?.value && Object.values(this._currentAppletInstances.value).length > 0)) {
+      this.success.emit({
+        title: "No Applets Installed",
+        msg: "You cannot use the Sensemaker dashboard without installing and using applets."
+      })
     }  
   }
 
