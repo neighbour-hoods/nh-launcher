@@ -146,6 +146,37 @@ export default () => {
           //@ts-ignore
           t.ok(e.message.match("only the community activator can create this entry"), "only network CA can configure resource widget trays; more complex permission structures planned in future");
         }
+
+        // get default when there is none set
+        const getDefault1 = await callZomeAlice(
+          "widgets",
+          "get_default_assessment_tray_config_for_resource_def",
+          dummyEntryHash,
+        );
+        t.equal(getDefault1, null, "Getting a default tray config when there is none set returns null");
+        await pause(pauseDuration);
+
+        // set default
+        const setDefault1 = await callZomeAlice(
+          "widgets",
+          "set_default_assessment_tray_config_for_resource_def",
+          {
+            resourceDefEh: dummyEntryHash,
+            assessmentTrayEh: entryRecordCreate1.entryHash,
+          }
+        );
+        t.ok(setDefault1, "setting a default tray config succeeds");
+        await pause(pauseDuration);
+
+        // get default when there is one set
+        const getDefault2 = await callZomeAlice(
+          "widgets",
+          "get_default_assessment_tray_config_for_resource_def",
+          dummyEntryHash,
+        );
+        const entrygetDefault2 = new EntryRecord<AssessmentWidgetTrayConfig>(getDefault2);
+        t.equal(entrygetDefault2.entry.name, "test config", "Getting a default tray config when it was set to the test entry returns the test entry");
+        t.deepEqual(entrygetDefault2.entry.assessmentWidgetBlocks, [testWidgetConfig1, testWidgetConfig2], "retrieved tray config blocks are the same, have same order");
       } catch (e) {
         console.error(e);
         t.ok(null);
