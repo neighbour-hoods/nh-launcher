@@ -46,13 +46,32 @@ fn set_assessment_tray_config(tray_config_input: AssessmentWidgetTrayConfigInput
     Ok(record)
 }
 
-// GET/SET default config
-  // get - create a link from the resource_def_eh to the default config with the ResourceDefDefaultAssessmentTrayConfig link type
-  // set - delete the existing link if it exists and create a new one. 
-
 #[hdk_extern]
-fn get_default_assessment_tray_config_for_resource_def(resource_def_eh: EntryHash) -> ExternResult<Option<AssessmentWidgetTrayConfig>> {
-    Ok(None)
+fn get_default_assessment_tray_config_for_resource_def(resource_def_eh: EntryHash) -> ExternResult<Option<Record>> {
+    let links = get_links(
+        resource_def_eh,
+        LinkTypes::ResourceDefDefaultAssessmentTrayConfig,
+        None,
+    )?;
+
+    let default_link = links.iter().next();
+    if let Some(link) = default_link {
+        let link_target_eh = link.clone().target.into_entry_hash();
+
+        if let Some(eh) = link_target_eh {
+            let maybe_record = get_assessment_tray_config(eh)?;
+
+            if let Some(record) = maybe_record {
+                return Ok(record.into())
+            } else {
+                return Ok(None)
+            }
+        } else {
+            return Ok(None)
+        }
+    } else {
+        return Ok(None)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
@@ -63,8 +82,24 @@ pub struct SetAssessmentTrayDefaultInput {
 }
 
 #[hdk_extern]
-fn set_default_assessment_tray_config_for_resource_def(SetAssessmentTrayDefaultInput {resource_def_eh, assessment_tray_eh}: SetAssessmentTrayDefaultInput) -> ExternResult<AssessmentWidgetTrayConfig> {
-    unimplemented!()
+fn set_default_assessment_tray_config_for_resource_def(SetAssessmentTrayDefaultInput {resource_def_eh, assessment_tray_eh}: SetAssessmentTrayDefaultInput) -> ExternResult<EntryHash> {
+    let links = get_links(
+        resource_def_eh.clone(),
+        LinkTypes::ResourceDefDefaultAssessmentTrayConfig,
+        None,
+    )?;
+
+    links.into_iter().for_each(|l| {
+        let _delete_link_result = delete_link(l.create_link_hash.clone());
+    });
+
+    let _link_action_hash = create_link(
+        resource_def_eh,
+        assessment_tray_eh.clone(),
+        LinkTypes::ResourceDefDefaultAssessmentTrayConfig,
+        (),
+    )?;
+    Ok(assessment_tray_eh)
 }
 
 fn tray_configs_typed_path() -> ExternResult<TypedPath> {
