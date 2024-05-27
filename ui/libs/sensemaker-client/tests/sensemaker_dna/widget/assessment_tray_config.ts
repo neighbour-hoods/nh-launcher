@@ -132,7 +132,7 @@ export default () => {
         // bob creates config
         // assert 'permission denied' error, only the CA can create
         try {
-          let config: AssessmentWidgetTrayConfig = await callZomeBob(
+          let _config: AssessmentWidgetTrayConfig = await callZomeBob(
             "widgets",
             "set_assessment_tray_config",
             {
@@ -177,11 +177,78 @@ export default () => {
         const entrygetDefault2 = new EntryRecord<AssessmentWidgetTrayConfig>(getDefault2);
         t.equal(entrygetDefault2.entry.name, "test config", "Getting a default tray config when it was set to the test entry returns the test entry");
         t.deepEqual(entrygetDefault2.entry.assessmentWidgetBlocks, [testWidgetConfig1, testWidgetConfig2], "retrieved tray config blocks are the same, have same order");
+
+        // Now create a totally different config and set as default
+        const dummyEntryHash2: EntryHash = await callZomeAlice(
+          "test_provider",
+          "create_post",
+          { title: 'dummy again', content: 'test 2' },
+          false,
+        );
+        const testWidgetConfig3 = {
+          inputAssessmentWidget: {
+            dimensionEh: dummyEntryHash2,
+            appletId: dummyEntryHash2,
+            componentName: 'another-test-component',
+          },
+          outputAssessmentWidget: {
+            dimensionEh: dummyEntryHash2,
+            appletId: dummyEntryHash2,
+            componentName: 'another-test-component',
+          },
+        };
+        const testWidgetConfig4 = {
+          inputAssessmentWidget: {
+            dimensionEh: dummyEntryHash2,
+            appletId: dummyEntryHash2,
+            componentName: 'another-test-component',
+          },
+          outputAssessmentWidget: {
+            dimensionEh: dummyEntryHash2,
+            appletId: dummyEntryHash2,
+            componentName: 'another-test-component',
+          },
+        };
+
+        const create2 = await callZomeAlice(
+          "widgets",
+          "set_assessment_tray_config",
+          {
+            name: 'test config 2',
+            assessmentWidgetBlocks: [testWidgetConfig3, testWidgetConfig4],
+          }
+        );
+        t.ok(create2, "Creating another new tray config succeeds");
+        await pause(pauseDuration);
+
+        const entryRecordCreate2 = new EntryRecord<AssessmentWidgetTrayConfig>(create2);
+
+        // set default again to the new entry
+        const setDefault2 = await callZomeAlice(
+          "widgets",
+          "set_default_assessment_tray_config_for_resource_def",
+          {
+            resourceDefEh: dummyEntryHash, // keep this the same
+            assessmentTrayEh: entryRecordCreate2.entryHash,
+          }
+        );
+        t.ok(setDefault2, "setting this new entry as default tray config succeeds");
+
+        // get default when a new one was set
+        const getDefault3 = await callZomeAlice(
+          "widgets",
+          "get_default_assessment_tray_config_for_resource_def",
+          dummyEntryHash,
+        );
+
+        const entrygetDefault3 = new EntryRecord<AssessmentWidgetTrayConfig>(getDefault3);
+        t.equal(entrygetDefault3.entry.name, "test config 2", "Getting a default tray config when it was set to the second test entry returns the second test entry");
+        t.deepEqual(entrygetDefault3.entry.assessmentWidgetBlocks, [testWidgetConfig3, testWidgetConfig4], "retrieved tray config blocks are the same, have same order");
+
       } catch (e) {
         console.error(e);
         t.ok(null);
       }
-
       await cleanup();
     });
   });
