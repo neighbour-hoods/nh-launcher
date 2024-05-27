@@ -11,6 +11,7 @@ import { InstallFromFsDialog } from "../dialogs/install-from-file-system";
 
 import NHButton from '@neighbourhoods/design-system-components/button';
 import NHSpinner from '@neighbourhoods/design-system-components/spinner';
+import { alertEvent } from "../../decorators/alert-event";
 
 export class AppletNotInstalled extends ScopedRegistryHost(LitElement) {
   @consume({ context: matrixContext , subscribe: true })
@@ -33,36 +34,14 @@ export class AppletNotInstalled extends ScopedRegistryHost(LitElement) {
   @query("#join-from-fs-dialog")
   joinFromFsDialog!: InstallFromFsDialog;
 
+  @alertEvent() success;
+  @alertEvent() danger;
 
   private toggleAppletDescription() {
     this._showAppletDescription = !this._showAppletDescription;
   }
 
-  async joinApplet() {
-    // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).show();
-
-    await this._matrixStore.joinApplet(this.weGroupId, this.appletInstanceId)
-      .then(() => {
-        this.dispatchEvent(
-          new CustomEvent("applet-installed", {
-            detail: { appletEntryHash: this.appletInstanceId, weGroupId: this.weGroupId },
-            composed: true,
-            bubbles: true,
-            }
-          )
-        );
-        // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).close();
-        // (this.shadowRoot?.getElementById("success-snackbar") as Snackbar).show();
-      }).catch((e) => {
-        console.log("Installation Error: ", e);
-        // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).close();
-        // (this.shadowRoot?.getElementById("error-snackbar") as Snackbar).show();
-      })
-  }
-
   async reinstallApplet() {
-    // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).show();
-
     await this._matrixStore.reinstallApplet(this.weGroupId, this.appletInstanceId)
       .then(() => {
         this.dispatchEvent(
@@ -73,12 +52,16 @@ export class AppletNotInstalled extends ScopedRegistryHost(LitElement) {
             }
           )
         );
-        // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).close();
-        // (this.shadowRoot?.getElementById("success-snackbar") as Snackbar).show();
+        this.success.emit({
+          title: "Success",
+          msg: "Your applet was reinstalled."
+        })
       }).catch((e) => {
         console.log("Installation Error: ", e);
-        // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).close();
-        // (this.shadowRoot?.getElementById("error-snackbar") as Snackbar).show();
+        this.danger.emit({
+          title: "Applet could not be reinstalled",
+          msg: "Check your developer console for more information."
+        })
       })
   }
 
