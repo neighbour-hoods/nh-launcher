@@ -11,6 +11,7 @@ import NHForm from '@neighbourhoods/design-system-components/form/form';
 import NHTextInput from '@neighbourhoods/design-system-components/input/text';
 import NHSelectAvatar from '@neighbourhoods/design-system-components/select-avatar';
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+import { alertEvent } from '../../../decorators/alert-event';
 
 export class NHCreateProfile extends NHComponent {
   @property() profilesStore!: ProfilesStore;
@@ -18,7 +19,8 @@ export class NHCreateProfile extends NHComponent {
   @state() private loading : boolean = false;
 
   @query("nh-button[type='submit']") private _submitBtn;
-  
+  @alertEvent() danger;
+
   _myProfile = new StoreSubscriber(
     this,
     () => this.profilesStore.myProfile,
@@ -46,18 +48,10 @@ export class NHCreateProfile extends NHComponent {
         }),
       );
     } catch (e) {
-      this.dispatchEvent(
-        new CustomEvent("trigger-alert", {
-          detail: { 
-            title: "Profile could not be created",
-            msg: "There was a problem creating your profile.",
-            type: "danger",
-            closable: true,
-          },
-          bubbles: true,
-          composed: true,
-        })
-      );
+      this.danger.emit({
+        title: "Profile could not be created",
+        msg: "There was a problem creating your profile."
+      })
       this.loading = false;
       console.log('Installation error:', e);
     }

@@ -17,6 +17,7 @@ import NHButton from '@neighbourhoods/design-system-components/button';
 import NHDialog from '@neighbourhoods/design-system-components/dialog';
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 import { b64images } from "@neighbourhoods/design-system-styles";
+import { alertEvent } from "../../decorators/alert-event";
 
 export class AppletInstanceStatusList extends NHComponent {
   @consume({ context: sensemakerStoreContext, subscribe: true })
@@ -39,6 +40,9 @@ export class AppletInstanceStatusList extends NHComponent {
   @query("#uninstall-applet-dialog")
   _uninstallAppletDialog;
 
+  @alertEvent() success;
+  @alertEvent() danger;
+
   @state()
   private _currentAppInfo!: AppletInstanceInfo;
 
@@ -50,33 +54,16 @@ export class AppletInstanceStatusList extends NHComponent {
         this.requestUpdate();
         await this.updateComplete;
 
-        this.dispatchEvent(
-          new CustomEvent("trigger-alert", {
-            detail: { 
-              title: "Applet Uninstalled",
-              msg: "You will no longer be able to access this applet or its data.",
-              type: "success",
-              closable: true,
-            },
-            bubbles: true,
-            composed: true,
-          })
-        )
+        this.success.emit({
+          title: "Applet Uninstalled",
+          msg: "You will no longer be able to access this applet or its data."
+        })
       }).catch((e) => {
         console.log("Error: ", e);
-
-        this.dispatchEvent(
-          new CustomEvent("trigger-alert", {
-            detail: { 
-              title: "Error During Uninstall",
-              msg: "Look in the developer console for more information.",
-              type: "danger",
-              closable: true,
-            },
-            bubbles: true,
-            composed: true,
-          })
-        )
+        this.danger.emit({
+          title: "Error During Uninstall",
+          msg: "Look in the developer console for more details."
+        })
       });
   }
 

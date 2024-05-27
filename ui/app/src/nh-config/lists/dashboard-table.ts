@@ -18,6 +18,7 @@ import { InputAssessmentRenderer, OutputAssessmentRenderer, ResourceBlockRendere
 import { appletInstanceInfosContext } from '../../context';
 import { consume } from '@lit/context';
 import { WithProfile } from '../../elements/components/profile/with-profile';
+import { alertEvent } from '../../decorators/alert-event';
 
 export const tableId = 'assessmentsForResource';
 
@@ -49,6 +50,8 @@ export class DashboardTable extends NHComponent {
   contextFieldDefs!: { [x: string]: FieldDefinition<AssessmentTableRecord> };
   @property()
   tableType!: AssessmentTableType;
+  
+  @alertEvent() success;
 
   async updateTable() {
     this.tableStore.fieldDefs = this.generateFieldDefs(this.resourceName, this.contextFieldDefs);
@@ -66,18 +69,10 @@ export class DashboardTable extends NHComponent {
     } 
 
     if(!this.loading && this.tableStore.records.length == 0 && this.assessments.length == 0) {
-      this.dispatchEvent(
-        new CustomEvent("trigger-alert", {
-          detail: { 
-            title: "No Assessments Found",
-            msg: "Go to your applets to start making assessments.",
-            type: "success",
-            closable: true,
-          },
-          bubbles: true,
-          composed: true,
-        })
-      );
+      this.success.emit({
+        title: "No Assessments Found",
+        msg: "Go to your applets to start making assessments."
+      })
       this.showSkeleton = true;
     }
     if(typeof this.contextFieldDefs == 'object') this.columns = Object.values(this.contextFieldDefs).length + 2

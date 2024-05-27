@@ -11,6 +11,7 @@ import NHCard from '@neighbourhoods/design-system-components/card';
 import NHTextInput from '@neighbourhoods/design-system-components/input/text';
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 import { b64images } from "@neighbourhoods/design-system-styles";
+import { alertEvent } from "../../decorators/alert-event";
 
 export class InvitationsBlock extends NHComponent {
   // TODO: add Yup schema for hash validation
@@ -21,6 +22,9 @@ export class InvitationsBlock extends NHComponent {
   @consume({ context: weGroupContext, subscribe: true })
   @property({attribute: false})
   weGroupId!: DnaHash;
+
+  @alertEvent() success;
+  @alertEvent() danger;
 
   @state()
   _inviteePubKey: AgentPubKeyB64 | undefined;
@@ -34,33 +38,17 @@ export class InvitationsBlock extends NHComponent {
       .then((r) => {
         this._pubkeyField._input.value = "";
         this._inviteePubKey = undefined;
-        this.dispatchEvent(
-          new CustomEvent("trigger-alert", {
-            detail: { 
-              title: "Invitation sent!",
-              msg: "Your neighbour should now have an invite in their Neighbourhood Home.",
-              type: "success",
-              closable: true,
-            },
-            bubbles: true,
-            composed: true,
-          })
-        )
+
+        this.success.emit({
+          title: "Invitation sent!",
+          msg: "Your neighbour should now have an invite in their Neighbourhood Home."
+        })
       })
       .catch((e) => {
-        
-      this.dispatchEvent(
-        new CustomEvent("trigger-alert", {
-          detail: { 
-            title: "Error. Public key may be invalid.",
-            msg: "Please check that you have copied it from the correct place!",
-            type: "danger",
-            closable: true,
-          },
-          bubbles: true,
-          composed: true,
+        this.danger.emit({
+          title: "Error. Public key may be invalid.",
+          msg: "Please check that you have copied it from the correct place!"
         })
-      );
         console.log(e);
       });
   }

@@ -14,6 +14,7 @@ import NHComponent from '@neighbourhoods/design-system-components/ancestors/base
 import { b64images } from "@neighbourhoods/design-system-styles";
 
 import { InferType, object, string } from "yup";
+import { alertEvent } from "../../decorators/alert-event";
 
 const NH_DEFAULT_LOGO = b64images.nhIcons.logoCol;
 
@@ -30,7 +31,7 @@ export class CreateNeighbourhoodDialog extends NHComponent {
   _neighbourhood: InferType<typeof this._neighbourhoodSchema> = { name: "", image: "" };
 
   @property() openDialogButton!: HTMLElement;
-
+  @alertEvent() danger;
   @query("nh-text-input") _nhInput;
   @query("nh-select-avatar") _nhAvatarSelect;
   @state() validName: boolean = true; // Emulates 'touched = false' initial state
@@ -73,19 +74,12 @@ export class CreateNeighbourhoodDialog extends NHComponent {
       })
       .catch((err) => {
         const dialog = (root.querySelector("nh-dialog") as any).renderRoot.querySelector('sl-dialog');
-        dialog.show() // Stop dialog from closing)
-        this.dispatchEvent(
-          new CustomEvent("trigger-alert", {
-            detail: { 
-              title: "Invalid Input",
-              msg: "Try filling out the form again!",
-              type: "danger",
-              closable: true,
-            },
-            bubbles: true,
-            composed: true,
-          })
-        );
+        dialog.show() // Stop dialog from closing
+        this.danger.emit({
+          title: "Invalid Input",
+          msg: "Try filling out the form again!"
+        })
+
         console.log("Error validating profile for field: ", err.path);
       })
   }

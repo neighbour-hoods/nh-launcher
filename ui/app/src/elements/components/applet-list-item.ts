@@ -12,12 +12,16 @@ import NHButton from '@neighbourhoods/design-system-components/button';
 import NHPageHeaderCard from '@neighbourhoods/design-system-components/page-header-card';
 import NHDialog from '@neighbourhoods/design-system-components/dialog';;
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+import { alertEvent } from "../../decorators/alert-event";
 
 export class AppletListItem extends NHComponent {
   @consume({ context: matrixContext , subscribe: true })
   @property({attribute: false})
   matrixStore!: MatrixStore;
 
+  @alertEvent() success;
+  @alertEvent() danger;
+  
   @property()
   sensemakerStore!: SensemakerStore;
 
@@ -40,33 +44,16 @@ export class AppletListItem extends NHComponent {
     const list = (this.parentNode as any);
     this.matrixStore.disableApp(appInfo)
       .then(() => {
-        this.dispatchEvent(
-          new CustomEvent("trigger-alert", {
-            detail: { 
-              title: "Applet Disabled",
-              msg: "You will no longer be able to use this applet.",
-              type: "success",
-              closable: true,
-            },
-            bubbles: true,
-            composed: true,
-          })
-        )
+        this.success.emit({
+          title: "Applet Disabled",
+          msg: "You will no longer be able to use this applet."
+        })
       }).catch((e) => {
         console.log("Error: ", e);
-
-        this.dispatchEvent(
-          new CustomEvent("trigger-alert", {
-            detail: { 
-              title: "Applet Not Disabled",
-              msg: "Look in the developer console for more details.",
-              type: "danger",
-              closable: true,
-            },
-            bubbles: true,
-            composed: true,
-          })
-        )
+        this.danger.emit({
+          title: "Applet Not Disabled",
+          msg: "Look in the developer console for more details."
+        })
       });
   }
 
@@ -74,32 +61,16 @@ export class AppletListItem extends NHComponent {
     const list = (this.parentNode as any);
     this.matrixStore.enableApp(appInfo)
       .then(() => {
-        this.dispatchEvent(
-          new CustomEvent("trigger-alert", {
-            detail: { 
-              title: "Applet Enabled",
-              msg: "You can now use this applet.",
-              type: "success",
-              closable: true,
-            },
-            bubbles: true,
-            composed: true,
-          })
-        )
+        this.success.emit({
+          title: "Applet Enabled",
+          msg: "You can now use this applet."
+        })
       }).catch((e) => {
         console.log("Error: ", e);
-        this.dispatchEvent(
-          new CustomEvent("trigger-alert", {
-            detail: { 
-              title: "Applet Not Enabled",
-              msg: "Look in the developer console for more details.",
-              type: "danger",
-              closable: true,
-            },
-            bubbles: true,
-            composed: true,
-          })
-        )
+        this.danger.emit({
+          title: "Applet Not Enabled",
+          msg: "Look in the developer console for more details."
+        })
       });
   }
 

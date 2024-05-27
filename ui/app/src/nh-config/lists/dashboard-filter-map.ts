@@ -26,6 +26,7 @@ import { derived } from 'svelte/store';
 import { compareUint8Arrays, createInputAssessmentWidgetDelegate, InputAssessmentRenderer } from '../../../../libs/app-loader';
 import { appletInstanceInfosContext } from '../../context';
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+import { alertEvent } from '../../decorators/alert-event';
 
 type DecoratorProps = {
   renderer: AssessmentWidgetRenderer,
@@ -68,7 +69,8 @@ export class DashboardFilterMap extends NHComponent {
     }),
     () => [this.loaded],
   );
-
+  @alertEvent() danger
+  
   @property() selectedContext;
   @property() selectedContextEhB64!: EntryHashB64;
   @property() resourceDefEntries!: object[];
@@ -251,18 +253,10 @@ export class DashboardFilterMap extends NHComponent {
         }
       }
     } catch (error) {
-        this.dispatchEvent(
-          new CustomEvent("trigger-alert", {
-            detail: { 
-              title: "Some Controls Not Configured",
-              msg: "Your controls have not all been configured correctly -  go to the *Assessments* screen to configure them!",
-              type: "danger",
-              closable: true,
-            },
-            bubbles: true,
-            composed: true,
-          })
-        );
+      this.danger.emit({
+        title: "Some Controls Not Configured",
+        msg: "Your controls have not all been configured correctly -  go to the *Assessments* screen to configure them!"
+      })
     }
     return baseRecord;
   }

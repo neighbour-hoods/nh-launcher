@@ -16,6 +16,7 @@ import NHForm from '@neighbourhoods/design-system-components/form/form';
 import NHSpinner from '@neighbourhoods/design-system-components/spinner';
 
 import { object, string } from 'yup';
+import { alertEvent } from '../../decorators/alert-event';
 
 export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
   @consume({ context: matrixContext , subscribe: true })
@@ -27,6 +28,9 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
   weGroupId!: DnaHash;
 
   @state() loading!: boolean;
+
+  @alertEvent() success;
+  @alertEvent() danger;
 
   _allApplets = new StoreSubscriber(
     this,
@@ -84,19 +88,10 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
         this._fileBytes, // compressed webhapp as Uint8Array
       );
       await this.updateComplete;
-
-      this.dispatchEvent(
-        new CustomEvent("trigger-alert", {
-          detail: { 
-            title: "Applet Installed",
-            msg: "You can now use your applet, and any assessments made in it will show up on your dashboard.",
-            type: "success",
-            closable: true,
-          },
-          bubbles: true,
-          composed: true,
-        })
-      );
+      this.success.emit({
+        title: "Applet Installed",
+        msg: "You can now use your applet, and any assessments made in it will show up on your dashboard."
+      })
       
       this.dispatchEvent(
         new CustomEvent('applet-installed', {
@@ -108,18 +103,10 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
       this.loading = false;
     } catch (e) {
       this.resetLocalState()
-      this.dispatchEvent(
-        new CustomEvent("trigger-alert", {
-          detail: { 
-            title: "Applet Could Not Be Installed",
-            msg: "There was a problem installing your applet. Please check that you have a valid and functioning webhapp bundle.",
-            type: "danger",
-            closable: true,
-          },
-          bubbles: true,
-          composed: true,
-        })
-      );
+      this.danger.emit({
+        title: "Applet Could Not Be Installed",
+        msg: "There was a problem installing your applet. Please check that you have a valid and functioning webhapp bundle."
+      })
       this.loading = false;
       console.log('Installation error:', e);
     }
