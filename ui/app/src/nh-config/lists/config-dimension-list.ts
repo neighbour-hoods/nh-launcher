@@ -133,6 +133,7 @@ export default class ConfigDimensionList extends NHComponent {
           this.inboundDimensionDuplicates = this.configDimensions.filter((inboundDimension: PossibleDuplicateInboundDimension | DuplicateInboundDimension) => {
             // Find the existing dimension entries for the possible duplicate
             const existingDimensionClashes: Array<DimensionEntry> = this.filterExistingDimensionsByInboundClash(inboundDimension);
+            existingDimensionClashes.forEach(clash => clash.useExisting = true); // Add a flag indicating the default existing dimension should be used
 
             this.categorizeDimensionsByInboundClashType(inboundDimension, existingDimensionClashes);
 
@@ -215,9 +216,10 @@ return //temp
 
       if(dimensionToSelect?.isDuplicate) {
         // Deselect each original dimension entry row for which this config row is a duplicate
-        dimensionToSelect.duplicateOf?.forEach((_, idx) => {
+        dimensionToSelect.duplicateOf?.forEach((dup, idx) => {
           const rowToDeselect = allRows[selectedRowIndex + (idx + 1)];
           this.uncheckRow(rowToDeselect)
+          dup.useExisting = false;
         })
         // Event will be handled by adding this to a list of dimensions to create in the parent component's state
         this.dispatchEvent(new CustomEvent("config-dimension-selected", { detail: { dimension: dimensionToSelect }, bubbles: true, composed: true }));
