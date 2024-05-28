@@ -30,6 +30,9 @@ export class ConfigureAppletDimensions extends NHComponent {
 
   @query('nh-dialog') dialog!: NHDialog;
 
+  @query('#applet-input-dimension-list') inputConfigDimensionList!: ConfigDimensionList;
+  @query('#applet-output-dimension-list') outputConfigDimensionList!: ConfigDimensionList;
+
   @state() private dimensionsCreated: boolean = false;
   @state() private _configDimensionsToCreate: Array<ConfigDimension & { range_eh?: EntryHash, dimension_eh?: EntryHash }> = [];
   @state() private _existingDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
@@ -202,6 +205,7 @@ export class ConfigureAppletDimensions extends NHComponent {
                   <config-dimension-list
                     id="applet-input-dimension-list"
                     .dimensionType=${'input'}
+                    .otherConfigDimensionList=${this.outputConfigDimensionList}
                     .configDimensions=${(this.config as AppletConfigInput)!.dimensions!.filter(dimension => !dimension.computed)}
                     .existingDimensions=${this._existingDimensionEntries}
                     .existingRanges=${this._existingRangeEntries}
@@ -211,6 +215,7 @@ export class ConfigureAppletDimensions extends NHComponent {
                   </config-dimension-list>
                   <config-dimension-list
                     id="applet-output-dimension-list"
+                    .otherConfigDimensionList=${this.inputConfigDimensionList}
                     .dimensionType=${'output'}
                     .configDimensions=${(this.config as AppletConfigInput)!.dimensions!.filter(dimension => dimension.computed)}
                     .existingDimensions=${this._existingDimensionEntries}
