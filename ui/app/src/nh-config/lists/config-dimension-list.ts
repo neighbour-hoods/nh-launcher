@@ -121,6 +121,8 @@ export default class ConfigDimensionList extends NHComponent {
 
   @property() configMethods!: Array<ConfigMethod>;
 
+  @property() otherConfigDimensionList?: ConfigDimensionList; // Used only when overlaps involve the other type of dimension
+
   @queryAll('.change-dimension-name-dialog') private _changeDimensionNameDialogs!: NHDialog[];
 
   protected updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
@@ -223,6 +225,7 @@ return //temp
         })
         // Event will be handled by adding this to a list of dimensions to create in the parent component's state
         this.dispatchEvent(new CustomEvent("config-dimension-selected", { detail: { dimension: dimensionToSelect }, bubbles: true, composed: true }));
+        this.otherConfigDimensionList?.requestUpdate();
       }
 
       const rowIsChecked: boolean = !!((e.target as NHCheckbox).value);
@@ -312,6 +315,7 @@ return //temp
             this.dispatchEvent(new CustomEvent((e.target.value == "inbound" ? "config-dimension-selected" : "config-dimension-deselected"),
               { detail: { dimension: inboundDimension }, bubbles: true, composed: true }
             ))
+            this.otherConfigDimensionList?.requestUpdate();
           }}>
             <option value="existing">Choose Existing</option>
             <option value="inbound">Choose Inbound</option>
@@ -325,21 +329,7 @@ return //temp
                   detail: { dimension: inboundDimension }, bubbles: true, composed: true
                 }
               ))
-            }}>
-            ${
-              html`${
-                this.existingDimensions
-                  .filter(dim => {
-                    if(dim.computed) return false;
-                    const range: Range | null = this.findRangeForDimension(dim);
-                    if(!range) return false;
-
-                    return dimensionIncludesControlRange(range.kind, inboundDimension.range.kind)
-                  })
-                  .map(dim => html`<option value=${dim.name}>${dim.name}</option>`)
-              }`
-            }
-            </select><br /><br />
+              this.otherConfigDimensionList?.requestUpdate();
           `
       }})()
     }`
@@ -368,6 +358,7 @@ return //temp
                   detail: { dimension: {...inboundDimension, name: dialogInput.value} }, bubbles: true, composed: true
                 }
               ))
+              this.otherConfigDimensionList?.requestUpdate();
               dialogInput.value = "";
             }
             this.dataset.hasUpdated = true;
@@ -406,6 +397,7 @@ return //temp
                   this.dispatchEvent(new CustomEvent((e.target.checked ? "config-dimension-selected" : "config-dimension-deselected"),
                     { detail: { dimension }, bubbles: true, composed: true }
               ))
+              this.otherConfigDimensionList?.requestUpdate();
             }} /><br />
             `)}
           `
