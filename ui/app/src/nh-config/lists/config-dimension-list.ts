@@ -303,33 +303,44 @@ return //temp
   }
 
   renderOverlappingDimensionFieldAction(duplicateOf, idx, inboundDimension) : TemplateResult {
-    if(duplicateOf.overlap.type.match("complete")) return html`` // NOTE: the best way of currently test the UI with partial overlaps is to comment out this line.
+    // if(duplicateOf.overlap.type.match("complete")) return html`` // NOTE: the best way of currently test the UI with partial overlaps is to comment out this line.
     return html`ACTION: <br />${  
       (() => {switch (true) {
-        case duplicateOf.overlap.fields.includes(PartialOverlapField.Name):
+        case duplicateOf.overlap.fields.includes(PartialOverlapField.Name) && duplicateOf.overlap.fields.length == 1:
           return html`
-            <button @click=${() => (this._changeDimensionNameDialogs)[idx].showDialog()}>${(this._changeDimensionNameDialogs)[idx]?.dataset?.hasUpdated ? "Updated" : "Rename"}</button><br />
+            <button @click=${() => {
+              // TODO: We are using dimension name for equality checks in some places, we will need to add an orginalDimensionName field here if we are changing it, and run equality checks using that (if it exists) or else name
+              this._changeDimensionNameDialogs[idx].showDialog()
+            }}>${(this._changeDimensionNameDialogs)[idx]?.dataset?.hasUpdated ? "Updated" : "Rename"}
+            </button><br />
           `
-        case duplicateOf.overlap.fields.includes(PartialOverlapField.Operation) || duplicateOf.overlap.fields.includes(PartialOverlapField.Range):
+        case !duplicateOf.overlap.fields.includes(PartialOverlapField.InputDimension) && (duplicateOf.overlap.fields.includes(PartialOverlapField.Operation) || duplicateOf.overlap.fields.includes(PartialOverlapField.Range)):
           return html`<select @change=${(e) => {
             this.dispatchEvent(new CustomEvent((e.target.value == "inbound" ? "config-dimension-selected" : "config-dimension-deselected"),
               { detail: { dimension: inboundDimension }, bubbles: true, composed: true }
             ))
+
+            inboundDimension.duplicateOf.forEach(dup => dup.useExisting = !(e.target.value == "inbound"));
             this.otherConfigDimensionList?.requestUpdate();
           }}>
             <option value="existing">Choose Existing</option>
             <option value="inbound">Choose Inbound</option>
           </select><br /><br />`
-        case duplicateOf.overlap.fields.includes(PartialOverlapField.InputDimension):
-          return html`Select input dimension with overlapping range: <br />
-            <select @change=${(e) => {
-              debugger;
-              this.dispatchEvent(new CustomEvent((e.target.value == "inbound" ? "config-dimension-selected" : "config-dimension-deselected"),
-                { 
-                  detail: { dimension: inboundDimension }, bubbles: true, composed: true
-                }
+        case duplicateOf.overlap.fields.includes(PartialOverlapField.InputDimension) && duplicateOf.overlap.fields.length == 1:
+          const inboundDimensionLinkedMethods = this.configMethods.filter(method => matchesConfigMethodOutputDimension(inboundDimension, method)); 
+          const inboundDimensionLinkedInputDimension = inboundDimensionLinkedMethods[0].input_dimensions[0];
+          const existingOverlappingInputDimension = this.otherConfigDimensionList!.inboundDimensionDuplicates.find(dim => dim == inboundDimensionLinkedInputDimension);
+          const usingExistingOverlappingInputDimension = existingOverlappingInputDimension && existingOverlappingInputDimension.useExisting;
+// TODO: update the inbound output dimension's method to use exising dimension IFF !usingInboundDimension on render
+          return html`Use existing input dimension with overlapping range:
+            <input type="checkbox" checked=${usingExistingOverlappingInputDimension} @change=${(e) => {
+              const useInboundDimension = !e.target.checked;
+              this.dispatchEvent(new CustomEvent((useInboundDimension ? "config-dimension-selected" : "config-dimension-deselected"),
+                { detail: { dimension: inboundDimensionLinkedInputDimension }, bubbles: true, composed: true }
               ))
+              // TODO: This will not currently dynamically update this.otherConfigDimensionList (input dimension list) action inputs' states
               this.otherConfigDimensionList?.requestUpdate();
+            }} /><br /><br />
           `
       }})()
     }`
@@ -354,9 +365,7 @@ return //temp
               inboundDimension.duplicateOf.forEach(dup => dup.useExisting = false);
 
               this.dispatchEvent(new CustomEvent(("config-dimension-selected"),
-                { 
-                  detail: { dimension: {...inboundDimension, name: dialogInput.value} }, bubbles: true, composed: true
-                }
+                { detail: { dimension: {...inboundDimension, name: dialogInput.value} }, bubbles: true, composed: true }
               ))
               this.otherConfigDimensionList?.requestUpdate();
               dialogInput.value = "";
