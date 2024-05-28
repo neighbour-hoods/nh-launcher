@@ -489,7 +489,7 @@ return //temp
 
   private getOverlapType(newDimension: InboundDimension, overlapFields: PartialOverlapField[]) : Overlap {
     if(newDimension.computed) { // Check output dimension partial overlaps
-      if(overlapFields.includes(PartialOverlapField.Name) && overlapFields.includes(PartialOverlapField.Operation) && overlapFields.includes(PartialOverlapField.Range) && overlapFields.includes(PartialOverlapField.Operation)) {
+      if(overlapFields.includes(PartialOverlapField.Name) && overlapFields.includes(PartialOverlapField.Operation) && overlapFields.includes(PartialOverlapField.Range) && overlapFields.includes(PartialOverlapField.InputDimension)) {
         return Overlap.CompleteOutput
       }
     } else if(overlapFields.includes(PartialOverlapField.Name) && overlapFields.includes(PartialOverlapField.Range) && overlapFields.length == 2) {
