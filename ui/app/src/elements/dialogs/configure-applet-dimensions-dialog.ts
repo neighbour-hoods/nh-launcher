@@ -106,7 +106,11 @@ export class ConfigureAppletDimensions extends NHComponent {
           const newDimension = e.detail.dimension;
           if(!newDimension) return;
           const alreadyInList = this._configDimensionsToCreate.find(dimension => dimension.name == newDimension.name) // Assume name uniqueness based on new dimension clash renaming validation
-          if(!alreadyInList) this._configDimensionsToCreate.push(e.detail.dimension);
+          if(!alreadyInList) {
+            this._configDimensionsToCreate.push(newDimension)
+            newDimension.useExisting = !newDimension.isDuplicate; 
+            newDimension.duplicateOf.forEach(dup => dup.useExisting = !(newDimension.useExisting)); 
+          };
           console.log('this._configDimensionsToCreate :>> ', this._configDimensionsToCreate);
         }}
         @config-dimension-deselected=${(e: CustomEvent) => {
