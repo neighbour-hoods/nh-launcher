@@ -27,12 +27,12 @@ type OutputDimensionTableRecord = InputDimensionTableRecord & {
 
 type DimensionTableRecord = InputDimensionTableRecord & OutputDimensionTableRecord;
 
-type DimensionEntry = Dimension & { dimension_eh: EntryHash, overlap?: { type: Overlap, fields?: PartialOverlapField[] } };
+type DimensionEntry = Dimension & { dimension_eh: EntryHash, useExisting: boolean, overlap?: { type: Overlap, fields?: PartialOverlapField[] } };
 type RangeEntry = Range & { range_eh: EntryHash };
 type MethodEntry = Method & { method_eh: EntryHash };
 
 type InboundDimension = ConfigDimension & {selected?: boolean };
-type PossibleDuplicateInboundDimension = InboundDimension & {isDuplicate?: boolean, duplicateOf?: Array<DimensionEntry>};
+type PossibleDuplicateInboundDimension = InboundDimension & {isDuplicate?: boolean, useExisting?: boolean, duplicateOf?: Array<DimensionEntry>};
 type DuplicateInboundDimension = PossibleDuplicateInboundDimension & { isDuplicate: true, existing_dimension_ehs: EntryHash[]};
 
 enum PartialOverlapField {
@@ -361,6 +361,8 @@ return //temp
             const dialogInput = (this.renderRoot.querySelector("slot").assignedElements()[0].querySelector("input")); // Targets inner-content slot (the only slot) and finds only input
             if(dialogInput?.value && dialogInput.value !== "") {
               inboundDimension.name = dialogInput.value;
+              inboundDimension.duplicateOf.forEach(dup => dup.useExisting = false);
+
               this.dispatchEvent(new CustomEvent(("config-dimension-selected"),
                 { 
                   detail: { dimension: {...inboundDimension, name: dialogInput.value} }, bubbles: true, composed: true
@@ -510,9 +512,7 @@ return //temp
     if(newDimension.computed && this.existingMethods) {
       const existingDimensionLinkedMethods = this.existingMethods.filter(method => this.matchesMethodEntryOutputDimension(existingDimension, method));
       const configDimensionLinkedMethods = this.configMethods.filter(method => matchesConfigMethodOutputDimension(newDimension, method));
-      // console.log('existingMethods :>> ', this.existingMethods);
-      // console.log('existingDimensionLinkedMethods :>> ', existingDimensionLinkedMethods);
-      // console.log('configDimensionLinkedMethods :>> ', configDimensionLinkedMethods);
+
       if(this.matchesOperation(existingDimensionLinkedMethods, configDimensionLinkedMethods)) {
         overlap.fields.push(PartialOverlapField.Operation)
       }
