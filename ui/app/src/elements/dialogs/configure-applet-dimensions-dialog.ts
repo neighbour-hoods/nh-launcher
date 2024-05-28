@@ -1,7 +1,7 @@
 import { html, css, CSSResult, PropertyValueMap} from "lit";
 import { property, query, state } from "lit/decorators.js";
 
-import { NHComponentShoelace, NHDialog, NHForm } from "@neighbourhoods/design-system-components";
+import NHDialog from '@neighbourhoods/design-system-components/dialog';
 import { ConfigDimensionList } from "../../nh-config";
 import { AppletConfigInput, ConfigDimension, ConfigMethod, Dimension, Method, serializeAsyncActions } from "@neighbourhoods/client";
 import { DnaHash, EntryHash } from "@holochain/client";
