@@ -1,7 +1,9 @@
 import { html, css, CSSResult, PropertyValueMap} from "lit";
 import { property, query, state } from "lit/decorators.js";
 
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 import NHDialog from '@neighbourhoods/design-system-components/dialog';
+import NHForm from '@neighbourhoods/design-system-components/form/form';
 import { ConfigDimensionList } from "../../nh-config";
 import { AppletConfigInput, ConfigDimension, ConfigMethod, Dimension, Method, serializeAsyncActions } from "@neighbourhoods/client";
 import { DnaHash, EntryHash } from "@holochain/client";
@@ -11,7 +13,7 @@ import { consume } from "@lit/context";
 import { matrixContext, weGroupContext } from "../../context";
 import { sleep } from "../../utils";
 
-export class ConfigureAppletDimensions extends NHComponentShoelace {
+export class ConfigureAppletDimensions extends NHComponent {
   @consume({ context: matrixContext , subscribe: true })
   @property({attribute: false}) _matrixStore!: MatrixStore;
 
