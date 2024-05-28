@@ -548,9 +548,9 @@ return //temp
 
     const inputDimensionRangeEntryForMethodEntry = this.findRangeForDimension(inputDimensionEntryForMethodEntry);
 
-    return !!inputDimensionRangeEntryForMethodEntry
-      && configDimensionMethods[0].input_dimensions[0].name == inputDimensionEntryForMethodEntry.name 
-      && configDimensionMethods[0].input_dimensions[0].range.name == inputDimensionRangeEntryForMethodEntry.name 
+    return !!inputDimensionRangeEntryForMethodEntry // Just using range equality but uncomment the following lines for name/range-name equality
+      // && configDimensionMethods[0].input_dimensions[0].name == inputDimensionEntryForMethodEntry.name 
+      // && configDimensionMethods[0].input_dimensions[0].range.name == inputDimensionRangeEntryForMethodEntry.name 
       && rangeKindEqual(configDimensionMethods[0].input_dimensions[0].range.kind, inputDimensionRangeEntryForMethodEntry.kind)
   }
 
