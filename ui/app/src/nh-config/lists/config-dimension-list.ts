@@ -310,9 +310,7 @@ return //temp
         case duplicateOf.overlap.fields.includes(PartialOverlapField.Operation) || duplicateOf.overlap.fields.includes(PartialOverlapField.Range):
           return html`<select @change=${(e) => {
             this.dispatchEvent(new CustomEvent((e.target.value == "inbound" ? "config-dimension-selected" : "config-dimension-deselected"),
-              { 
-                detail: { dimension: inboundDimension }, bubbles: true, composed: true
-              }
+              { detail: { dimension: inboundDimension }, bubbles: true, composed: true }
             ))
           }}>
             <option value="existing">Choose Existing</option>
@@ -357,9 +355,7 @@ return //temp
           .handleOk=${function(){
             if(this.dataset.hasUpdated) {
               this.dispatchEvent(new CustomEvent(("config-dimension-deselected"),
-                { 
-                  detail: { dimension: inboundDimension }, bubbles: true, composed: true
-                }
+                { detail: { dimension: inboundDimension }, bubbles: true, composed: true }
               ))
             }
             const dialogInput = (this.renderRoot.querySelector("slot").assignedElements()[0].querySelector("input")); // Targets inner-content slot (the only slot) and finds only input
@@ -406,9 +402,7 @@ return //temp
               .map(dimension => html`
                 ${dimension.name} : <input type="checkbox" @change=${(e) => {
                   this.dispatchEvent(new CustomEvent((e.target.checked ? "config-dimension-selected" : "config-dimension-deselected"),
-                { 
-                  detail: { dimension }, bubbles: true, composed: true
-                }
+                    { detail: { dimension }, bubbles: true, composed: true }
               ))
             }} /><br />
             `)}
