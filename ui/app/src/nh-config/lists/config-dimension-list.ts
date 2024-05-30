@@ -6,8 +6,8 @@ import { ConfigDimension, ConfigMethod,  Dimension, RangeKind, Range, Method } f
 import { NHButton, NHCard, NHCheckbox, NHComponent, NHDialog, NHTooltip } from "@neighbourhoods/design-system-components";
 import { capitalize } from "../../elements/components/helpers/functions";
 import { FieldDefinition, FieldDefinitions, Table, TableStore } from "@adaburrows/table-web-component";
-import { dimensionIncludesControlRange, rangeKindEqual } from "../../utils";
-import { EntryHash, encodeHashToBase64 } from "@holochain/client";
+import { rangeKindEqual } from "../../utils";
+import { EntryHash } from "@holochain/client";
 import { compareUint8Arrays } from "@neighbourhoods/app-loader";
 import { repeat } from "lit/directives/repeat.js";
 
@@ -302,7 +302,7 @@ return //temp
       }
   }
 
-  renderOverlappingDimensionFieldAction(duplicateOf, idx, inboundDimension) : TemplateResult {
+  private renderOverlappingDimensionFieldAction(duplicateOf, idx, inboundDimension) : TemplateResult {
     // if(duplicateOf.overlap.type.match("complete")) return html`` // NOTE: the best way of currently test the UI with partial overlaps is to comment out this line.
     return html`ACTION: <br />${  
       (() => {switch (true) {
@@ -350,7 +350,7 @@ return //temp
     }`
   }
 
-  renderOverlappingDimension(inboundDimension, idx) : TemplateResult {
+  private renderOverlappingDimension(inboundDimension, idx) : TemplateResult {
     const self = this;
     return html`<h3>${inboundDimension.name}</h3>
         <nh-dialog
@@ -397,7 +397,7 @@ return //temp
       `
   }
 
-  renderOverlaps() : TemplateResult {
+  private renderOverlaps() : TemplateResult {
     return html`
       ${
         this.inboundDimensionDuplicates.length > 0 && this.inboundDimensionDuplicates.every((inboundDimension: any) => inboundDimension.duplicateOf.some(duplicateOf => duplicateOf.overlap.type.match("complete")))
