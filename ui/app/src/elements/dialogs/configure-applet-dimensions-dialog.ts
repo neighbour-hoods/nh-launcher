@@ -7,12 +7,13 @@ import NHForm from '@neighbourhoods/design-system-components/form/form';
 import NHSpinner from '@neighbourhoods/design-system-components/spinner';
 import { ConfigDimensionList } from "../../nh-config";
 import { AppletConfigInput, ConfigDimension, ConfigMethod, Dimension, Method, serializeAsyncActions } from "@neighbourhoods/client";
-import { DnaHash, EntryHash } from "@holochain/client";
+import { DnaHash, EntryHash, encodeHashToBase64 } from "@holochain/client";
 import { StoreSubscriber } from "lit-svelte-stores";
 import { MatrixStore } from "../../matrix-store";
 import { consume } from "@lit/context";
 import { matrixContext, weGroupContext } from "../../context";
 import { sleep } from "../../utils";
+import { compareUint8Arrays } from "@neighbourhoods/app-loader";
 
 export class ConfigureAppletDimensions extends NHComponent {
   @consume({ context: matrixContext , subscribe: true })
@@ -34,7 +35,7 @@ export class ConfigureAppletDimensions extends NHComponent {
   @query('#applet-input-dimension-list') inputConfigDimensionList!: ConfigDimensionList;
   @query('#applet-output-dimension-list') outputConfigDimensionList!: ConfigDimensionList;
 
-  @state() private dimensionsCreated: boolean = false;
+  @state() private _dimensionsCreated: boolean = false;
   @state() private _configDimensionsToCreate: Array<ConfigDimension & { range_eh?: EntryHash, dimension_eh?: EntryHash }> = [];
   @state() private _existingDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
   @state() private _existingRangeEntries!: Array<Range & { range_eh: EntryHash }>;
@@ -131,7 +132,7 @@ export class ConfigureAppletDimensions extends NHComponent {
           console.log('this._configDimensionsToCreate :>> ', this._configDimensionsToCreate);
         }}
         .handleClose=${() => {
-          if(!this.dimensionsCreated) this.dispatchEvent(
+          if(!this._dimensionsCreated) this.dispatchEvent(
             new CustomEvent("configure-dimensions-manually", {
               bubbles: true,
               composed: true,
@@ -160,19 +161,17 @@ export class ConfigureAppletDimensions extends NHComponent {
             // Create methods linked to newly created inbound dimensions
             if(methodsToCreate.length > 0) {
               const updatedConfigMethods: Array<Method> = this.mapConfigMethodToCreateMethodInput(methodsToCreate, "inbound").filter(m => m !== null) as Method[];
-
               await this.createMethodsOfCheckedDimensions(updatedConfigMethods)
             }
 
             // Create methods not linked to newly created inbound dimensions but to existing dimension entries
             if(remainingConfigMethods.length > 0) {
               const updatedRemainingConfigMethods: Array<Method> = this.mapConfigMethodToCreateMethodInput(remainingConfigMethods, "existing").filter(m => m !== null) as Method[];
-
               await this.createMethodsOfCheckedDimensions(updatedRemainingConfigMethods);
             }
 
             this._configDimensionsToCreate = [];
-            this.dimensionsCreated = true;
+            this._dimensionsCreated = true;
             await sleep(100);
             this.requestUpdate();
             await this.updateComplete;
@@ -220,7 +219,6 @@ export class ConfigureAppletDimensions extends NHComponent {
     return configMethods.map((configMethod: ConfigMethod) => {
       // Try to use existing input dimension instead if there is an overlap on input dimension
       const usedExistingOverlappingInputDimensionEntryHash = linkedDimensionType == "inbound" && this.findExistingEntryHashForInputDimensionOverlap(configMethod);
-
       const linkedInputDimension = (linkedDimensionType == "existing" ? this._existingDimensionEntries : this._configDimensionsToCreate).find(dim => !dim.computed && configMethod.input_dimensions[0].name == dim.name)// TODO: also check ranges
       const linkedOutputDimension = (linkedDimensionType == "existing" ? this._existingDimensionEntries : this._configDimensionsToCreate).find(dim => dim.computed && configMethod.output_dimension.name == dim.name);
       if(!linkedInputDimension || !linkedOutputDimension) return null
@@ -234,6 +232,18 @@ export class ConfigureAppletDimensions extends NHComponent {
         input_dimension_ehs: [usedExistingOverlappingInputDimensionEntryHash || linkedInputDimension.dimension_eh as EntryHash],
         output_dimension_eh: linkedOutputDimension.dimension_eh as EntryHash
       }
+
+      const existsMethodEntryWithSameDetails = this._existingMethodEntries.find(methodEntry => {
+        return methodEntry.program == updatedMethod.program 
+          && methodEntry.can_compute_live == updatedMethod.can_compute_live 
+          && methodEntry.requires_validation == updatedMethod.requires_validation 
+          && compareUint8Arrays(methodEntry.output_dimension_eh, updatedMethod.output_dimension_eh)
+          && compareUint8Arrays(methodEntry.input_dimension_ehs[0], updatedMethod.input_dimension_ehs[0])
+      })
+      // TODO: create tests for this - currently filtering to dedup new methods may no be working due to which dimensions are used
+      // console.log('existsMethodEntryWithSameDetails :>> ', existsMethodEntryWithSameDetails);
+      if(existsMethodEntryWithSameDetails) return null
+
       return updatedMethod;
     })
   }

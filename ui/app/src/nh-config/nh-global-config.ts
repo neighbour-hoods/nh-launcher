@@ -117,7 +117,7 @@ export default class NHGlobalConfig extends NHComponent {
         // Add GUIs so that correct assessment controls can be loaded later
         const guis = {} as { EntryHashB64 : AppletGui };
         serializeAsyncActions<AppletGui>((Object.values(this._currentAppletInstances.value) as any).map(
-          (appletInstanceInfo: AppletInstanceInfo) => this._matrixStore.queryAppletGui(appletInstanceInfo.applet.devhubGuiReleaseHash).then(gui => {console.log('Gui added to applet instances: ', gui); guis[encodeHashToBase64(appletInstanceInfo.appletId)] = gui})
+          (appletInstanceInfo: AppletInstanceInfo) => this._matrixStore.queryAppletGui(appletInstanceInfo.applet.devhubGuiReleaseHash).then(gui => {guis[encodeHashToBase64(appletInstanceInfo.appletId)] = gui})
         ))
         this.guis = guis;
         this.loaded = true;
