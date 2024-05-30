@@ -4,6 +4,7 @@ import { property, query, state } from "lit/decorators.js";
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 import NHDialog from '@neighbourhoods/design-system-components/dialog';
 import NHForm from '@neighbourhoods/design-system-components/form/form';
+import NHSpinner from '@neighbourhoods/design-system-components/spinner';
 import { ConfigDimensionList } from "../../nh-config";
 import { AppletConfigInput, ConfigDimension, ConfigMethod, Dimension, Method, serializeAsyncActions } from "@neighbourhoods/client";
 import { DnaHash, EntryHash } from "@holochain/client";
@@ -241,7 +242,7 @@ export class ConfigureAppletDimensions extends NHComponent {
                   >
                   </config-dimension-list>
                 `
-              : html`No config!` // TODO: replace with nh-spinner once that feature branch is merged.
+              : html`<nh-spinner type=${"page"}></nh-spinner>`
             } 
         </div>
       </nh-dialog>
@@ -289,6 +290,7 @@ export class ConfigureAppletDimensions extends NHComponent {
   static elementDefinitions = {
     'nh-dialog' : NHDialog,
     'nh-form' : NHForm,
+    "nh-spinner": NHSpinner,
     'config-dimension-list' : ConfigDimensionList
   }
 
