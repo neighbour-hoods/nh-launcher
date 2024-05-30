@@ -235,16 +235,19 @@ export class ConfigureAppletDimensions extends NHComponent {
     `;
   }
 
+  private checkDimensionEqualityByNameOrOriginalName(dimension1, dimension2) {
+    return dimension1.name == dimension2?.originalName || dimension1.name == dimension2.name
+  }
+
   private mapConfigMethodToCreateMethodInput(configMethods: ConfigMethod[], linkedDimensionType: "inbound" | "existing"): Array<Method | null> {
     return configMethods.map((configMethod: ConfigMethod) => {
       // Try to use existing input dimension instead if there is an overlap on input dimension
       const usedExistingOverlappingInputDimensionEntryHash = linkedDimensionType == "inbound" && this.findExistingEntryHashForInputDimensionOverlap(configMethod);
-      const linkedInputDimension = (linkedDimensionType == "existing" ? this._existingDimensionEntries : this._configDimensionsToCreate).find(dim => !dim.computed && configMethod.input_dimensions[0].name == dim.name)// TODO: also check ranges
-      const linkedOutputDimension = (linkedDimensionType == "existing" ? this._existingDimensionEntries : this._configDimensionsToCreate).find(dim => dim.computed && configMethod.output_dimension.name == dim.name);
+      const linkedInputDimension = (linkedDimensionType == "existing" ? this._existingDimensionEntries : this._configDimensionsToCreate).find(dim => !dim.computed && this.checkDimensionEqualityByNameOrOriginalName(configMethod.input_dimensions[0], dim)) // TODO: also check ranges
+      const linkedOutputDimension = (linkedDimensionType == "existing" ? this._existingDimensionEntries : this._configDimensionsToCreate).find(dim => dim.computed && this.checkDimensionEqualityByNameOrOriginalName(configMethod.output_dimension, dim));
       if(!linkedInputDimension || !linkedOutputDimension) return null
       if(!linkedInputDimension?.dimension_eh || !linkedOutputDimension?.dimension_eh) {
         throw new Error("Linked dimension entry hashes not available")
-        debugger;
       }
       const updatedMethod: Method = {
         name: configMethod.name,
