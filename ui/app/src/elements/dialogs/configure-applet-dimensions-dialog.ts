@@ -40,7 +40,7 @@ export class ConfigureAppletDimensions extends NHComponent {
   @state() private _existingRangeEntries!: Array<Range & { range_eh: EntryHash }>;
   @state() private _existingMethodEntries!: Array<Method & { method_eh: EntryHash }>;
 
-  findConfigMethodsForDimensions() : ConfigMethod[] {
+  private findConfigMethodsForDimensions() : ConfigMethod[] {
     const methodsToCreate: ConfigMethod[] = []
     for(let dim of this._configDimensionsToCreate) {
       if(dim.computed) {
@@ -54,7 +54,7 @@ export class ConfigureAppletDimensions extends NHComponent {
     return methodsToCreate
   }
 
-  async createRangesOfCheckedDimensions() {
+  private async createRangesOfCheckedDimensions() {
     for(let dim of this._configDimensionsToCreate) {
           const rangeEntryRecord = await this._sensemakerStore.value?.createRange(dim.range);
           // Assign entry hash to config dimensions ready for creation of dimensions
@@ -63,7 +63,7 @@ export class ConfigureAppletDimensions extends NHComponent {
     console.log('ranges created for config dimensions')
   }
 
-  createCheckedDimensions() {
+  private createCheckedDimensions() {
     serializeAsyncActions(this._configDimensionsToCreate.map((dimension: (ConfigDimension & { range_eh?: EntryHash, dimension_eh?: EntryHash,  })) => {
       if(!(dimension.range_eh)) throw new Error("Could not find created range for dimension");
       return async () => {
@@ -77,7 +77,7 @@ export class ConfigureAppletDimensions extends NHComponent {
     console.log('config dimensions created')
   }
 
-  createMethodsOfCheckedDimensions(updatedConfigMethods: Method[]) {
+  private createMethodsOfCheckedDimensions(updatedConfigMethods: Method[]) {
     serializeAsyncActions(updatedConfigMethods.map((method: Method) => {
       return async () => {return this._sensemakerStore.value?.createMethod(method)}
     }))
@@ -85,7 +85,7 @@ export class ConfigureAppletDimensions extends NHComponent {
     console.log('config methods created')
   }
 
-  findExistingEntryHashForInputDimensionOverlap(configMethod: ConfigMethod) : EntryHash | undefined {
+  private findExistingEntryHashForInputDimensionOverlap(configMethod: ConfigMethod) : EntryHash | undefined {
     const overlappingInputDimension = this.inputConfigDimensionList.inboundDimensionDuplicates.find(dim => dim == configMethod.input_dimensions[0]) 
     if(!overlappingInputDimension) return;
     const existing = overlappingInputDimension.duplicateOf!.find(existingEntry => existingEntry.useExisting);
@@ -216,7 +216,7 @@ export class ConfigureAppletDimensions extends NHComponent {
     `;
   }
 
-  mapConfigMethodToCreateMethodInput(configMethods: ConfigMethod[], linkedDimensionType: "inbound" | "existing"): Array<Method | null> {
+  private mapConfigMethodToCreateMethodInput(configMethods: ConfigMethod[], linkedDimensionType: "inbound" | "existing"): Array<Method | null> {
     return configMethods.map((configMethod: ConfigMethod) => {
       // Try to use existing input dimension instead if there is an overlap on input dimension
       const usedExistingOverlappingInputDimensionEntryHash = linkedDimensionType == "inbound" && this.findExistingEntryHashForInputDimensionOverlap(configMethod);
@@ -238,7 +238,7 @@ export class ConfigureAppletDimensions extends NHComponent {
     })
   }
 
-  async fetchRangeEntriesFromHashes(rangeEhs: EntryHash[]) {
+  private async fetchRangeEntriesFromHashes(rangeEhs: EntryHash[]) {
     let response;
     try {
       response = await Promise.all(rangeEhs.map(eH => this._sensemakerStore.value?.getRange(eH)))
@@ -248,7 +248,7 @@ export class ConfigureAppletDimensions extends NHComponent {
     this._existingRangeEntries = response.map((entryRecord) => ({...entryRecord.entry, range_eh: entryRecord.entryHash})) as Array<Range & { range_eh: EntryHash }>;
   }
 
-  async fetchDimensionEntries() {
+  private async fetchDimensionEntries() {
     try {
       const entryRecords = await this._sensemakerStore.value?.getDimensions();
       this._existingDimensionEntries = entryRecords!.map(entryRecord => {
@@ -262,7 +262,7 @@ export class ConfigureAppletDimensions extends NHComponent {
     }
   }
 
-  async fetchMethodEntries() {
+  private async fetchMethodEntries() {
     try {
       const entryRecords = await this._sensemakerStore.value?.getMethods();
       this._existingMethodEntries = entryRecords!.map(entryRecord => {
