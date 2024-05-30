@@ -84,6 +84,15 @@ export class ConfigureAppletDimensions extends NHComponent {
     console.log('config methods created')
   }
 
+  findExistingEntryHashForInputDimensionOverlap(configMethod: ConfigMethod) : EntryHash | undefined {
+    const overlappingInputDimension = this.inputConfigDimensionList.inboundDimensionDuplicates.find(dim => dim == configMethod.input_dimensions[0]) 
+    if(!overlappingInputDimension) return;
+    const existing = overlappingInputDimension.duplicateOf!.find(existingEntry => existingEntry.useExisting);
+    if(!existing) return;
+    
+    return existing.dimension_eh
+  }
+
   async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     if(changedProperties.has("config")) { // By now we should have a Sensemaker store value
       if(!this._sensemakerStore?.value) return;
@@ -142,7 +151,7 @@ export class ConfigureAppletDimensions extends NHComponent {
             console.error("Could not create dimensions from config: ", error)
           }
           try {
-            let remainingConfigMethods = [];
+            let remainingConfigMethods: any = [];
             const methodsToCreate = this.findConfigMethodsForDimensions();
             // The rest of the config methods should be stored in state so we can create them, bound to existing dimensions instead
             this.config.methods?.forEach(method => !methodsToCreate.includes(method) ? remainingConfigMethods.push(method) : null);
@@ -150,6 +159,9 @@ export class ConfigureAppletDimensions extends NHComponent {
             // Create methods linked to newly created inbound dimensions
             if(methodsToCreate && methodsToCreate.length > 0) {
               const updatedConfigMethods: Array<Method | null> = methodsToCreate.map((configMethod: ConfigMethod) => {
+                // Try to use existing input dimension instead if there is an overlap on input dimension
+                const usedExistingOverlappingInputDimensionEntryHash = this.findExistingEntryHashForInputDimensionOverlap(configMethod);
+
                 const linkedInputDimension = this._configDimensionsToCreate.find(dim => !dim.computed && configMethod.input_dimensions[0].name == dim.name)// TODO: also check ranges
                 const linkedOutputDimension = this._configDimensionsToCreate.find(dim => dim.computed && configMethod.output_dimension.name == dim.name);
                 if(!linkedInputDimension || !linkedOutputDimension) return null
@@ -160,7 +172,7 @@ export class ConfigureAppletDimensions extends NHComponent {
                   program: configMethod.program,
                   can_compute_live: configMethod.can_compute_live,
                   requires_validation: configMethod.requires_validation,
-                  input_dimension_ehs: [linkedInputDimension.dimension_eh as EntryHash],
+                  input_dimension_ehs: [usedExistingOverlappingInputDimensionEntryHash || linkedInputDimension.dimension_eh as EntryHash],
                   output_dimension_eh: linkedOutputDimension.dimension_eh as EntryHash
                 }
                 return updatedMethod;
