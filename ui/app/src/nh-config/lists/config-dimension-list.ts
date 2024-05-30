@@ -531,8 +531,7 @@ return //temp
   private matchesRange(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
     const foundRange = this.findRangeForDimension(existingDimension);
 
-    return foundRange?.name == configDimension.range.name
-      && rangeKindEqual(configDimension.range.kind, foundRange!.kind)
+    return foundRange?.name == configDimension.range.name || rangeKindEqual(configDimension.range.kind, foundRange!.kind)
   }
   private matchesOperation(existingDimensionMethods: MethodEntry[], configDimensionMethods: ConfigMethod[]): boolean {
     return configDimensionMethods.length > 0 && existingDimensionMethods.length > 0 && configDimensionMethods[0].program && existingDimensionMethods[0].program && Object.keys(configDimensionMethods[0].program)[0] === Object.keys(existingDimensionMethods[0].program)[0]
