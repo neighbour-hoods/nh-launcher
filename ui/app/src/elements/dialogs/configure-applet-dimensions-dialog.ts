@@ -5,15 +5,16 @@ import NHComponent from '@neighbourhoods/design-system-components/ancestors/base
 import NHDialog from '@neighbourhoods/design-system-components/dialog';
 import NHForm from '@neighbourhoods/design-system-components/form/form';
 import NHSpinner from '@neighbourhoods/design-system-components/spinner';
-import { ConfigDimensionList } from "../../nh-config";
-import { AppletConfigInput, ConfigDimension, ConfigMethod, Dimension, Method, serializeAsyncActions } from "@neighbourhoods/client";
-import { DnaHash, EntryHash, encodeHashToBase64 } from "@holochain/client";
+import { ConfigDimensionList, MAX_RANGE_FLOAT, MAX_RANGE_INT, MIN_RANGE_FLOAT, MIN_RANGE_INT } from "../../nh-config";
+import { AppletConfigInput, ConfigDimension, ConfigMethod, Dimension, Method, serializeAsyncActions, Range, RangeKind, RangeKindFloat, RangeKindInteger } from "@neighbourhoods/client";
+import { DnaHash, EntryHash } from "@holochain/client";
 import { StoreSubscriber } from "lit-svelte-stores";
 import { MatrixStore } from "../../matrix-store";
 import { consume } from "@lit/context";
 import { matrixContext, weGroupContext } from "../../context";
 import { sleep } from "../../utils";
 import { compareUint8Arrays } from "@neighbourhoods/app-loader";
+import { matchesConfigMethodOutputDimension } from "../../nh-config/lists/config-dimension-list";
 
 export class ConfigureAppletDimensions extends NHComponent {
   @consume({ context: matrixContext , subscribe: true })
@@ -53,6 +54,22 @@ export class ConfigureAppletDimensions extends NHComponent {
       }
       }
     return methodsToCreate
+  }
+
+  private coerceOutputDimensionRanges() {
+    if(!(this.config?.methods)) return;
+    for(let dim of this._configDimensionsToCreate) {
+      if(!dim.computed) continue;
+
+      const dimensionLinkedMethods: ConfigMethod[] = this.config.methods.filter(method => matchesConfigMethodOutputDimension(dim, method));
+      if(dimensionLinkedMethods.length == 0) continue;
+      // NOTE: assuming one linked method only for simplicity at this stage but may need to be revised later
+      const { program, input_dimensions } = dimensionLinkedMethods[0];
+
+      const newRange : Range = this.getCoercedOutputDimensionRange(input_dimensions[0].range, Object.keys(program)[0] as "Average" | "Sum", Object.keys(dim.range.kind)[0] as keyof RangeKindInteger | keyof RangeKindFloat)
+      dim.range = newRange;
+    }
+    console.log('coerced ranges for output config dimensions')
   }
 
   private async createRangesOfCheckedDimensions() {
@@ -120,7 +137,7 @@ export class ConfigureAppletDimensions extends NHComponent {
           if(!alreadyInList) {
             this._configDimensionsToCreate.push(newDimension)
             newDimension.useExisting = !newDimension.isDuplicate; 
-            newDimension.duplicateOf.forEach(dup => dup.useExisting = !(newDimension.useExisting)); 
+            newDimension.duplicateOf?.forEach(dup => dup.useExisting = !(newDimension.useExisting)); 
           };
           console.log('this._configDimensionsToCreate :>> ', this._configDimensionsToCreate);
         }}
@@ -141,6 +158,7 @@ export class ConfigureAppletDimensions extends NHComponent {
         }}
         .handleOk=${async () => {
           try {
+            this.coerceOutputDimensionRanges()
             await this.createRangesOfCheckedDimensions()
             await sleep(100);
           } catch (error) {
@@ -148,7 +166,7 @@ export class ConfigureAppletDimensions extends NHComponent {
           }
           try {
             this.createCheckedDimensions()
-            await sleep(250);
+            await sleep(350); //TODO: Serialise this whole chain of actions to prevent race condition errors and remove sleeps
           } catch (error) {
             console.error("Could not create dimensions from config: ", error)
           }
@@ -162,12 +180,14 @@ export class ConfigureAppletDimensions extends NHComponent {
             if(methodsToCreate.length > 0) {
               const updatedConfigMethods: Array<Method> = this.mapConfigMethodToCreateMethodInput(methodsToCreate, "inbound").filter(m => m !== null) as Method[];
               await this.createMethodsOfCheckedDimensions(updatedConfigMethods)
+              console.log('updatedConfigMethods :>> ', updatedConfigMethods);
             }
 
             // Create methods not linked to newly created inbound dimensions but to existing dimension entries
             if(remainingConfigMethods.length > 0) {
               const updatedRemainingConfigMethods: Array<Method> = this.mapConfigMethodToCreateMethodInput(remainingConfigMethods, "existing").filter(m => m !== null) as Method[];
               await this.createMethodsOfCheckedDimensions(updatedRemainingConfigMethods);
+              console.log('updatedRemainingConfigMethods :>> ', updatedRemainingConfigMethods);
             }
 
             this._configDimensionsToCreate = [];
@@ -222,8 +242,10 @@ export class ConfigureAppletDimensions extends NHComponent {
       const linkedInputDimension = (linkedDimensionType == "existing" ? this._existingDimensionEntries : this._configDimensionsToCreate).find(dim => !dim.computed && configMethod.input_dimensions[0].name == dim.name)// TODO: also check ranges
       const linkedOutputDimension = (linkedDimensionType == "existing" ? this._existingDimensionEntries : this._configDimensionsToCreate).find(dim => dim.computed && configMethod.output_dimension.name == dim.name);
       if(!linkedInputDimension || !linkedOutputDimension) return null
-      if(!linkedInputDimension?.dimension_eh || !linkedOutputDimension?.dimension_eh) throw new Error("Linked dimension entry hashes not available")
-
+      if(!linkedInputDimension?.dimension_eh || !linkedOutputDimension?.dimension_eh) {
+        throw new Error("Linked dimension entry hashes not available")
+        debugger;
+      }
       const updatedMethod: Method = {
         name: configMethod.name,
         program: configMethod.program,
@@ -233,7 +255,7 @@ export class ConfigureAppletDimensions extends NHComponent {
         output_dimension_eh: linkedOutputDimension.dimension_eh as EntryHash
       }
 
-      const existsMethodEntryWithSameDetails = this._existingMethodEntries.find(methodEntry => {
+      const existsMethodEntryWithSameDetails = this._existingMethodEntries?.find(methodEntry => {
         return methodEntry.program == updatedMethod.program 
           && methodEntry.can_compute_live == updatedMethod.can_compute_live 
           && methodEntry.requires_validation == updatedMethod.requires_validation 
@@ -246,6 +268,62 @@ export class ConfigureAppletDimensions extends NHComponent {
 
       return updatedMethod;
     })
+  }
+  // Helpers to calculate output range
+  private getRangeForSumComputation(min: number, max: number, numberType: keyof RangeKindInteger | keyof RangeKindFloat): RangeKind {
+    const rangeMin = numberType == 'Integer' ? MIN_RANGE_INT : MIN_RANGE_FLOAT;
+    const rangeMax = numberType == 'Integer' ? MAX_RANGE_INT : MAX_RANGE_FLOAT;
+    switch (true) {
+      case max <= min:
+        throw new Error('Invalid RangeKind limits');
+      case min >= 0:
+        // range is [0, x], where x is positive the output range will be [0, INF].
+        //@ts-ignore
+        return {
+          [numberType]: {
+            min: 0,
+            max: rangeMax,
+          },
+        } as RangeKind;
+      case min < 0 && max > 0:
+        // range is [x, y], where x is negative and y is positive the output range will be [-INF, INF].
+        //@ts-ignore
+        return {
+          [numberType]: {
+            min: rangeMin,
+            max: rangeMax,
+          },
+        } as RangeKind;
+      default:
+        // range is [x, 0], where x is negative the output range will be [-INF, 0].
+        //@ts-ignore
+        return {
+          [numberType]: {
+            min: rangeMin,
+            max: 0,
+          },
+        } as RangeKind;
+    }
+  }
+  private getCoercedOutputDimensionRange(inputRange: Range, methodProgram: "Sum" | "Average", numberType: keyof RangeKindInteger | keyof RangeKindFloat) : Range {
+    let outputRange;
+
+    if (methodProgram === 'Sum') {
+      const rangeKindLimits = Object.values(inputRange.kind)[0];
+      const { min, max } = rangeKindLimits;
+      try {
+        outputRange = {
+          name: inputRange.name,
+          kind: this.getRangeForSumComputation(min, max, numberType),
+        };
+      } catch (error) {
+        console.log('Error calculating output range: ', error);
+      }
+    } else {
+      // Else it is Avg...
+      outputRange = inputRange;
+    }
+    return outputRange
   }
 
   private async fetchRangeEntriesFromHashes(rangeEhs: EntryHash[]) {
