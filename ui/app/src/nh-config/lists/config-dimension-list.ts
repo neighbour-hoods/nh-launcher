@@ -365,6 +365,7 @@ return //temp
             }
             const dialogInput = (this.renderRoot.querySelector("slot").assignedElements()[0].querySelector("input")); // Targets inner-content slot (the only slot) and finds only input
             if(dialogInput?.value && dialogInput.value !== "") {
+              inboundDimension.originalName = inboundDimension.name; // Useful to keep this for name equality checks in method creation
               inboundDimension.name = dialogInput.value;
               inboundDimension.duplicateOf.forEach(dup => dup.useExisting = false);
 
