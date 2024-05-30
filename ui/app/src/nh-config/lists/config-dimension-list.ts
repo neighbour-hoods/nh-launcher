@@ -306,6 +306,8 @@ return //temp
     // if(duplicateOf.overlap.type.match("complete")) return html`` // NOTE: the best way of currently test the UI with partial overlaps is to comment out this line.
     return html`ACTION: <br />${  
       (() => {switch (true) {
+        // TODO: determine UX for the case where we have a partial/complete overlap INCLUDING more than just name.. should we be forcing a name change in order to create inbound dimension?
+        // Only the name overlaps:
         case duplicateOf.overlap.fields.includes(PartialOverlapField.Name) && duplicateOf.overlap.fields.length == 1:
           return html`
             <button @click=${() => {
@@ -313,8 +315,9 @@ return //temp
               this._changeDimensionNameDialogs[idx].showDialog()
             }}>${(this._changeDimensionNameDialogs)[idx]?.dataset?.hasUpdated ? "Updated" : "Rename"}
             </button><br />
-          `
-        case !duplicateOf.overlap.fields.includes(PartialOverlapField.InputDimension) && (duplicateOf.overlap.fields.includes(PartialOverlapField.Operation) || duplicateOf.overlap.fields.includes(PartialOverlapField.Range)):
+        `
+        // Only the range overlaps:
+        case duplicateOf.overlap.type !== Overlap.CompleteOutput && duplicateOf.overlap.fields.includes(PartialOverlapField.Range):
           return html`<select @change=${(e) => {
             this.dispatchEvent(new CustomEvent((e.target.value == "inbound" ? "config-dimension-selected" : "config-dimension-deselected"),
               { detail: { dimension: inboundDimension }, bubbles: true, composed: true }
@@ -326,19 +329,20 @@ return //temp
             <option value="existing">Choose Existing</option>
             <option value="inbound">Choose Inbound</option>
           </select><br /><br />`
+        // Only input dimension overlaps:
         case duplicateOf.overlap.fields.includes(PartialOverlapField.InputDimension) && duplicateOf.overlap.fields.length == 1:
           const inboundDimensionLinkedMethods = this.configMethods.filter(method => matchesConfigMethodOutputDimension(inboundDimension, method)); 
           const inboundDimensionLinkedInputDimension = inboundDimensionLinkedMethods[0].input_dimensions[0];
           const existingOverlappingInputDimension = this.otherConfigDimensionList!.inboundDimensionDuplicates.find(dim => dim == inboundDimensionLinkedInputDimension);
           const usingExistingOverlappingInputDimension = existingOverlappingInputDimension && existingOverlappingInputDimension.useExisting;
-// TODO: update the inbound output dimension's method to use exising dimension IFF !usingInboundDimension on render
+
           return html`Use existing input dimension with overlapping range:
             <input type="checkbox" checked=${usingExistingOverlappingInputDimension} @change=${(e) => {
               const useInboundDimension = !e.target.checked;
               this.dispatchEvent(new CustomEvent((useInboundDimension ? "config-dimension-selected" : "config-dimension-deselected"),
                 { detail: { dimension: inboundDimensionLinkedInputDimension }, bubbles: true, composed: true }
               ))
-              // TODO: This will not currently dynamically update this.otherConfigDimensionList (input dimension list) action inputs' states
+              // NOTE: This will not currently dynamically update this.otherConfigDimensionList (input dimension list) action inputs' conflicting states (this will be a UX issue)
               this.otherConfigDimensionList?.requestUpdate();
             }} /><br /><br />
           `
@@ -472,13 +476,6 @@ return //temp
     return this.existingRanges.find(range => compareUint8Arrays(range.range_eh, dimension.range_eh)) as RangeEntry || null
   }
 
-  private existingDimensionRangeMatchesConfigDimensionRange(existingDimension: DimensionEntry, newDimension: InboundDimension) {
-    const foundRange = this.findRangeForDimension(existingDimension);
-    // TODO: determine if this kind of range comparison is sufficient.
-    return foundRange?.name == newDimension.range.name
-      && rangeKindEqual(newDimension.range.kind, foundRange!.kind)
-  }
-
   private categorizeDimensionsByInboundClashType(configDimension: PossibleDuplicateInboundDimension, existingDimensions: Array<DimensionEntry>): void {
     existingDimensions.forEach(existingDimension => {
       // Filter out clashes between subjective and objective dimensions
@@ -531,7 +528,10 @@ return //temp
     return existingDimension.name == configDimension.name
   }
   private matchesRange(configDimension: PossibleDuplicateInboundDimension, existingDimension: DimensionEntry): boolean {
-    return this.existingDimensionRangeMatchesConfigDimensionRange(existingDimension, configDimension)
+    const foundRange = this.findRangeForDimension(existingDimension);
+
+    return foundRange?.name == configDimension.range.name
+      && rangeKindEqual(configDimension.range.kind, foundRange!.kind)
   }
   private matchesOperation(existingDimensionMethods: MethodEntry[], configDimensionMethods: ConfigMethod[]): boolean {
     return configDimensionMethods.length > 0 && existingDimensionMethods.length > 0 && configDimensionMethods[0].program && existingDimensionMethods[0].program && Object.keys(configDimensionMethods[0].program)[0] === Object.keys(existingDimensionMethods[0].program)[0]
