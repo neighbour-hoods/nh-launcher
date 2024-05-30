@@ -154,56 +154,23 @@ export class ConfigureAppletDimensions extends NHComponent {
           try {
             let remainingConfigMethods: any = [];
             const methodsToCreate = this.findConfigMethodsForDimensions();
-            // The rest of the config methods should be stored in state so we can create them, bound to existing dimensions instead
+            // The rest of the config methods should be stored in local state so we can create them, bound to existing dimensions instead
             this.config.methods?.forEach(method => !methodsToCreate.includes(method) ? remainingConfigMethods.push(method) : null);
 
             // Create methods linked to newly created inbound dimensions
-            if(methodsToCreate && methodsToCreate.length > 0) {
-              const updatedConfigMethods: Array<Method | null> = methodsToCreate.map((configMethod: ConfigMethod) => {
-                // Try to use existing input dimension instead if there is an overlap on input dimension
-                const usedExistingOverlappingInputDimensionEntryHash = this.findExistingEntryHashForInputDimensionOverlap(configMethod);
+            if(methodsToCreate.length > 0) {
+              const updatedConfigMethods: Array<Method> = this.mapConfigMethodToCreateMethodInput(methodsToCreate, "inbound").filter(m => m !== null) as Method[];
 
-                const linkedInputDimension = this._configDimensionsToCreate.find(dim => !dim.computed && configMethod.input_dimensions[0].name == dim.name)// TODO: also check ranges
-                const linkedOutputDimension = this._configDimensionsToCreate.find(dim => dim.computed && configMethod.output_dimension.name == dim.name);
-                if(!linkedInputDimension || !linkedOutputDimension) return null
-                if(!linkedInputDimension?.dimension_eh || !linkedOutputDimension?.dimension_eh) throw new Error("Linked dimension entry hashes not available")
-
-                const updatedMethod: Method = {
-                  name: configMethod.name,
-                  program: configMethod.program,
-                  can_compute_live: configMethod.can_compute_live,
-                  requires_validation: configMethod.requires_validation,
-                  input_dimension_ehs: [usedExistingOverlappingInputDimensionEntryHash || linkedInputDimension.dimension_eh as EntryHash],
-                  output_dimension_eh: linkedOutputDimension.dimension_eh as EntryHash
-                }
-                return updatedMethod;
-              })
-
-              await this.createMethodsOfCheckedDimensions(updatedConfigMethods.filter(m => m !== null) as Method[])
+              await this.createMethodsOfCheckedDimensions(updatedConfigMethods)
             }
 
             // Create methods not linked to newly created inbound dimensions but to existing dimension entries
             if(remainingConfigMethods.length > 0) {
-              const updatedRemainingConfigMethods: Array<Method | null> = remainingConfigMethods.map((configMethod: ConfigMethod) => {
-                const linkedInputDimension = this._existingDimensionEntries.find(dim => !dim.computed && configMethod.input_dimensions[0].name == dim.name)// TODO: update this criteria by checking linked ranges for equality. This simplified version will do for COMPLETE overlaps only
-                const linkedOutputDimension = this._existingDimensionEntries.find(dim => dim.computed && configMethod.output_dimension.name == dim.name);
-                if(!linkedInputDimension || !linkedOutputDimension) return null
-                if(!linkedInputDimension?.dimension_eh || !linkedOutputDimension?.dimension_eh) throw new Error("Linked dimension entry hashes not available")
+              const updatedRemainingConfigMethods: Array<Method> = this.mapConfigMethodToCreateMethodInput(remainingConfigMethods, "existing").filter(m => m !== null) as Method[];
 
-                const updatedMethod: Method = {
-                  name: configMethod.name,
-                  program: configMethod.program,
-                  can_compute_live: configMethod.can_compute_live,
-                  requires_validation: configMethod.requires_validation,
-                  input_dimension_ehs: [linkedInputDimension.dimension_eh as EntryHash],
-                  output_dimension_eh: linkedOutputDimension.dimension_eh as EntryHash
-                }
-                console.log('updatedMethod :>> ', updatedMethod);
-                return updatedMethod;
-              })
-
-              await this.createMethodsOfCheckedDimensions(updatedRemainingConfigMethods.filter(m => m !== null) as Method[])
+              await this.createMethodsOfCheckedDimensions(updatedRemainingConfigMethods);
             }
+
             this._configDimensionsToCreate = [];
             this.dimensionsCreated = true;
             await sleep(100);
@@ -247,6 +214,28 @@ export class ConfigureAppletDimensions extends NHComponent {
         </div>
       </nh-dialog>
     `;
+  }
+
+  mapConfigMethodToCreateMethodInput(configMethods: ConfigMethod[], linkedDimensionType: "inbound" | "existing"): Array<Method | null> {
+    return configMethods.map((configMethod: ConfigMethod) => {
+      // Try to use existing input dimension instead if there is an overlap on input dimension
+      const usedExistingOverlappingInputDimensionEntryHash = linkedDimensionType == "inbound" && this.findExistingEntryHashForInputDimensionOverlap(configMethod);
+
+      const linkedInputDimension = (linkedDimensionType == "existing" ? this._existingDimensionEntries : this._configDimensionsToCreate).find(dim => !dim.computed && configMethod.input_dimensions[0].name == dim.name)// TODO: also check ranges
+      const linkedOutputDimension = (linkedDimensionType == "existing" ? this._existingDimensionEntries : this._configDimensionsToCreate).find(dim => dim.computed && configMethod.output_dimension.name == dim.name);
+      if(!linkedInputDimension || !linkedOutputDimension) return null
+      if(!linkedInputDimension?.dimension_eh || !linkedOutputDimension?.dimension_eh) throw new Error("Linked dimension entry hashes not available")
+
+      const updatedMethod: Method = {
+        name: configMethod.name,
+        program: configMethod.program,
+        can_compute_live: configMethod.can_compute_live,
+        requires_validation: configMethod.requires_validation,
+        input_dimension_ehs: [usedExistingOverlappingInputDimensionEntryHash || linkedInputDimension.dimension_eh as EntryHash],
+        output_dimension_eh: linkedOutputDimension.dimension_eh as EntryHash
+      }
+      return updatedMethod;
+    })
   }
 
   async fetchRangeEntriesFromHashes(rangeEhs: EntryHash[]) {
