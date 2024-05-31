@@ -90,7 +90,6 @@ export default class NHCard extends NHComponent {
     }
     
     .container {
-      max-width: 45vw;
       min-width: 264px;
       color: var(--nh-theme-fg-default);
       border-radius: calc(1px * var(--nh-radii-xl));
@@ -118,7 +117,7 @@ export default class NHCard extends NHComponent {
     }
     
     .content {
-      margin-right: 1.5rem;
+      margin: 0 auto;
     }
 
     .container.light {

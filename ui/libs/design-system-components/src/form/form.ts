@@ -509,6 +509,10 @@ export default class NHForm extends NHBaseForm {
           margin: 0px auto;
         }
 
+        :host(.auto-height) {
+          min-height: initial;
+        }
+
         form {
           display: flex;
           flex: 1;
@@ -530,6 +534,9 @@ export default class NHForm extends NHBaseForm {
           flex: 1 1 100%;
           justify-content: center;
           gap: 1rem;
+        }
+        form > .row:only-child {
+          flex-wrap: wrap;
         }
 
         .row-2 {
@@ -573,7 +580,6 @@ export default class NHForm extends NHBaseForm {
           display: flex;
           align-items: center;
           gap: 1rem;
-          padding: calc(1px * var(--nh-spacing-sm)) calc(1px * var(--nh-spacing-md));
           margin-top: calc(1px * var(--nh-spacing-sm));
         }
         .row .file-upload.errored {
