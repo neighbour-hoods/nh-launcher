@@ -50,7 +50,7 @@ export class NeighbourhoodSettings extends NHComponent {
     this._showAppletDescription = !this._showAppletDescription;
   }
 
-  renderContent() {
+  render() {
     return html`
       <leave-nh-dialog id="leave-nh-dialog" .weGroupId=${this.weGroupId}></leave-nh-dialog>
 
@@ -89,11 +89,6 @@ export class NeighbourhoodSettings extends NHComponent {
     `;
   }
 
-  render() {
-    return !this._neighbourhoodInfo.value
-      ? html`<nh-spinner type=${"page"}></nh-spinner>`
-      : this.renderContent()
-  }
 
   static elementDefinitions = {
     "nh-button": NHButton,
