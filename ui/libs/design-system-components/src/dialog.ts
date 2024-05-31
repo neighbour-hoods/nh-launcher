@@ -275,7 +275,7 @@ export default class NHDialog extends NHComponent {
         align-items: flex-start;
       }
       #main::part(body) {
-        overflow: auto !important;
+        overflow-y: auto !important;
       }
       
       #main::part(title) {
