@@ -108,10 +108,13 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
 
   async refreshProfileCard(weGroupId: DnaHash) {
     if(!this._withProfile?.agentProfile?.value) {
-      console.log("Unable to refresh profile card")
+      console.warn("Unable to refresh profile card")
       return;
     }
+
+    this._withProfile.refreshed = true;
     this._withProfile.weGroupId = weGroupId;
+    await this._withProfile.requestUpdate("agentProfile");
     await this._withProfile.updateComplete;
   }
 
@@ -166,7 +169,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
           <nh-global-config></nh-global-config>
         </we-group-context>
       `
-    } else if (this._dashboardMode === DashboardMode.WeGroupHome) {
+    } else if (!!this._selectedWeGroupId && this._dashboardMode === DashboardMode.WeGroupHome) {
       return html`
         <we-group-context .weGroupId=${this._selectedWeGroupId}>
           <nh-home
@@ -226,11 +229,11 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
     this._dashboardMode = DashboardMode.WeGroupHome;
     this._selectedWeGroupId = weGroupId;
 
-    await this.refreshProfileCard(weGroupId);
-
     // initialize widgets for group
     console.log("initializing views for group")
     await this._matrixStore.initializeStateForGroup(weGroupId);
+
+    await this.refreshProfileCard(weGroupId);
   }
 
   handleWeGroupIconSecondaryClick(weGroupId: DnaHash, appletId: EntryHash) {
@@ -566,7 +569,11 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
                 <button slot="hoverable" class="user-profile" type="button" @click=${() => {this.toggleUserMenu()}}></button>
               </nh-tooltip>
                 ${this._selectedWeGroupId
-                  ? html`<we-group-context .weGroupId=${this._selectedWeGroupId}><with-profile id="component-card" .agentHash=${encodeHashToBase64(this._matrixStore.myAgentPubKey)} .component=${"card"} class="context-menu" data-open=${this.userProfileMenuVisible} @mouseleave=${() => {this.toggleUserMenu()}}></with-profile></we-group-context>`
+                  ? html`
+                    <we-group-context .weGroupId=${this._selectedWeGroupId}>
+                      <with-profile id="component-card" .agentHash=${encodeHashToBase64(this._matrixStore.myAgentPubKey)} .component=${"card"} class="context-menu" data-open=${this.userProfileMenuVisible} @mouseleave=${() => {this.toggleUserMenu()}}>
+                      </with-profile>
+                    </we-group-context>`
                   : html`<div id="component-card" class="context-menu" data-open=${this.userProfileMenuVisible} @mouseleave=${() => {this.toggleUserMenu()}}>No profile</div>`
                 }
 
