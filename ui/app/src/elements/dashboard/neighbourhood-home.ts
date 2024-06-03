@@ -39,9 +39,14 @@ export class NeighbourhoodHome extends NHComponent {
   _neighbourhoodInfo = new StoreSubscriber(
     this,
     () => provideWeGroupInfo(this._matrixStore, this.weGroupId),
-    () => [this._matrixStore, this.weGroupId, this._profileCreated]
   );
 
+  @state() agentProfile = new StoreSubscriber(
+    this,
+    () => (this._profilesStore)?.value?.profiles.get(this._matrixStore.myAgentPubKey),
+    () => [this.weGroupId, this._profilesStore]
+  );
+  
   @state() private _showLibrary: boolean = false;
   @state() private _profileCreated: boolean = false;
 
@@ -58,13 +63,20 @@ export class NeighbourhoodHome extends NHComponent {
     this._showLibrary = true
   }
 
-  protected updated(_: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-      if(this._profilesStore?.value) {
-        this._profilesStore.value.myProfile.subscribe(task => {
-          if(task!.status == "pending") return;
-          this._profileCreated = !!((task as any).value);
-        })
+  protected updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    if (this._profilesStore?.value && changedProperties.has("weGroupId") && changedProperties.get("weGroupId")) {
+      const task = this.agentProfile.value?.valueOf();
+      if(!task) return;
+
+      const allProfiles = Object.fromEntries(this._profilesStore?.value.profiles.map._map.entries())
+      if(Object.values(allProfiles).length > 0) {
+        Object.values(allProfiles)[0].subscribe(allProfiles0 => {
+          const { value } = allProfiles0;
+          // TODO: revise this approach this when we have multiple agent profiles in a NH. For demo purposes this now suffices. 
+          this._profileCreated = !!value;
+      });
       }
+    }
   }
 
   renderContent() {
