@@ -76,7 +76,7 @@ export class ConfigureAppletDimensions extends NHComponent {
     for(let dim of this._configDimensionsToCreate) {
           const rangeEntryRecord = await this._sensemakerStore.value?.createRange(dim.range);
           // Assign entry hash to config dimensions ready for creation of dimensions
-          dim.range_eh = rangeEntryRecord;
+          dim.range_eh = rangeEntryRecord?.entryHash;
         }
     console.log('ranges created for config dimensions')
   }
@@ -85,10 +85,12 @@ export class ConfigureAppletDimensions extends NHComponent {
     serializeAsyncActions(this._configDimensionsToCreate.map((dimension: (ConfigDimension & { range_eh?: EntryHash, dimension_eh?: EntryHash,  })) => {
       if(!(dimension.range_eh)) throw new Error("Could not find created range for dimension");
       return async () => {
-        const eH = await this._sensemakerStore.value?.createDimension(({name: dimension.name, computed: dimension.computed, range_eh: (dimension!.range_eh)} as Dimension))
-        if(!eH) return eH;
-        dimension.dimension_eh = eH;
-        return eH
+        try {  
+          const response = await this._sensemakerStore.value?.createDimension(({name: dimension.name, computed: dimension.computed, range_eh: (dimension!.range_eh)} as Dimension))
+          dimension.dimension_eh = response!.entryHash;
+        } catch (error) {
+          console.error("Could not create config dimension: ", error)
+        }
       }
     }))
 
@@ -149,12 +151,14 @@ export class ConfigureAppletDimensions extends NHComponent {
           console.log('this._configDimensionsToCreate :>> ', this._configDimensionsToCreate);
         }}
         .handleClose=${() => {
-          if(!this._dimensionsCreated) this.dispatchEvent(
-            new CustomEvent("configure-dimensions-manually", {
-              bubbles: true,
-              composed: true,
-            })
-          );
+          setTimeout(() => {
+            if(!this._dimensionsCreated) this.dispatchEvent(
+              new CustomEvent("configure-dimensions-manually", {
+                bubbles: true,
+                composed: true,
+              })
+            );
+          }, 500);
         }}
         .handleOk=${async () => {
           try {

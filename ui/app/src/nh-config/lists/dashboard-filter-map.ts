@@ -60,10 +60,10 @@ export class DashboardFilterMap extends NHComponent {
       //@ts-ignore
       return !!appletInstanceInfos && Object.values(appletInstanceInfos).some(appletInfo => appletInfo!.gui)
       //@ts-ignore
-        ? Object.fromEntries(Object.entries(appletInstanceInfos).map(([appletEh, appletInfo]) => {
+        ? Object.fromEntries((Object.entries(appletInstanceInfos) || [])?.map(([appletEh, appletInfo]) => {
           if(typeof appletInfo?.gui == 'undefined') return;
           return [appletEh, {...(appletInfo as any)?.gui?.resourceRenderers, ...(appletInfo as any).gui.assessmentWidgets}]
-        }) || [])
+        }).filter(value => !!value) || [])
         : null
     }),
     () => [this.loaded],
@@ -214,7 +214,10 @@ export class DashboardFilterMap extends NHComponent {
     
     const linkedResourceDefApplet = this._currentAppletInstances.value[encodeHashToBase64(linkedResourceDef.applet_eh)];
     const linkedResourceDefRenderers = this._appletInstanceRenderers.value[encodeHashToBase64(linkedResourceDef.applet_eh)];
-    if(!linkedResourceDefRenderers || !linkedResourceDefRenderers) throw new Error('No renderers/applet instance info found for this ResourceDef');
+
+    if(!linkedResourceDefRenderers || !linkedResourceDefRenderers) {
+      throw new Error('No renderers/applet instance info found for this ResourceDef');
+    };
     
     // Base record with basic fields
     const baseRecord = {
@@ -283,15 +286,14 @@ export class DashboardFilterMap extends NHComponent {
             [name]: new FieldDefinition<AssessmentTableRecord>({
               heading: generateHeaderHTML('Assessment', cleanResourceNameForUI(name)),
               decorator: (value : DecoratorProps) => {
-                return !!value && value?.renderer && value?.delegate
-                    ? html`
-                      <input-assessment-renderer
-                        .component=${value.renderer}
-                        .nhDelegate=${value.delegate}
-                      ></input-assessment-renderer>
-                    `
-                    : null
-                  }
+                if(typeof value?.renderer == 'undefined' || typeof value?.delegate == 'undefined') return null;
+                return html`
+                  <input-assessment-renderer
+                    .component=${value.renderer}
+                    .nhDelegate=${value.delegate}
+                  ></input-assessment-renderer>
+                `
+              }
             }),
           }),
         );
@@ -388,7 +390,7 @@ export class DashboardFilterMap extends NHComponent {
 
   partitionDimensionEntries() {
     if (!this._dimensionEntries) return;
-
+    
     let [subjective, objective] = this._dimensionEntries.map(eR => eR.entry).reduce(
       (partitioned, dimension) => {
         partitioned[dimension.computed ? 1 : 0].push(dimension.name);

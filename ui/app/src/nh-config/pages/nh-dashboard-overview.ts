@@ -20,6 +20,7 @@ import {
 } from '../types';
 import { AppletGui, AppletInstanceInfo } from '../../types';
 import { StoreSubscriber } from 'lit-svelte-stores';
+import { decode } from '@msgpack/msgpack';
 
 export default class NHDashBoardOverview extends NHComponent {
   @property() loaded!: boolean;
@@ -62,7 +63,6 @@ export default class NHDashBoardOverview extends NHComponent {
   }
 
   protected updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-
     if(this.loaded && !(this._currentAppletInstances?.value && Object.values(this._currentAppletInstances.value).length > 0)) {
       
       this.dispatchEvent(
