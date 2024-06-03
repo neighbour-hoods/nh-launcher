@@ -65,7 +65,7 @@ export class NeighbourhoodHome extends NHComponent {
   }
 
   protected updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    if (this._profilesStore?.value && changedProperties.has("weGroupId") && changedProperties.get("weGroupId")) {
+    if (this._profilesStore?.value && changedProperties.has("weGroupId")) {
       const task = this.agentProfile.value?.valueOf();
       if(!task) return;
 
