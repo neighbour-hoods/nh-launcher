@@ -1,18 +1,18 @@
-import { consume } from "@lit/context";
-import { html, css, CSSResult, PropertyValueMap } from "lit";
+import { consume } from '@lit/context';
+import { html, css, CSSResult, PropertyValueMap } from 'lit';
 
-import { matrixContext, weGroupContext } from "../../context";
-import { MatrixStore } from "../../matrix-store";
+import { matrixContext, weGroupContext } from '../../context';
+import { MatrixStore } from '../../matrix-store';
 
-import { property, state } from "lit/decorators.js";
-import { InvitationsBlock } from "../components/invitations-block";
-import { AppletLibrary } from "../components/applet-library";
-import { StoreSubscriber } from "lit-svelte-stores";
-import { DnaHash, EntryHash } from "@holochain/client";
-import { NeighbourhoodSettings } from "./neighbourhood-settings";
-import { ProfilePrompt } from "../components/profile-prompt";
-import { AppletNotInstalled } from "./applet-not-installed";
-import { provideWeGroupInfo } from "../../matrix-helpers";
+import { property, state } from 'lit/decorators.js';
+import { InvitationsBlock } from '../components/invitations-block';
+import { AppletLibrary } from '../components/applet-library';
+import { StoreSubscriber } from 'lit-svelte-stores';
+import { DnaHash, EntryHash } from '@holochain/client';
+import { NeighbourhoodSettings } from './neighbourhood-settings';
+import { ProfilePrompt } from '../components/profile-prompt';
+import { AppletNotInstalled } from './applet-not-installed';
+import { provideWeGroupInfo } from '../../matrix-helpers';
 
 import NHButton from '@neighbourhoods/design-system-components/button';
 import NHCard from '@neighbourhoods/design-system-components/card';
@@ -22,23 +22,24 @@ import NHSpinner from '@neighbourhoods/design-system-components/spinner';
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 
 export class NeighbourhoodHome extends NHComponent {
-  @consume({ context: matrixContext , subscribe: true })
-  @property({attribute: false})
+  @consume({ context: matrixContext, subscribe: true })
+  @property({ attribute: false })
   _matrixStore!: MatrixStore;
 
   _profilesStore = new StoreSubscriber(
     this,
     () => this._matrixStore.profilesStore(this.weGroupId),
-    () => [this._matrixStore, this.weGroupId, this._profileCreated]
+    () => [this._matrixStore, this.weGroupId, this._profileCreated],
   );
 
   @consume({ context: weGroupContext, subscribe: true })
-  @property({attribute: false})
+  @property({ attribute: false })
   weGroupId!: DnaHash;
 
   _neighbourhoodInfo = new StoreSubscriber(
     this,
     () => provideWeGroupInfo(this._matrixStore, this.weGroupId),
+    () => [this._matrixStore, this.weGroupId, this._profileCreated],
   );
 
   @state() agentProfile = new StoreSubscriber(
@@ -57,10 +58,10 @@ export class NeighbourhoodHome extends NHComponent {
   private _installAppletId: EntryHash | undefined;
 
   @state()
-  private _installMode: "reinstall" | "join" = "join";
+  private _installMode: 'reinstall' | 'join' = 'join';
 
   public showLibrary() {
-    this._showLibrary = true
+    this._showLibrary = true;
   }
 
   protected updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
@@ -80,157 +81,208 @@ export class NeighbourhoodHome extends NHComponent {
   }
 
   renderContent() {
-    if (this._showInstallScreen) {
+    if (!this._showInstallScreen && !this._showLibrary) {
       return html`
-              <applet-not-installed
-                .appletInstanceId=${this._installAppletId}
-                .mode=${this._installMode}
-                @cancel-reinstall=${() => { this._showInstallScreen = false; this._installAppletId = undefined; }}>
-              </applet-not-installed>
-      `
-    }
+        <div class="container">
+          <div class="nh-image">
+            ${this._neighbourhoodInfo.value
+              ? html`<img class="logo-large" src=${this._neighbourhoodInfo.value?.logoSrc} />`
+              : html`<nh-spinner type=${"icon"}></nh-spinner>`}
+            <h1>
+              ${this._neighbourhoodInfo.value?.name !== undefined
+                ? this._neighbourhoodInfo.value?.name
+                : html`<nh-spinner type=${"icon"}></nh-spinner>`}
+            </h1>
+          </div>
 
-    return this._showLibrary
-      ? html`
-            <div class="container">
-              <applet-library .toggleVisible=${() => { this._showLibrary = false }}></applet-library>
-            </div>
-        `
-      : html`
-            <div class="container">
-              <div class="nh-image">
-                ${this._neighbourhoodInfo.value
-                  ? html`<img
-                      class="logo-large"
-                      src=${this._neighbourhoodInfo.value?.logoSrc}
-                    />`
-                  : html``}
-                <h1>
-                  ${this._neighbourhoodInfo.value?.name !== undefined ? this._neighbourhoodInfo.value?.name : ''}
-                </h1>
+          ${this._neighbourhoodInfo.value
+            ? html`<div class="card-block">
+            <invitations-block></invitations-block>
+
+            <nh-card
+              .theme=${'dark'}
+              .title=${''}
+              .heading=${'Add new applet'}
+              .textSize=${'sm'}
+              .hasPrimaryAction=${true}
+            >
+              <p>
+                Initiate a new Applet instance from scratch that other neighbourhood members will
+                be able to join.
+              </p>
+              <div slot="footer">
+                <nh-button
+                  .variant=${'primary'}
+                  @click=${() => (this._showLibrary = true)}
+                  .size=${'auto'}
+                  >Browse Applets</nh-button
+                >
               </div>
-
-              <div class="card-block">
-                <invitations-block></invitations-block>
-
-                <nh-card .theme=${"dark"} .title=${""} .heading=${"Add new applet"} .textSize=${"sm"} .hasPrimaryAction=${true}>
-                  <p>
-                    Initiate a new Applet instance from scratch that other neighbourhood members will be able to join.
-                  </p>
-                  <div slot="footer">
-                    <nh-button .variant=${"primary"} @click=${() => this._showLibrary = true} .size=${"auto"}>Browse Applets</nh-button>
-                  </div>
-                </nh-card>
-              </div>
-              <neighbourhood-settings class="settings"
+            </nh-card>
+                  </div>`
+            : html`<nh-spinner type=${"icon"}></nh-spinner>`}
+          
+          ${this._neighbourhoodInfo.value
+            ? html`
+              <neighbourhood-settings
+                class="settings"
                 @join-applet=${(e: CustomEvent) => {
                   this._installAppletId = e.detail;
-                  this._installMode = "join";
+                  this._installMode = 'join';
                   this._showInstallScreen = true;
-                  }
-                }
+                }}
                 @reinstall-applet=${(e: CustomEvent) => {
                   this._installAppletId = e.detail;
-                  this._installMode = "reinstall";
+                  this._installMode = 'reinstall';
                   this._showInstallScreen = true;
-                  }
-                }
+                }}
               >
                 <div class="to-join"></div>
                 <div class="installed"></div>
                 <div class="uninstalled"></div>
                 <div class="danger-zone"></div>
-              </neighbourhood-settings>
-            </div>
+              </neighbourhood-settings>`
+            : html`<nh-spinner type=${"icon"}></nh-spinner>`}
+              
+        </div>
+      </div>
+      `;
+    }
+
+    if (!this._showLibrary && this._showInstallScreen) {
+      return html`
+        <applet-not-installed
+          .appletInstanceId=${this._installAppletId}
+          .mode=${this._installMode}
+          @cancel-reinstall=${() => {
+            this._showInstallScreen = false;
+            this._installAppletId = undefined;
+          }}
+        >
+        </applet-not-installed>
+      `;
+    }
+
+    return html`
+      <div class="container">
+        <applet-library
+          .toggleVisible=${() => {
+            this._showLibrary = false;
+          }}
+        ></applet-library>
+      </div>
     `
   }
 
-  handleProfileCreated() {
-    this._neighbourhoodInfo.store = provideWeGroupInfo(this._matrixStore, this.weGroupId)
+  async handleProfileCreated() {
+    this._neighbourhoodInfo.store = provideWeGroupInfo(this._matrixStore, this.weGroupId);
     this._profileCreated = true;
+    await this.requestUpdate();
   }
 
   render() {
-    return this._profileCreated
-      ? this.renderContent()
-      : this.renderProfilePrompt();
+    return this._profileCreated ? this.renderContent() : this.renderProfilePrompt();
   }
 
   renderProfilePrompt() {
-    return this._neighbourhoodInfo?.value
-      ? html`
-        <main @profile-created=${this.handleProfileCreated}>
-          <profile-prompt .profilesStore=${this._profilesStore.value} .neighbourhoodInfo=${this._neighbourhoodInfo.value}>
-          </profile-prompt>
-        </main>`
-      : html`<nh-spinner type=${"page"}></nh-spinner>`
+    return typeof this._profileCreated !== 'undefined' && this._neighbourhoodInfo?.value
+      ? html` 
+          <div class="container" @profile-created=${() => this.handleProfileCreated()}>
+            <nh-profile-prompt
+              .profilesStore=${this._profilesStore.value}
+              .neighbourhoodInfo=${this._neighbourhoodInfo.value}
+            >
+            </nh-profile-prompt>
+          </div>`
+      : html`
+          <nh-spinner type=${'page'}></nh-spinner>
+        `;
   }
 
   static elementDefinitions = {
-      'nh-page-header-card': NHPageHeaderCard,
-      "nh-button": NHButton,
-      "nh-card": NHCard,
-      "nh-spinner": NHSpinner,
-      'nh-dialog': NHDialog,
-      "applet-library": AppletLibrary,
-      "profile-prompt": ProfilePrompt,
-      "invitations-block": InvitationsBlock,
-      "neighbourhood-settings": NeighbourhoodSettings,
-      'applet-not-installed': AppletNotInstalled,
-  }
+    'nh-page-header-card': NHPageHeaderCard,
+    'nh-button': NHButton,
+    'nh-card': NHCard,
+    'nh-spinner': NHSpinner,
+    'nh-dialog': NHDialog,
+    'applet-library': AppletLibrary,
+    'nh-profile-prompt': ProfilePrompt,
+    'invitations-block': InvitationsBlock,
+    'neighbourhood-settings': NeighbourhoodSettings,
+    'applet-not-installed': AppletNotInstalled,
+  };
 
-  static styles : CSSResult[] = [
+  static styles: CSSResult[] = [
     super.styles as CSSResult,
-      css`
-        /** Layout **/
+    css`
+      /** Layout **/
 
-        main {
-          display: flex;
-          flex: 1;
-        }
+      .container {
+        flex: 1;
+        display: grid;
+        gap: calc(1px * var(--nh-spacing-sm));
+        padding: calc(1px * var(--nh-spacing-3xl));
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto;
+        grid-template-areas:
+          'nh-image card-block'
+          'nh-settings nh-settings';
+      }
+      .nh-image {
+        grid-area: nh-image;
+        align-self: center;
+      }
 
-        .container {
-          flex: 1;
-          display: grid;
-          gap: calc(1px * var(--nh-spacing-sm));
-          padding: calc(1px * var(--nh-spacing-3xl));
-          grid-template-columns: 1fr 1fr;
-          grid-template-rows: auto;
-          grid-template-areas:  "nh-image card-block"
-                                "nh-settings nh-settings";
-        }
-        .nh-image { grid-area: nh-image; align-self: center; }
-        .card-block { grid-area: card-block; align-self: center; }
-        .settings { grid-area: nh-settings; display: flex; flex-direction: column;}
-        applet-library { grid-column: -1/1; grid-row: -1/1; }
+      nh-profile-prompt {
+        align-items: flex-start;
+        grid-row: 1/-1;
+        grid-column: 1/-1;
+      }
 
-        /** Sub-Layout **/
-        .to-join, .installed, .uninstalled, .danger-zone {
-          display: flex;
-          flex: 1;
-        }
+      .card-block {
+        grid-area: card-block;
+        align-self: center;
+      }
+      .settings {
+        grid-area: nh-settings;
+        display: flex;
+        flex-direction: column;
+      }
+      applet-library {
+        grid-column: -1/1;
+        grid-row: -1/1;
+      }
 
-        .nh-image {
-          display: grid;
-          place-content: center
-        }
+      /** Sub-Layout **/
+      .to-join,
+      .installed,
+      .uninstalled,
+      .danger-zone {
+        display: flex;
+        flex: 1;
+      }
 
-        .card-block {
-          display: flex;
-          flex-direction: column;
-          gap: calc(1px * var(--nh-spacing-3xl));
-        }
+      .nh-image {
+        display: grid;
+        place-content: center;
+      }
 
-        .logo-large {
-          width: 200px;
-          height: 200px;
-          border-radius: 100%;
-        }
+      .card-block {
+        display: flex;
+        flex-direction: column;
+        gap: calc(1px * var(--nh-spacing-3xl));
+      }
 
-        /** Typo **/
-        h1 {
-          text-align: center;
-        }
-    `
+      .logo-large {
+        width: 200px;
+        height: 200px;
+        border-radius: 100%;
+      }
+
+      /** Typo **/
+      h1 {
+        text-align: center;
+      }
+    `,
   ];
 }
