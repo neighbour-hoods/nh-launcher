@@ -28,6 +28,14 @@ class BlockRendererTable extends Table {
     'resource-block-renderer': ResourceBlockRenderer,
     'with-profile': WithProfile,
   }
+
+  static styles = css`
+    input-assessment-renderer {
+      display:flex;
+      justify-content: center;
+      cursor: pointer;
+    }
+  `
 }
 
 export class DashboardTable extends NHComponent {
