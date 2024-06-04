@@ -303,7 +303,7 @@ return //temp
   }
 
   private renderOverlappingDimensionFieldAction(duplicateOf, idx, inboundDimension) : TemplateResult {
-    // if(duplicateOf.overlap.type.match("complete")) return html`` // NOTE: the best way of currently test the UI with partial overlaps is to comment out this line.
+    if(duplicateOf.overlap.type.match("complete")) return html`` // NOTE: the best way of currently test the UI with partial overlaps is to comment out this line.
     return html`ACTION: <br />${  
       (() => {switch (true) {
         // TODO: determine UX for the case where we have a partial/complete overlap INCLUDING more than just name.. should we be forcing a name change in order to create inbound dimension?
