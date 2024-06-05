@@ -6,7 +6,7 @@ mod method;
 mod properties;
 mod range;
 mod resource_def;
-mod widget_registration;
+mod assessment_control;
 
 pub use applet::{AppletConfig, AppletConfigInput, ConfigResourceDef};
 pub use assessment::Assessment;
@@ -18,4 +18,4 @@ pub use method::{DataSet, Method, PartialMethod, Program};
 pub use properties::{Properties, SensemakerConfig};
 pub use range::{Range, RangeValue};
 pub use resource_def::ResourceDef;
-pub use widget_registration::{AssessmentWidgetRegistration, AssessmentWidgetRegistrationInput};
+pub use assessment_control::{AssessmentControlRegistration, AssessmentControlRegistrationInput};
