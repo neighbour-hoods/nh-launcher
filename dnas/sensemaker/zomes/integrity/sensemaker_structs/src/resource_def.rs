@@ -19,7 +19,7 @@ impl TryFrom<ConfigResourceDef> for ResourceDef {
         let resource_def = ResourceDef {
             resource_name: value.resource_name,
             // This is the AppletID EntryHash from the AppletInstanceInfo[]
-            applet_eh: value.applet_eh,
+            applet_eh: value.applet_eh.into(),
             base_types: value.base_types,
             role_name: value.role_name,
             zome_name: value.zome_name,
