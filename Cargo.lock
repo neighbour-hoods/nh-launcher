@@ -4153,20 +4153,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "nh_zome_sensemaker_widgets_config"
+name = "nh_zome_assessment_tray"
 version = "0.0.1"
 dependencies = [
  "hdk",
  "holo_hash",
  "nh_sensemaker_zome_lib",
- "nh_zome_sensemaker_widgets_integrity",
+ "nh_zome_assessment_tray_integrity",
  "sensemaker_integrity",
  "sensemaker_integrity_structs",
  "serde",
 ]
 
 [[package]]
-name = "nh_zome_sensemaker_widgets_integrity"
+name = "nh_zome_assessment_tray_integrity"
 version = "0.0.1"
 dependencies = [
  "hdi",
