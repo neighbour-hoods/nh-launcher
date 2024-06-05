@@ -270,9 +270,9 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                         const foundComponent = Object.values(appletRenderers).find(component => component.name == (inputWidgetConfig as { dimensionEh: EntryHash, appletId: string, componentName: string }).componentName);
                         if(!foundComponent) return;
 
-                        const widgetKey = Object.values(this._registeredWidgets).find(widget => widget.name == foundComponent.name)?.widgetKey;
-                        const renderBlock = this._workingWidgetControlRendererCache.get(widgetKey as string);
-                        if(!widgetKey || !renderBlock) return;
+                        const controlKey = Object.values(this._registeredWidgets).find(widget => widget.name == foundComponent.name)?.controlKey;
+                        const renderBlock = this._workingWidgetControlRendererCache.get(controlKey as string);
+                        if(!controlKey || !renderBlock) return;
 
                         const templateResult = !!this.updatedComponent ? renderBlock(undefined, this.updatedComponent) : renderBlock(undefined, foundComponent.component);
                         const hasUpdated = !!this.updatedComponent;
@@ -473,7 +473,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     const widgets = typeof this._registeredWidgets == 'object' && Object.values(this._registeredWidgets) || []
 
     const selectedWidget = widgets?.find(widget => widget.name == this._form._model.assessment_widget);
-    this.selectedWidgetKey = selectedWidget?.widgetKey;
+    this.selectedWidgetKey = selectedWidget?.controlKey;
 
     this.placeHolderWidget = this?._workingWidgetControlRendererCache.get(this.selectedWidgetKey as string) as (delegate?: InputAssessmentControlDelegate) => TemplateResult;
 
@@ -549,7 +549,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                       })
                       .map((widget: AssessmentControlRegistrationInput) => {
                           const possibleRenderers : ({string: AssessmentWidgetRenderer | ResourceBlockRenderer})[] = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)];
-                          const renderer = possibleRenderers[widget.widgetKey];
+                          const renderer = possibleRenderers[widget.controlKey];
                           if(!renderer || renderer?.kind !== 'input') throw new Error('Could not fill using widget renderer as none could be found')
                           let renderBlock = (delegate?: InputAssessmentControlDelegate, component?: any) => html`
                             <input-assessment-renderer slot="assessment-control"
@@ -557,7 +557,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                               .nhDelegate=${delegate || new FakeInputAssessmentControlDelegate()}
                             ></input-assessment-renderer>`
 
-                          this._workingWidgetControlRendererCache?.set(widget.widgetKey, renderBlock)
+                          this._workingWidgetControlRendererCache?.set(widget.controlKey, renderBlock)
                           return ({
                             label: widget.name,
                             value: widget.name,
@@ -573,8 +573,8 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                   if(this.editMode) {
                     const possibleRenderers : ({string: AssessmentWidgetRenderer | ResourceBlockRenderer})[] = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)];
                     const widget = Object.values(this._registeredWidgets)?.find(widget=> widget.name == model.assessment_widget);
-                    if(!widget?.widgetKey || widget?.kind !== 'input' || !(possibleRenderers[widget.widgetKey])) throw new Error('Could not update currently editable widget control')
-                    const renderer = possibleRenderers[widget.widgetKey];
+                    if(!widget?.controlKey || widget?.kind !== 'input' || !(possibleRenderers[widget.controlKey])) throw new Error('Could not update currently editable widget control')
+                    const renderer = possibleRenderers[widget.controlKey];
                     this.updatedComponent = renderer.component;
                     model.input_dimension = undefined;
                     model.output_dimension = undefined;
@@ -584,7 +584,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 defaultValue: (() => !!foundEditableWidget ? ({
                   label: foundEditableWidget.name,
                   value: foundEditableWidget.name,
-                  renderBlock: this._workingWidgetControlRendererCache.get(foundEditableWidget.widgetKey)
+                  renderBlock: this._workingWidgetControlRendererCache.get(foundEditableWidget.controlKey)
                 }) : null)()
               },
             ],
@@ -600,7 +600,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                         ?.filter(dimension => {
                           const selectedWidgetRangeKind = Object.values(
                             this._registeredWidgets,
-                          ).find(widget => widget.widgetKey == this.selectedWidgetKey)?.rangeKind;
+                          ).find(widget => widget.controlKey == this.selectedWidgetKey)?.rangeKind;
                           if (typeof this.selectedWidgetKey == 'undefined' || !selectedWidgetRangeKind) return false;
 
                           const dimensionRange = this._rangeEntries!.find(range =>
