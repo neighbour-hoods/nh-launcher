@@ -6,7 +6,7 @@ import { ConfigResourceDef } from "./resourceDef";
 import { Range } from "./range";
 import { SensemakerStore } from "./sensemakerStore";
 import { NHDelegateReceiverConstructor } from "./delegate";
-import { AssessmentWidgetRenderers } from "./assessment_control";
+import { AssessmentControlRenderers } from "./assessment_control";
 
 /**
  * Logo and name of Neighbourhood
@@ -100,11 +100,11 @@ export interface NeighbourhoodApplet {
   appletConfig: AppletConfigInput;
   appletRenderers: AppletRenderers;
   resourceRenderers: ResourceRenderers;
-  assessmentControls: AssessmentWidgetRenderers;
+  assessmentControls: AssessmentControlRenderers;
 }
 
 export interface NeighbourhoodAppletRenderers {
   appletRenderers?: AppletRenderers;
   resourceRenderers?: ResourceRenderers;
-  assessmentControls?: AssessmentWidgetRenderers;
+  assessmentControls?: AssessmentControlRenderers;
 }

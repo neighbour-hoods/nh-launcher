@@ -51,7 +51,7 @@ export type AssessmentWidgetRenderer = {
 /**
  * Defines the different assessment control renderers by name
  */
-export type AssessmentWidgetRenderers = Record<string, AssessmentWidgetRenderer>
+export type AssessmentControlRenderers = Record<string, AssessmentWidgetRenderer>
 
 /**
  * Defines the shape of the data sent to the sensemaker to register a an assessment control
