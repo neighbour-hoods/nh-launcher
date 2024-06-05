@@ -8,7 +8,7 @@ import { currentAppletEhContext, appletInstanceInfosContext, matrixContext, reso
 import { DnaHash, EntryHash, EntryHashB64, encodeHashToBase64 } from '@holochain/client';
 
 import DimensionsConfig from './pages/nh-dimensions-config';
-import AssessmentWidgetConfig from './pages/nh-assessment-widget-config';
+import AssessmentControlConfig from './pages/nh-assessment-control-config';
 import NHDashBoardOverview from './pages/nh-dashboard-overview';
 
 import NHMenu from '@neighbourhoods/design-system-components/menu';
@@ -135,7 +135,7 @@ export default class NHGlobalConfig extends NHComponent {
       case ConfigPage.Dimensions:
         return html`<dimensions-config></dimensions-config>`;
       case ConfigPage.Widgets:
-        return html`<assessment-widget-config .loaded=${this.loaded} .sensemakerStore=${this._sensemakerStore.value} .resourceDef=${this.selectedResourceDef}></assessment-widget-config>`;
+        return html`<assessment-control-config .loaded=${this.loaded} .sensemakerStore=${this._sensemakerStore.value} .resourceDef=${this.selectedResourceDef}></assessment-control-config>`;
       default:
         return html`<p>Coming Soon</p>`;
     }
@@ -268,7 +268,7 @@ export default class NHGlobalConfig extends NHComponent {
   static elementDefinitions = {
     'nh-menu': NHMenu,
     'dimensions-config': DimensionsConfig,
-    'assessment-widget-config': AssessmentWidgetConfig,
+    'assessment-control-config': AssessmentControlConfig,
     'dashboard-overview': NHDashBoardOverview,
   };
 
