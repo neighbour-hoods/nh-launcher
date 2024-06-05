@@ -42,7 +42,7 @@ import {
   AppBlockDelegate,
   AppletRenderers,
   AppletConfigInput,
-  AssessmentWidgetRegistrationInput,
+  AssessmentControlRegistrationInput,
   DimensionEh,
   InputAssessmentWidgetDelegate,
   NeighbourhoodApplet,
@@ -1648,14 +1648,14 @@ export class MatrixStore {
     const sensemakerStore = get(this.sensemakerStore(weGroupId));
     if (sensemakerStore) {
       try {
-        const registrationActions: Array<()=>Promise<AssessmentWidgetRegistrationInput>> = []
+        const registrationActions: Array<()=>Promise<AssessmentControlRegistrationInput>> = []
         const registeredConfig = await sensemakerStore.registerApplet(appletConfig);
         // console.log('registeredConfig', registeredConfig)
         // console.log('registering widgets to SM store')
         for (let widgetKey in applet.assessmentWidgets) {
           // console.log(widgetKey)
           const widgetConfig = applet.assessmentWidgets[widgetKey]
-          const registration: AssessmentWidgetRegistrationInput = {
+          const registration: AssessmentControlRegistrationInput = {
             appletId: installedAppId,
             widgetKey,  // keyof an AssessmentWidgetConfigDict
             name: widgetConfig.name,

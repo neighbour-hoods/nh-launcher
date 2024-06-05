@@ -24,7 +24,7 @@ import {
   RunMethodInput,
   SignalPayload,
   AssessmentWidgetBlockConfig,
-  AssessmentWidgetRegistrationInput,
+  AssessmentControlRegistrationInput,
   GetMethodsForDimensionQueryParams,
 } from './index';
 import { derived, Readable, Writable, writable } from 'svelte/store';
@@ -440,21 +440,21 @@ export class SensemakerStore {
     return appletConfig;
   }
 
-  async registerWidget(assessmentControlRegistration: AssessmentWidgetRegistrationInput): Promise<AssessmentWidgetRegistrationInput> {
+  async registerWidget(assessmentControlRegistration: AssessmentControlRegistrationInput): Promise<AssessmentControlRegistrationInput> {
     const result = await this.service.registerWidget(assessmentControlRegistration);
-    return new EntryRecord<AssessmentWidgetRegistrationInput>(result).entry
+    return new EntryRecord<AssessmentControlRegistrationInput>(result).entry
   }
 
-  async getRegisteredWidgets(): Promise<Record<EntryHashB64, AssessmentWidgetRegistrationInput>> {
+  async getRegisteredWidgets(): Promise<Record<EntryHashB64, AssessmentControlRegistrationInput>> {
     const result : HolochainRecord[] = await this.service.getRegisteredWidgets();
     return result.reduce((record, value) => {
-      const entryRecord = new EntryRecord<AssessmentWidgetRegistrationInput>(value);
+      const entryRecord = new EntryRecord<AssessmentControlRegistrationInput>(value);
       const key: EntryHashB64 = encodeHashToBase64(entryRecord.entryHash);
-      const registration: AssessmentWidgetRegistrationInput = entryRecord.entry;
+      const registration: AssessmentControlRegistrationInput = entryRecord.entry;
 
       record[key] = registration;
       return record
-    }, {} as Record<EntryHashB64, AssessmentWidgetRegistrationInput>)
+    }, {} as Record<EntryHashB64, AssessmentControlRegistrationInput>)
   }
 
   async checkIfAppletConfigExists(appletName: string): Promise<Option<AppletConfig>> {

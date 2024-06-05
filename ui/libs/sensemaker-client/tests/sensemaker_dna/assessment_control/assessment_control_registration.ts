@@ -1,4 +1,4 @@
-import { AssessmentWidgetRegistrationInput } from '#client';
+import { AssessmentControlRegistrationInput } from '#client';
 import { AgentPubKey, EntryHash, Record } from "@holochain/client";
 import {
   pause,
@@ -78,7 +78,7 @@ export default () => {
         const twentyScaleRangeKind = {
           "Integer": { "min": 0, "max": 20 }
         };
-        const testAssessmentControlRegistration: AssessmentWidgetRegistrationInput = {
+        const testAssessmentControlRegistration: AssessmentControlRegistrationInput = {
           appletId: installedAppId,
           controlKey: 'importance',
           name: 'Importance Control',
@@ -93,7 +93,7 @@ export default () => {
         );
         t.ok(controlRegistrationCreationRecord, "create a new assessment control registration");
 
-        const controlRegistrationCreationEntryRecord = new EntryRecord<AssessmentWidgetRegistrationInput>(controlRegistrationCreationRecord);
+        const controlRegistrationCreationEntryRecord = new EntryRecord<AssessmentControlRegistrationInput>(controlRegistrationCreationRecord);
 
         t.deepEqual(controlRegistrationCreationEntryRecord.entry.rangeKind, twentyScaleRangeKind, "created assessment control registration with the correct range");
 
@@ -106,7 +106,7 @@ export default () => {
         );
         t.ok(get1, "get an assessment control registration");
 
-        const getAssessmentControlRegistrationEntryRecord = new EntryRecord<AssessmentWidgetRegistrationInput>(get1);
+        const getAssessmentControlRegistrationEntryRecord = new EntryRecord<AssessmentControlRegistrationInput>(get1);
         t.deepEqual(getAssessmentControlRegistrationEntryRecord.entry.rangeKind, twentyScaleRangeKind, "got assessment control registration with the correct range");
 
         // Test 3: Given a created registration entry Then Alice can read all registered assessment_tray and get an array of one
@@ -117,7 +117,7 @@ export default () => {
           null
         );
         t.equal(1, getAll2.length);
-        const firstRecord = new EntryRecord<AssessmentWidgetRegistrationInput>(getAll2[0]);
+        const firstRecord = new EntryRecord<AssessmentControlRegistrationInput>(getAll2[0]);
         t.deepEqual(firstRecord.entry.rangeKind, twentyScaleRangeKind, "got assessment control registrations with the correct range");
 
 
