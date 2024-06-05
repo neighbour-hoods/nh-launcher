@@ -1,6 +1,6 @@
 import NHGlobalConfig from './nh-global-config'
 import NHDimensionConfig from './pages/nh-dimensions-config'
-import NHAssessmentWidgetConfig from './pages/nh-assessment-widget-config'
+import NHAssessmentWidgetConfig from './pages/nh-assessment-control-config'
 import NHDashboardOverview from './pages/nh-dashboard-overview'
 import CreateDimension from './forms/create-input-dimension-form'
 import CreateOutputDimensionMethod from './forms/create-output-dimension-form'
