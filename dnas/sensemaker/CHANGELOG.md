@@ -1,6 +1,22 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## No release - 2024-07-05
+- Renamed the whole 'AssessmentWidget' API to instead be called 'AssessmentControl'. This impacts both the client side and rust API, and zome test suite. This includes various interfaces, object properties and method names, primarily:
+-- renamed AssessmentWidgetBlockConfig to AssessmentControlConfig
+-- renamed AssessmentWidgetRenderer to AssessmentControlRenderer
+-- renamed widgetKey property to controlKey
+-- renamed AssessmentWidgetKind to AssessmentControlKind
+-- renamed AssessmentWidgetRenderers to AssessmentControlRenderers
+-- renamed assessmentWidgets to assessmentControls
+-- renamed OutputAssessmentWidgetDelegate to OutputAssessmentControlDelegate
+-- renamed InputAssessmentWidgetDelegate to InputAssessmentControlDelegate
+-- renamed InputAssessmentWidgetDelegate to InputAssessmentControlDelegate
+-- renamed AssessmentWidgetTrayConfig to AssessmentTrayConfig
+-- renamed registerWidget to registerAssessmentControl
+-- renamed AssessmentWidgetRegistrationInput to AssessmentControlRegistrationInput
+-- renamed the coordinator and integrity zomes to `assessment_tray` and `assessment_tray_integrity`, updating all the manifests
+
 ## v0.0.14-alpha - 2023-11-30
 - `get_methods` and `get_methods_for_dimension` are added as zome functions. 
 - `get_methods` takes no parameters, while `get_methods_for_dimension` accepts a `GetMethodsForDimensionInput` struct, having one `query: Option<QueryParams>` field. Calling with `query` as `null` returns the same as `get_methods`, but providing a `dimension_type` and `dimension_eh` will return all methods created with that input/output dimension entry hash.  
