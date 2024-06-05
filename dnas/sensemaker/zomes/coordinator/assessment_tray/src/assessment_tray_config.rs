@@ -1,6 +1,5 @@
 use hdk::prelude::*;
-use nh_sensemaker_zome_lib::*;
-use nh_zome_sensemaker_widgets_integrity::*;
+use nh_zome_assessment_tray_integrity::*;
 
 #[hdk_extern]
 fn get_assessment_tray_config(assessment_tray_eh: EntryHash) -> ExternResult<Option<Record>> {
@@ -10,28 +9,28 @@ fn get_assessment_tray_config(assessment_tray_eh: EntryHash) -> ExternResult<Opt
 
 #[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
 #[serde(rename_all = "camelCase")]
-pub struct AssessmentWidgetTrayConfigInput {
+pub struct AssessmentTrayConfigInput {
     pub name: String,
-    pub assessment_widget_blocks: Vec<AssessmentWidgetBlockConfig>,
+    pub assessment_control_configs: Vec<AssessmentControlConfig>,
 }
 
-impl TryFrom<AssessmentWidgetTrayConfigInput> for AssessmentWidgetTrayConfig {
+impl TryFrom<AssessmentTrayConfigInput> for AssessmentTrayConfig {
     type Error = WasmError;
-    fn try_from(value: AssessmentWidgetTrayConfigInput) -> Result<Self, Self::Error> {
-        let registration = AssessmentWidgetTrayConfig {
+    fn try_from(value: AssessmentTrayConfigInput) -> Result<Self, Self::Error> {
+        let registration = AssessmentTrayConfig {
             name: value.name,
-            assessment_widget_blocks: value.assessment_widget_blocks,
+            assessment_control_configs: value.assessment_control_configs,
         };
         Ok(registration)
     }
 }
 
 #[hdk_extern]
-fn set_assessment_tray_config(tray_config_input: AssessmentWidgetTrayConfigInput) -> ExternResult<Record> {
-    let input: AssessmentWidgetTrayConfig = tray_config_input.clone().try_into()?;
-    let action_hash = create_entry(&EntryTypes::AssessmentWidgetTrayConfig(input.clone()))?;
+fn set_assessment_tray_config(tray_config_input: AssessmentTrayConfigInput) -> ExternResult<Record> {
+    let input: AssessmentTrayConfig = tray_config_input.clone().try_into()?;
+    let action_hash = create_entry(&EntryTypes::AssessmentTrayConfig(input.clone()))?;
 
-    let eh = hash_entry(EntryTypes::AssessmentWidgetTrayConfig(input.clone()))?;
+    let eh = hash_entry(EntryTypes::AssessmentTrayConfig(input.clone()))?;
 
     create_link(
         tray_configs_typed_path()?.path_entry_hash()?,
@@ -41,7 +40,7 @@ fn set_assessment_tray_config(tray_config_input: AssessmentWidgetTrayConfigInput
     )?;
 
     let record = get(action_hash.clone(), GetOptions::default())?
-        .ok_or(wasm_error!(WasmErrorInner::Guest("AssessmentWidgetTrayConfig could not be retrieved after creation".into())))?;
+        .ok_or(wasm_error!(WasmErrorInner::Guest("AssessmentTrayConfig could not be retrieved after creation".into())))?;
 
     Ok(record)
 }

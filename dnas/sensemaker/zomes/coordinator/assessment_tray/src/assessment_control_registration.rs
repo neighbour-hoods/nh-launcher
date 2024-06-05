@@ -1,35 +1,35 @@
 use hdk::prelude::*;
-use sensemaker_integrity_structs::{AssessmentWidgetRegistration, AssessmentWidgetRegistrationInput};
-use nh_zome_sensemaker_widgets_integrity::*;
+use sensemaker_integrity_structs::{AssessmentControlRegistration, AssessmentControlRegistrationInput};
+use nh_zome_assessment_tray_integrity::*;
 
 #[hdk_extern]
-fn register_assessment_widget(registration_input: AssessmentWidgetRegistrationInput) -> ExternResult<Record> {
+fn register_assessment_control(registration_input: AssessmentControlRegistrationInput) -> ExternResult<Record> {
     let action_hash;
 
-    let input: AssessmentWidgetRegistration = registration_input.clone().try_into()?;
+    let input: AssessmentControlRegistration = registration_input.clone().try_into()?;
     // Create entry
-    action_hash = create_entry(&EntryTypes::AssessmentWidgetRegistration(input.clone()))?;
+    action_hash = create_entry(&EntryTypes::AssessmentControlRegistration(input.clone()))?;
 
-    let eh = hash_entry(EntryTypes::AssessmentWidgetRegistration(input.clone()))?;
+    let eh = hash_entry(EntryTypes::AssessmentControlRegistration(input.clone()))?;
     // Create link
-    // - widget_registrations anchor to new entry hash
+    // - control registration anchor to new entry hash
     create_link(
         registrations_typed_path()?.path_entry_hash()?,
         eh.clone(),
-        LinkTypes::WidgetRegistration,
+        LinkTypes::AssessmentControlRegistration,
         (),
     )?;
 
     let record = get(action_hash.clone(), GetOptions::default())?
-        .ok_or(wasm_error!(WasmErrorInner::Guest("AssessmentWidgetRegistration could not be retrieved after creation".into())))?;
+        .ok_or(wasm_error!(WasmErrorInner::Guest("AssessmentControlRegistration could not be retrieved after creation".into())))?;
 
     // debug!("_+_+_+_+_+_+_+_+_+_ Created record: {:#?}", record);
     Ok(record)
 }
 
 #[hdk_extern]
-fn get_assessment_widget_registration(assessment_widget_registration_eh: EntryHash) -> ExternResult<Option<Record>> {
-    let maybe_registration = get(assessment_widget_registration_eh, GetOptions::default())?;
+fn get_assessment_control_registration(assessment_control_registration_eh: EntryHash) -> ExternResult<Option<Record>> {
+    let maybe_registration = get(assessment_control_registration_eh, GetOptions::default())?;
 
     if let Some(registration_record) = maybe_registration {
         Ok(Some(registration_record))
@@ -39,10 +39,10 @@ fn get_assessment_widget_registration(assessment_widget_registration_eh: EntryHa
 }
 
 #[hdk_extern]
-fn get_assessment_widget_registrations(_:()) -> ExternResult<Vec<Record>> {
+fn get_assessment_control_registrations(_:()) -> ExternResult<Vec<Record>> {
     let links = get_links(
         registrations_typed_path()?.path_entry_hash()?,
-        LinkTypes::WidgetRegistration,
+        LinkTypes::AssessmentControlRegistration,
         None,
     )?;
     match links.last() {
@@ -51,7 +51,7 @@ fn get_assessment_widget_registrations(_:()) -> ExternResult<Vec<Record>> {
                 let entry_hash = link.target.into_entry_hash()
                     .ok_or_else(|| wasm_error!(WasmErrorInner::Guest(String::from("Invalid link target"))))?;
 
-                get_assessment_widget_registration(entry_hash)
+                get_assessment_control_registration(entry_hash)
             }).collect();
 
             // Handle the Result and then filter_map to remove None values
@@ -64,10 +64,10 @@ fn get_assessment_widget_registrations(_:()) -> ExternResult<Vec<Record>> {
 }
 
 fn registrations_typed_path() -> ExternResult<TypedPath> {
-    Path::from("widget_registrations").typed(LinkTypes::WidgetRegistration)
+    Path::from("control_registration").typed(LinkTypes::AssessmentControlRegistration)
 }
 
 #[hdk_extern]
-fn delete_assessment_widget_registration(action_hash: ActionHash) -> ExternResult<ActionHash> {
+fn delete_assessment_control_registration(action_hash: ActionHash) -> ExternResult<ActionHash> {
     delete_entry(action_hash)
 }
