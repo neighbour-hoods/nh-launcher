@@ -36,7 +36,7 @@ export interface OutputAssessmentControlDelegate {
 /**
  * Can either be 'input' or 'output'
  */
-export type AssessmentWidgetKind = 'input' | 'output';
+export type AssessmentControlKind = 'input' | 'output';
 
 /**
  * Defines an Assessment Widget in an Applet config
@@ -45,7 +45,7 @@ export type AssessmentWidgetRenderer = {
   name: string,         // Likely appended to the App name in the dashboard configuration screen
   rangeKind: RangeKind,         // Output components must support a range of [-INF, INF] unless it is used with an AVG.
   component: NHDelegateReceiverConstructor<InputAssessmentControlDelegate> | NHDelegateReceiverConstructor<OutputAssessmentControlDelegate>, // Intersection of HTML Element and the delegate interface for
-  kind: AssessmentWidgetKind
+  kind: AssessmentControlKind
 }
 
 /**
@@ -61,7 +61,7 @@ export interface AssessmentControlRegistrationInput {
   controlKey: string,  // keyof an AssessmentWidgetConfigDict
   name: string,
   rangeKind: RangeKind,
-  kind: AssessmentWidgetKind
+  kind: AssessmentControlKind
 }
 
 /**
