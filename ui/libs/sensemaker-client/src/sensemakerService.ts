@@ -93,8 +93,8 @@ export class SensemakerService {
     return this.callZome('get_assessment_tray_config', { resourceDefEh }, 'assessment_tray')
   }
 
-  async setAssessmentWidgetTrayConfig(resourceDefEh: EntryHash, widgetConfigs: Array<AssessmentWidgetBlockConfig>): Promise<Array<EntryHash>> {
-    return this.callZome('set_assessment_tray_config', { resourceDefEh, widgetConfigs }, 'assessment_tray')
+  async setAssessmentWidgetTrayConfig(resourceDefEh: EntryHash, assessmentControlConfigs: Array<AssessmentWidgetBlockConfig>): Promise<Array<EntryHash>> {
+    return this.callZome('set_assessment_tray_config', { resourceDefEh, assessmentControlConfigs }, 'assessment_tray')
   }
 
   async createCulturalContext(culturalContext: CulturalContext): Promise<HolochainRecord> {
