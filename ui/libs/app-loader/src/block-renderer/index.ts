@@ -2,7 +2,7 @@ import {
   NHDelegateReceiver,
   NHDelegateReceiverComponent,
   NHDelegateReceiverConstructor,
-  InputAssessmentWidgetDelegate,
+  InputAssessmentControlDelegate,
   OutputAssessmentWidgetDelegate,
   ResourceBlockDelegate,
   AppBlockDelegate
@@ -130,5 +130,5 @@ export class BlockRenderer<D> extends HTMLElement implements NHDelegateReceiver<
 // Export specialized versions of the BlockRenderer
 export class AppBlockRenderer extends BlockRenderer<AppBlockDelegate> {}
 export class ResourceBlockRenderer extends BlockRenderer<ResourceBlockDelegate> {}
-export class InputAssessmentRenderer extends BlockRenderer<InputAssessmentWidgetDelegate> {}
+export class InputAssessmentRenderer extends BlockRenderer<InputAssessmentControlDelegate> {}
 export class OutputAssessmentRenderer extends BlockRenderer<OutputAssessmentWidgetDelegate> {}

@@ -8,7 +8,7 @@ import {
   Assessment,
   CallbackFn,
   DimensionEh,
-  InputAssessmentWidgetDelegate,
+  InputAssessmentControlDelegate,
   NeighbourhoodInfo,
   OutputAssessmentWidgetDelegate,
   RangeValue,
@@ -135,18 +135,18 @@ export function createOutputAssessmentWidgetDelegate(
 /**
  * Creates an ResourceBlockDelegate to be passed into an resource block
  */
-export function createInputAssessmentWidgetDelegate(
+export function createInputAssessmentControlDelegate(
   sensemakerStore: SensemakerStore,
   dimensionEh: DimensionEh,
   resourceDefEh: ResourceDefEh,
   resourceEh: ResourceEh,
   initialAssessment?: Assessment
-): InputAssessmentWidgetDelegate {
+): InputAssessmentControlDelegate {
   const subscribers = new SubscriberManager()
 
   let assessment: Assessment | undefined = initialAssessment;
 
-  const delegate: InputAssessmentWidgetDelegate = {
+  const delegate: InputAssessmentControlDelegate = {
     /**
      * Used to render the currently selected value for the user
      *
@@ -206,7 +206,7 @@ export function createInputAssessmentWidgetDelegate(
   return delegate;
 }
 
-export class FakeInputAssessmentWidgetDelegate implements InputAssessmentWidgetDelegate {
+export class FakeInputAssessmentControlDelegate implements InputAssessmentControlDelegate {
   public subscribers;
   public assessment: Assessment | undefined
   public latestAssessment: Assessment | undefined

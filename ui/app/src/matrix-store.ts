@@ -44,7 +44,7 @@ import {
   AppletConfigInput,
   AssessmentControlRegistrationInput,
   DimensionEh,
-  InputAssessmentWidgetDelegate,
+  InputAssessmentControlDelegate,
   NeighbourhoodApplet,
   NeighbourhoodAppletRenderers,
   NeighbourhoodInfo,
@@ -89,7 +89,7 @@ import {
   getAppAgentWebsocket,
   createAppDelegate,
   createResourceBlockDelegate,
-  createInputAssessmentWidgetDelegate,
+  createInputAssessmentControlDelegate,
   createOutputAssessmentWidgetDelegate
 } from "@neighbourhoods/app-loader";
 
@@ -451,19 +451,19 @@ export class MatrixStore {
   /**
    * Creates an ResourceBlockDelegate to be passed into an resource block
    */
-  public createInputAssessmentWidgetDelegate(
+  public createInputAssessmentControlDelegate(
     appletInstanceId: Uint8Array,
     dimensionEh: DimensionEh,
     resourceDefEh: ResourceDefEh,
     resourceEh: ResourceEh
-  ): InputAssessmentWidgetDelegate {
+  ): InputAssessmentControlDelegate {
     // Get Neighbourhood id
     // XXX: This seems like a very round-about way of getting the Neighbourhood id & weGroupInfo
     const weGroupId = dnaHash(this.getWeGroupInfoForAppletInstance(appletInstanceId).cell_id);
     const weGroup = get(this._matrix).get(weGroupId);
     const weGroupData = weGroup[0];
 
-    return createInputAssessmentWidgetDelegate(
+    return createInputAssessmentControlDelegate(
       weGroupData.sensemakerStore,
       dimensionEh,
       resourceDefEh,
