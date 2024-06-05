@@ -1,4 +1,4 @@
-import { AssessmentWidgetRegistrationInput, AssessmentWidgetRegistrationUpdateInput } from '#client';
+import { AssessmentWidgetRegistrationInput } from '#client';
 import { AgentPubKey, EntryHash, Record } from "@holochain/client";
 import {
   pause,
@@ -13,7 +13,7 @@ import { setUpAliceandBob } from '../../utils';
 const { test } = pkg;
 
 export default () => {
-  test("Widget registration", async (t) => {
+  test("Assessment Control registration", async (t) => {
     await runScenario(async (scenario) => {
       const {
         alice,
@@ -62,73 +62,73 @@ export default () => {
         await scenario.shareAllAgents();
         await pause(pauseDuration*2);
 
-        // Test 0: Given no registered widgets Then Alice can read all registered widgets and get an empty array
+        // Test 0: Given no registered controls Then Alice can read all registered controls and get an empty array
 
         const getAll1 : Record[] = await callZomeAlice(
-          "widgets",
-          "get_assessment_widget_registrations",
+          "assessment_control",
+          "get_assessment_control_registrations",
           null
         );
         t.deepEqual([], getAll1);
 
-      // Test 1: Alice can create a widget registration entry
+      // Test 1: Alice can create a control registration entry
         // use provider DNA method to get some entry hash for applet_eh
         const installedAppId: string = "applet-test-neighbourhood-13687278ewqr78ewq9r7w8e6rtqwbygvhauigyoqru";
         // create range
         const twentyScaleRangeKind = {
           "Integer": { "min": 0, "max": 20 }
         };
-        const testWidgetRegistration: AssessmentWidgetRegistrationInput = {
+        const testAssessmentControlRegistration: AssessmentWidgetRegistrationInput = {
           appletId: installedAppId,
           widgetKey: 'importance',
-          name: 'Importance Widget',
+          name: 'Importance Control',
           rangeKind: twentyScaleRangeKind,
           kind: 'input'
         };
-        const widgetRegistrationCreationRecord : Record = await callZomeAlice(
-          "widgets",
-          "register_assessment_widget",
-          testWidgetRegistration,
+        const controlRegistrationCreationRecord : Record = await callZomeAlice(
+          "assessment_control",
+          "register_assessment_control",
+          testAssessmentControlRegistration,
           true
         );
-        t.ok(widgetRegistrationCreationRecord, "create a new assessment widget registration");
+        t.ok(controlRegistrationCreationRecord, "create a new assessment control registration");
 
-        const widgetRegistrationCreationEntryRecord = new EntryRecord<AssessmentWidgetRegistrationInput>(widgetRegistrationCreationRecord);
+        const controlRegistrationCreationEntryRecord = new EntryRecord<AssessmentWidgetRegistrationInput>(controlRegistrationCreationRecord);
 
-        t.deepEqual(widgetRegistrationCreationEntryRecord.entry.rangeKind, twentyScaleRangeKind, "created assessment widget registration with the correct range");
+        t.deepEqual(controlRegistrationCreationEntryRecord.entry.rangeKind, twentyScaleRangeKind, "created assessment control registration with the correct range");
 
-        // Test 2: Given a created registration entry Then Alice can read that widget registration entry
+        // Test 2: Given a created registration entry Then Alice can read that control registration entry
 
         const get1 = await callZomeAlice(
-          "widgets",
-          "get_assessment_widget_registration",
-          widgetRegistrationCreationEntryRecord.entryHash
+          "assessment_control",
+          "get_assessment_control_registration",
+          controlRegistrationCreationEntryRecord.entryHash
         );
-        t.ok(get1, "get an assessment widget registration");
+        t.ok(get1, "get an assessment control registration");
 
-        const getWidgetRegistrationEntryRecord = new EntryRecord<AssessmentWidgetRegistrationInput>(get1);
-        t.deepEqual(getWidgetRegistrationEntryRecord.entry.rangeKind, twentyScaleRangeKind, "got assessment widget registration with the correct range");
+        const getAssessmentControlRegistrationEntryRecord = new EntryRecord<AssessmentWidgetRegistrationInput>(get1);
+        t.deepEqual(getAssessmentControlRegistrationEntryRecord.entry.rangeKind, twentyScaleRangeKind, "got assessment control registration with the correct range");
 
-        // Test 3: Given a created registration entry Then Alice can read all registered widgets and get an array of one
+        // Test 3: Given a created registration entry Then Alice can read all registered assessment_control and get an array of one
 
         const getAll2 : Record[] = await callZomeAlice(
-          "widgets",
-          "get_assessment_widget_registrations",
+          "assessment_control",
+          "get_assessment_control_registrations",
           null
         );
         t.equal(1, getAll2.length);
         const firstRecord = new EntryRecord<AssessmentWidgetRegistrationInput>(getAll2[0]);
-        t.deepEqual(firstRecord.entry.rangeKind, twentyScaleRangeKind, "got assessment widget registrations with the correct range");
+        t.deepEqual(firstRecord.entry.rangeKind, twentyScaleRangeKind, "got assessment control registrations with the correct range");
 
 
-        // Test 4: Given a created registration entry Then Alice can delete that widget registration entry
+        // Test 4: Given a created registration entry Then Alice can delete that control registration entry
 
         const delete1 = await callZomeAlice(
-          "widgets",
-          "delete_assessment_widget_registration",
-          widgetRegistrationCreationEntryRecord.actionHash
+          "assessment_control",
+          "delete_assessment_control_registration",
+          controlRegistrationCreationEntryRecord.actionHash
         );
-        t.ok(delete1, "deleted an assessment widget registration");
+        t.ok(delete1, "deleted an assessment control registration");
         await pause(pauseDuration);
 
       } catch (e) {
@@ -138,8 +138,8 @@ export default () => {
 
       // And Then getting all registration entries returns an empty array
       const getAll3 : Record[] = await callZomeAlice(
-        "widgets",
-        "get_assessment_widget_registrations",
+        "assessment_control",
+        "get_assessment_control_registrations",
         null
       );
       t.equal(0, getAll3.length);
