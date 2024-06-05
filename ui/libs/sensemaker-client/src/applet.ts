@@ -100,11 +100,11 @@ export interface NeighbourhoodApplet {
   appletConfig: AppletConfigInput;
   appletRenderers: AppletRenderers;
   resourceRenderers: ResourceRenderers;
-  assessmentWidgets: AssessmentWidgetRenderers;
+  assessmentControls: AssessmentWidgetRenderers;
 }
 
 export interface NeighbourhoodAppletRenderers {
   appletRenderers?: AppletRenderers;
   resourceRenderers?: ResourceRenderers;
-  assessmentWidgets?: AssessmentWidgetRenderers;
+  assessmentControls?: AssessmentWidgetRenderers;
 }

@@ -349,7 +349,7 @@ export class MatrixStore {
     const renderers: NeighbourhoodAppletRenderers = {
       appletRenderers: applet.appletRenderers,
       resourceRenderers: applet.resourceRenderers,
-      assessmentWidgets: applet.assessmentWidgets
+      assessmentControls: applet.assessmentControls
     }
 
     // now that the applet instance renderers have been fetched and instantiated, add them to the AppletInstanceInfo
@@ -1652,9 +1652,9 @@ export class MatrixStore {
         const registeredConfig = await sensemakerStore.registerApplet(appletConfig);
         // console.log('registeredConfig', registeredConfig)
         // console.log('registering widgets to SM store')
-        for (let widgetKey in applet.assessmentWidgets) {
+        for (let widgetKey in applet.assessmentControls) {
           // console.log(widgetKey)
-          const widgetConfig = applet.assessmentWidgets[widgetKey]
+          const widgetConfig = applet.assessmentControls[widgetKey]
           const registration: AssessmentControlRegistrationInput = {
             appletId: installedAppId,
             widgetKey,  // keyof an AssessmentWidgetConfigDict
