@@ -235,11 +235,13 @@ export default () => {
           createResourceDefEntryHash,
           true
         );
+        const createRedDefReadEntryRecord = new EntryRecord<ResourceDef>(createResourceDefReadOutput);
+
+        // Test fails when you include the applet_eh so test separately and encode eh's for string comparison
+        t.equal(encodeHashToBase64(applet_eh), encodeHashToBase64(createRedDefReadEntryRecord.entry.applet_eh))
         t.deepEqual(
-          createResourceDef,
-          decode(
-            (createResourceDefReadOutput.entry as any).Present.entry
-          ) as any
+          { ...createResourceDef, applet_eh: undefined },
+          { ...createRedDefReadEntryRecord.entry, applet_eh: undefined },
         );
 
         // create an assessment on the Post
@@ -684,11 +686,13 @@ export default () => {
           createResourceDefEntryHash,
           true
         );
+        const resourceDefEntryRecord = new EntryRecord<ResourceDef>(createResourceDefReadOutput);
+
+        // Test fails when you include the applet_eh so test separately and encode
+        t.equal(encodeHashToBase64(applet_eh), encodeHashToBase64(resourceDefEntryRecord.entry.applet_eh))
         t.deepEqual(
-          createResourceDef,
-          decode(
-            (createResourceDefReadOutput.entry as any).Present.entry
-          ) as any
+          { ...createResourceDef, applet_eh: undefined },
+          { ...resourceDefEntryRecord.entry, applet_eh: undefined },
         );
 
         // create an assessment on the Post
