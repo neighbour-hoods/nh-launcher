@@ -99,7 +99,7 @@ export type AssessmentWidgetConfig = {
 /**
  * Used to configure the assessment tray,
  */
-export interface AssessmentWidgetBlockConfig {
+export interface AssessmentControlConfig {
   /**
    * This is the control that allows making an assessment and displaying the
    * user's chosen selection if the user can select one of many options.
@@ -117,11 +117,11 @@ export interface AssessmentWidgetBlockConfig {
  */
 export interface AssessmentTrayConfig {
   name: string,
-  assessmentControlConfigs: AssessmentWidgetBlockConfig[]
+  assessmentControlConfigs: AssessmentControlConfig[]
 }
 
 /**
  * This is currently associated with each resource type.
  * In the future, it may be matched by [resource def, context].
  */
-export type AssessmentTrayConfig = AssessmentWidgetBlockConfig[]
+export type AssessmentTrayConfig = AssessmentControlConfig[]

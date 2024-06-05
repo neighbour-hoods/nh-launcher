@@ -2,14 +2,14 @@ import { CSSResult, css, html } from "lit"
 import { property, state } from "lit/decorators.js";
 import { NHComponent, NHTooltip } from '..';
 import NHAssessmentContainer from './assessment-container';
-import { AssessmentWidgetBlockConfig } from '@neighbourhoods/client';
+import { AssessmentControlConfig } from '@neighbourhoods/client';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 
 /**
  */
 export default class NHResourceAssessmentTray extends NHComponent {
   @property()
-  assessmentWidgetTrayConfig: Array<AssessmentWidgetBlockConfig> = []; // Still used for storybook currently
+  assessmentWidgetTrayConfig: Array<AssessmentControlConfig> = []; // Still used for storybook currently
 
   @state()
   expanded: boolean = false;

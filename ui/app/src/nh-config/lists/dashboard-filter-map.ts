@@ -1,6 +1,6 @@
 import {
   Assessment,
-  AssessmentWidgetBlockConfig,
+  AssessmentControlConfig,
   AssessmentControlRenderer,
   CulturalContext,
   Dimension,
@@ -73,7 +73,7 @@ export class DashboardFilterMap extends NHComponent {
   @property() selectedContextEhB64!: EntryHashB64;
   @property() resourceDefEntries!: object[];
   
-  @state() private _widgetConfigBlocksForResourceDef: {EntryHashB64: AssessmentWidgetBlockConfig[]} | {} = {};
+  @state() private _widgetConfigBlocksForResourceDef: {EntryHashB64: AssessmentControlConfig[]} | {} = {};
   @state() private _dimensionEntries!: EntryRecord<Dimension>[];
   @state() private _methodEntries!: Method[];
   @state() private _objectiveDimensionNames: string[] = [];
@@ -347,8 +347,8 @@ export class DashboardFilterMap extends NHComponent {
   async fetchWidgetConfigBlocks() {
     if (!this._sensemakerStore || !this.resourceDefEntries) return;
     try {
-      const configs = {} as {EntryHashB64: AssessmentWidgetBlockConfig[]};
-      serializeAsyncActions<Array<AssessmentWidgetBlockConfig>>([...this.resourceDefEntries.map(
+      const configs = {} as {EntryHashB64: AssessmentControlConfig[]};
+      serializeAsyncActions<Array<AssessmentControlConfig>>([...this.resourceDefEntries.map(
         (resourceDef: any) => {
           return async () => { return Promise.resolve(this._widgetConfigBlocksForResourceDef[encodeHashToBase64(resourceDef.resource_def_eh) as EntryHashB64] = await this._sensemakerStore.getAssessmentTrayConfig(resourceDef.resource_def_eh))}
         }
