@@ -1662,7 +1662,7 @@ export class MatrixStore {
             rangeKind: widgetConfig.rangeKind,
             kind: widgetConfig.kind
           }
-          registrationActions.push(() => sensemakerStore.registerWidget(registration))
+          registrationActions.push(() => sensemakerStore.registerAssessmentControl(registration))
         }
         serializeAsyncActions(registrationActions);
       } catch (e) {
