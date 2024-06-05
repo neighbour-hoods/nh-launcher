@@ -16,7 +16,7 @@ import { EntryRecord } from '@holochain-open-dev/utils';
  * AppAgentClient which would give the assessment controls complete access to all
  * the sensemaker data.
  */
-export interface InputAssessmentWidgetDelegate {
+export interface InputAssessmentControlDelegate {
   getLatestAssessmentForUser(): Promise<Assessment | undefined> // get the latest assessment value the user created (or none if never assessed or invalidated)
   subscribe(_:CallbackFn): UnsubscribeFn // subscribe to when the current assessment changes
   createAssessment(value: RangeValue): Promise<EntryRecord<Assessment>> // create an assessment
@@ -45,7 +45,7 @@ export type AssessmentWidgetKind = 'input' | 'output';
 export type AssessmentWidgetRenderer = {
   name: string,         // Likely appended to the App name in the dashboard configuration screen
   rangeKind: RangeKind,         // Output components must support a range of [-INF, INF] unless it is used with an AVG.
-  component: NHDelegateReceiverConstructor<InputAssessmentWidgetDelegate> | NHDelegateReceiverConstructor<OutputAssessmentWidgetDelegate>, // Intersection of HTML Element and the delegate interface for
+  component: NHDelegateReceiverConstructor<InputAssessmentControlDelegate> | NHDelegateReceiverConstructor<OutputAssessmentWidgetDelegate>, // Intersection of HTML Element and the delegate interface for
   kind: AssessmentWidgetKind
 }
 

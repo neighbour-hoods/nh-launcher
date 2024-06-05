@@ -36,7 +36,7 @@ import {
   AssessmentWidgetRenderer,
   Constructor,
   Dimension,
-  InputAssessmentWidgetDelegate,
+  InputAssessmentControlDelegate,
   Method,
   SensemakerStore,
 } from '@neighbourhoods/client';
@@ -44,7 +44,7 @@ import {repeat} from 'lit/directives/repeat.js';
 import { InputAssessmentRenderer } from '@neighbourhoods/app-loader';
 import { derived } from 'svelte/store';
 import { Applet } from '../../types';
-import { FakeInputAssessmentWidgetDelegate } from '@neighbourhoods/app-loader';
+import { FakeInputAssessmentControlDelegate } from '@neighbourhoods/app-loader';
 import { dimensionIncludesControlRange } from '../../utils';
 import { ResourceBlockRenderer } from '@neighbourhoods/app-loader';
 
@@ -93,7 +93,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   @state() selectedInputDimensionEh: EntryHash | undefined; // used to filter for the 3rd select
 
   @state() _workingWidgetControls: AssessmentWidgetBlockConfig[] = [];
-  @state() _workingWidgetControlRendererCache: Map<string, (delegate?: InputAssessmentWidgetDelegate, component?: unknown) => TemplateResult> = new Map();
+  @state() _workingWidgetControlRendererCache: Map<string, (delegate?: InputAssessmentControlDelegate, component?: unknown) => TemplateResult> = new Map();
 
   @state() private _trayName!: string; // Text input value for the name
   @state() private _trayNameFieldErrored: boolean = false; // Flag for errored status on name field
@@ -470,7 +470,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     const selectedWidget = widgets?.find(widget => widget.name == this._form._model.assessment_widget);
     this.selectedWidgetKey = selectedWidget?.widgetKey;
 
-    this.placeHolderWidget = this?._workingWidgetControlRendererCache.get(this.selectedWidgetKey as string) as (delegate?: InputAssessmentWidgetDelegate) => TemplateResult;
+    this.placeHolderWidget = this?._workingWidgetControlRendererCache.get(this.selectedWidgetKey as string) as (delegate?: InputAssessmentControlDelegate) => TemplateResult;
 
     this.selectedInputDimensionEh = this._form._model.input_dimension;
 
@@ -546,10 +546,10 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                           const possibleRenderers : ({string: AssessmentWidgetRenderer | ResourceBlockRenderer})[] = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)];
                           const renderer = possibleRenderers[widget.widgetKey];
                           if(!renderer || renderer?.kind !== 'input') throw new Error('Could not fill using widget renderer as none could be found')
-                          let renderBlock = (delegate?: InputAssessmentWidgetDelegate, component?: any) => html`
+                          let renderBlock = (delegate?: InputAssessmentControlDelegate, component?: any) => html`
                             <input-assessment-renderer slot="assessment-control"
                               .component=${component || renderer.component}
-                              .nhDelegate=${delegate || new FakeInputAssessmentWidgetDelegate()}
+                              .nhDelegate=${delegate || new FakeInputAssessmentControlDelegate()}
                             ></input-assessment-renderer>`
 
                           this._workingWidgetControlRendererCache?.set(widget.widgetKey, renderBlock)

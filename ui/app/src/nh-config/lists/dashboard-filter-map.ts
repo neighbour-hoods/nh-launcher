@@ -4,7 +4,7 @@ import {
   AssessmentWidgetRenderer,
   CulturalContext,
   Dimension,
-  InputAssessmentWidgetDelegate,
+  InputAssessmentControlDelegate,
   Method,
   OutputAssessmentWidgetDelegate,
   ResourceDef,
@@ -23,7 +23,7 @@ import { AssessmentTableRecord, AssessmentTableType } from '../types';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import { cleanResourceNameForUI, generateHeaderHTML } from '../../elements/components/helpers/functions';
 import { derived } from 'svelte/store';
-import { compareUint8Arrays, createInputAssessmentWidgetDelegate, InputAssessmentRenderer } from '../../../../libs/app-loader';
+import { compareUint8Arrays, createInputAssessmentControlDelegate, InputAssessmentRenderer } from '../../../../libs/app-loader';
 import { appletInstanceInfosContext } from '../../context';
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 
@@ -198,9 +198,9 @@ export class DashboardFilterMap extends NHComponent {
     });
   }
 
-  getControlForAssessment(assessment: Assessment) : InputAssessmentWidgetDelegate | void {
+  getControlForAssessment(assessment: Assessment) : InputAssessmentControlDelegate | void {
     try {
-      return createInputAssessmentWidgetDelegate(this._sensemakerStore, assessment.dimension_eh, assessment.resource_def_eh, assessment.resource_eh, assessment)
+      return createInputAssessmentControlDelegate(this._sensemakerStore, assessment.dimension_eh, assessment.resource_def_eh, assessment.resource_eh, assessment)
     } catch (error) {
       console.error('Error creating delegate: ', error)
     }
