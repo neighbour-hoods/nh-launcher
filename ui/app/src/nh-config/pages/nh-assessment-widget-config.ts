@@ -32,7 +32,7 @@ import { property, query, queryAll, state } from 'lit/decorators.js';
 import {
   AssessmentWidgetBlockConfig,
   AssessmentWidgetConfig,
-  AssessmentWidgetRegistrationInput,
+  AssessmentControlRegistrationInput,
   AssessmentWidgetRenderer,
   Constructor,
   Dimension,
@@ -100,10 +100,10 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   @state() private _trayName!: string; // Text input value for the name
   @state() private _trayNameFieldErrored: boolean = false; // Flag for errored status on name field
   
-  // AssessmentWidgetBlockConfig (group) and AssessmentWidgetRegistrationInputs (individual)
+  // AssessmentWidgetBlockConfig (group) and AssessmentControlRegistrationInputs (individual)
   @state() private _fetchedConfig!: AssessmentWidgetBlockConfig[];
   @state() private _updateToFetchedConfig!: AssessmentWidgetBlockConfig[];
-  @state() private _registeredWidgets: Record<EntryHashB64, AssessmentWidgetRegistrationInput> = {};
+  @state() private _registeredWidgets: Record<EntryHashB64, AssessmentControlRegistrationInput> = {};
 
   // Derived from _fetchedConfig
   @state() configuredInputWidgets!: AssessmentWidgetBlockConfig[];
@@ -525,7 +525,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     `
   }
 
-  private renderMainForm(foundEditableWidget?: AssessmentWidgetRegistrationInput | null, foundEditableWidgetConfig?: AssessmentWidgetConfig | null): TemplateResult {
+  private renderMainForm(foundEditableWidget?: AssessmentControlRegistrationInput | null, foundEditableWidgetConfig?: AssessmentWidgetConfig | null): TemplateResult {
     return html`
       <nh-form
         class="responsive"
@@ -542,12 +542,12 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 selectOptions: (() =>
                   this?._registeredWidgets && this?._appletInstanceRenderers.value
                     ? Object.values(this._registeredWidgets)!
-                      .filter((widget: AssessmentWidgetRegistrationInput) => {
+                      .filter((widget: AssessmentControlRegistrationInput) => {
                         const linkedResourceDefApplet = Object.values(this._currentAppletInstances.value).find(applet => compareUint8Arrays(applet.appletId, this.resourceDef.applet_eh))
                         const fromLinkedApplet = !!linkedResourceDefApplet && (linkedResourceDefApplet.appInfo.installed_app_id == widget.appletId)
                         return fromLinkedApplet && widget.kind == "input"
                       })
-                      .map((widget: AssessmentWidgetRegistrationInput) => {
+                      .map((widget: AssessmentControlRegistrationInput) => {
                           const possibleRenderers : ({string: AssessmentWidgetRenderer | ResourceBlockRenderer})[] = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)];
                           const renderer = possibleRenderers[widget.widgetKey];
                           if(!renderer || renderer?.kind !== 'input') throw new Error('Could not fill using widget renderer as none could be found')
