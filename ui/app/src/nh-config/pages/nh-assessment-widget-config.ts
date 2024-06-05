@@ -451,8 +451,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     try {
       await (
         this.sensemakerStore as SensemakerStore
-      ).setAssessmentWidgetTrayConfig(resource_def_eh, this.getCombinedWorkingAndFetchedWidgets());
-      console.log('successfully set the widget tray config');
+      ).setAssessmentTrayConfig(resource_def_eh, this.getCombinedWorkingAndFetchedWidgets());
     } catch (error) {
       return Promise.reject('Error setting assessment widget config');
     }
@@ -803,7 +802,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   async fetchExistingWidgetConfigBlock() {
     if (!this.sensemakerStore || !this.resourceDef) return;
     try {
-      this._fetchedConfig = await this.sensemakerStore.getAssessmentWidgetTrayConfig(
+      this._fetchedConfig = await this.sensemakerStore.getAssessmentTrayConfig(
         this.resourceDef?.resource_def_eh,
       );
       console.log('fetched persisted widget config block :>> ', this._fetchedConfig);

@@ -395,8 +395,8 @@ export class SensemakerStore {
     return contextResult;
   }
 
-  async getAssessmentWidgetTrayConfig(resourceDefEh: EntryHash): Promise<Array<AssessmentWidgetBlockConfig>> {
-    return await this.service.getAssessmentWidgetTrayConfig(resourceDefEh)
+  async getAssessmentTrayConfig(resourceDefEh: EntryHash): Promise<Array<AssessmentWidgetBlockConfig>> {
+    return await this.service.getAssessmentTrayConfig(resourceDefEh)
   }
 
   async setAssessmentWidgetTrayConfig(resourceDefEh: EntryHash, widgetConfigs: Array<AssessmentWidgetBlockConfig>): Promise<Array<EntryHash>> {
