@@ -118,11 +118,11 @@ export class SensemakerService {
   }
   
   async registerWidget(assessmentControlRegistration: AssessmentWidgetRegistrationInput) : Promise<HolochainRecord> {
-    return this.callZome('register_assessment_control', assessmentControlRegistration, 'assessment_control');
+    return this.callZome('register_assessment_control', assessmentControlRegistration, 'assessment_tray');
   }
 
   async getRegisteredWidgets(): Promise<Array<HolochainRecord>> {
-    return this.callZome('get_assessment_control_registrations', null, 'assessment_control');
+    return this.callZome('get_assessment_control_registrations', null, 'assessment_tray');
   }
 
   private callZome(fn_name: string, payload: any, zomeName = this.zomeName) {
