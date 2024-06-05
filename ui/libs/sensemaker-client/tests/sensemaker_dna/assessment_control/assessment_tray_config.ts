@@ -73,7 +73,7 @@ export default () => {
         );
 
         let getEmpty: AssessmentWidgetTrayConfig = await callZomeAlice(
-          "widgets",
+          "assessment_controls",
           "get_assessment_tray_config",
           dummyEntryHash
         );
@@ -106,7 +106,7 @@ export default () => {
         };
 
         const create1 = await callZomeAlice(
-          "widgets",
+          "assessment_controls",
           "set_assessment_tray_config",
           {
             name: 'test config',
@@ -120,7 +120,7 @@ export default () => {
 
         // read config back out & check for correctness
         const read1 = await callZomeBob(
-          "widgets",
+          "assessment_controls",
           "get_assessment_tray_config",
           entryRecordCreate1.entryHash
         );
@@ -133,7 +133,7 @@ export default () => {
         // assert 'permission denied' error, only the CA can create
         try {
           let _config: AssessmentWidgetTrayConfig = await callZomeBob(
-            "widgets",
+            "assessment_controls",
             "set_assessment_tray_config",
             {
               name: 'test config',
@@ -144,12 +144,12 @@ export default () => {
           //@ts-ignore
           console.info(e.message)
           //@ts-ignore
-          t.ok(e.message.match("only the community activator can create this entry"), "only network CA can configure resource widget trays; more complex permission structures planned in future");
+          t.ok(e.message.match("only the community activator can create this entry"), "only network CA can configure assessment trays; more complex permission structures planned in future");
         }
 
         // get default when there is none set
         const getDefault1 = await callZomeAlice(
-          "widgets",
+          "assessment_controls",
           "get_default_assessment_tray_config_for_resource_def",
           dummyEntryHash,
         );
@@ -158,7 +158,7 @@ export default () => {
 
         // set default
         const setDefault1 = await callZomeAlice(
-          "widgets",
+          "assessment_controls",
           "set_default_assessment_tray_config_for_resource_def",
           {
             resourceDefEh: dummyEntryHash,
@@ -170,7 +170,7 @@ export default () => {
 
         // get default when there is one set
         const getDefault2 = await callZomeAlice(
-          "widgets",
+          "assessment_controls",
           "get_default_assessment_tray_config_for_resource_def",
           dummyEntryHash,
         );
@@ -211,7 +211,7 @@ export default () => {
         };
 
         const create2 = await callZomeAlice(
-          "widgets",
+          "assessment_controls",
           "set_assessment_tray_config",
           {
             name: 'test config 2',
@@ -225,7 +225,7 @@ export default () => {
 
         // set default again to the new entry
         const setDefault2 = await callZomeAlice(
-          "widgets",
+          "assessment_controls",
           "set_default_assessment_tray_config_for_resource_def",
           {
             resourceDefEh: dummyEntryHash, // keep this the same
@@ -236,7 +236,7 @@ export default () => {
 
         // get default when a new one was set
         const getDefault3 = await callZomeAlice(
-          "widgets",
+          "assessment_controls",
           "get_default_assessment_tray_config_for_resource_def",
           dummyEntryHash,
         );
