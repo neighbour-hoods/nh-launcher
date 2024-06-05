@@ -9,7 +9,7 @@ import {
 import { EntryRecord } from '@holochain-open-dev/utils';
 
 /**
- * The minimal interface needed for an assessment widget.
+ * The minimal interface needed for an assessment control.
  *
  * We can create objects that conform to this interface and provide a limited set
  * of functions which can be used to act on assessments instead of passing in the
@@ -59,7 +59,7 @@ export type AssessmentWidgetRenderers = Record<string, AssessmentWidgetRenderer>
  */
 export interface AssessmentWidgetRegistrationInput {
   appletId: string, // Applet id
-  widgetKey: string,  // keyof an AssessmentWidgetConfigDict
+  controlKey: string,  // keyof an AssessmentWidgetConfigDict
   name: string,
   rangeKind: RangeKind,
   kind: AssessmentWidgetKind
@@ -101,15 +101,15 @@ export type AssessmentWidgetConfig = {
  */
 export interface AssessmentWidgetBlockConfig {
   /**
-   * This is the widget that allows making an assessment and displaying the
+   * This is the control that allows making an assessment and displaying the
    * user's chosen selection if the user can select one of many options.
    */
-  inputAssessmentWidget: AssessmentWidgetConfig,
+  inputAssessmentControl: AssessmentWidgetConfig,
   /**
-   * This is the widget that displays the computed result, for the case where
+   * This is the control that displays the computed result, for the case where
    * output and input and separate, as in the Todo applet.
    */
-  outputAssessmentWidget: AssessmentWidgetConfig
+  outputAssessmentControl: AssessmentWidgetConfig
 }
 
 /**
@@ -117,7 +117,7 @@ export interface AssessmentWidgetBlockConfig {
  */
 export interface AssessmentWidgetTrayConfig {
   name: string,
-  assessmentWidgetBlocks: AssessmentWidgetBlockConfig[]
+  assessmentControlConfigs: AssessmentWidgetBlockConfig[]
 }
 
 /**
