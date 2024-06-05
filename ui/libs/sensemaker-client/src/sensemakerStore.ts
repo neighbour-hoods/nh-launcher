@@ -440,8 +440,8 @@ export class SensemakerStore {
     return appletConfig;
   }
 
-  async registerWidget(assessmentControlRegistration: AssessmentControlRegistrationInput): Promise<AssessmentControlRegistrationInput> {
-    const result = await this.service.registerWidget(assessmentControlRegistration);
+  async registerAssessmentControl(assessmentControlRegistration: AssessmentControlRegistrationInput): Promise<AssessmentControlRegistrationInput> {
+    const result = await this.service.registerAssessmentControl(assessmentControlRegistration);
     return new EntryRecord<AssessmentControlRegistrationInput>(result).entry
   }
 
