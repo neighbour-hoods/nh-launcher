@@ -65,7 +65,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
       //@ts-ignore
         ? Object.fromEntries(Object.entries(appletInstanceInfos).map(([appletEh, appletInfo]) => {
           if(typeof appletInfo?.gui == 'undefined') return;
-          return [appletEh, {...(appletInfo as any)?.gui?.resourceRenderers, ...(appletInfo as any).gui.assessmentWidgets}]
+          return [appletEh, {...(appletInfo as any)?.gui?.resourceRenderers, ...(appletInfo as any).gui.assessmentControls}]
         }))
         : null
     }),
