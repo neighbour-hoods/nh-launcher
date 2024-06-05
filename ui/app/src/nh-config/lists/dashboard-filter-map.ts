@@ -1,7 +1,7 @@
 import {
   Assessment,
   AssessmentWidgetBlockConfig,
-  AssessmentWidgetRenderer,
+  AssessmentControlRenderer,
   CulturalContext,
   Dimension,
   InputAssessmentControlDelegate,
@@ -28,7 +28,7 @@ import { appletInstanceInfosContext } from '../../context';
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 
 type DecoratorProps = {
-  renderer: AssessmentWidgetRenderer,
+  renderer: AssessmentControlRenderer,
   delegate: OutputAssessmentControlDelegate
 }
 
@@ -239,7 +239,7 @@ export class DashboardFilterMap extends NHComponent {
           if(!controls) throw new Error('Could not find a widget control in the widget config block that matches your assessment dimension');
 
           const inputControlName = controls.inputAssessmentWidget.componentName;
-          const controlRenderer = (Object.values(linkedResourceDefRenderers) as AssessmentWidgetRenderer[]).find((renderer: AssessmentWidgetRenderer) => renderer.name == inputControlName);
+          const controlRenderer = (Object.values(linkedResourceDefRenderers) as AssessmentControlRenderer[]).find((renderer: AssessmentControlRenderer) => renderer.name == inputControlName);
           if(!controlRenderer) throw new Error('Could not find a renderer for the widget config block that matches your assessment dimension');
 
           baseRecord[dimensionEntry.entry.name] = {

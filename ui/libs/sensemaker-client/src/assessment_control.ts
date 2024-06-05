@@ -41,7 +41,7 @@ export type AssessmentControlKind = 'input' | 'output';
 /**
  * Defines an Assessment Widget in an Applet config
  */
-export type AssessmentWidgetRenderer = {
+export type AssessmentControlRenderer = {
   name: string,         // Likely appended to the App name in the dashboard configuration screen
   rangeKind: RangeKind,         // Output components must support a range of [-INF, INF] unless it is used with an AVG.
   component: NHDelegateReceiverConstructor<InputAssessmentControlDelegate> | NHDelegateReceiverConstructor<OutputAssessmentControlDelegate>, // Intersection of HTML Element and the delegate interface for
@@ -51,7 +51,7 @@ export type AssessmentWidgetRenderer = {
 /**
  * Defines the different assessment control renderers by name
  */
-export type AssessmentControlRenderers = Record<string, AssessmentWidgetRenderer>
+export type AssessmentControlRenderers = Record<string, AssessmentControlRenderer>
 
 /**
  * Defines the shape of the data sent to the sensemaker to register a an assessment control

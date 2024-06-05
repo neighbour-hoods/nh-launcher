@@ -33,7 +33,7 @@ import {
   AssessmentWidgetBlockConfig,
   AssessmentWidgetConfig,
   AssessmentControlRegistrationInput,
-  AssessmentWidgetRenderer,
+  AssessmentControlRenderer,
   Constructor,
   Dimension,
   InputAssessmentControlDelegate,
@@ -548,7 +548,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                         return fromLinkedApplet && widget.kind == "input"
                       })
                       .map((widget: AssessmentControlRegistrationInput) => {
-                          const possibleRenderers : ({string: AssessmentWidgetRenderer | ResourceBlockRenderer})[] = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)];
+                          const possibleRenderers : ({string: AssessmentControlRenderer | ResourceBlockRenderer})[] = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)];
                           const renderer = possibleRenderers[widget.controlKey];
                           if(!renderer || renderer?.kind !== 'input') throw new Error('Could not fill using widget renderer as none could be found')
                           let renderBlock = (delegate?: InputAssessmentControlDelegate, component?: any) => html`
@@ -571,7 +571,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 required: true,
                 handleInputChangeOverload: (_e, model) => { // Update the currently editable widget constrol renderer component
                   if(this.editMode) {
-                    const possibleRenderers : ({string: AssessmentWidgetRenderer | ResourceBlockRenderer})[] = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)];
+                    const possibleRenderers : ({string: AssessmentControlRenderer | ResourceBlockRenderer})[] = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)];
                     const widget = Object.values(this._registeredWidgets)?.find(widget=> widget.name == model.assessment_widget);
                     if(!widget?.controlKey || widget?.kind !== 'input' || !(possibleRenderers[widget.controlKey])) throw new Error('Could not update currently editable widget control')
                     const renderer = possibleRenderers[widget.controlKey];
