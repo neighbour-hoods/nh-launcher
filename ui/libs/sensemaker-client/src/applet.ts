@@ -6,7 +6,7 @@ import { ConfigResourceDef } from "./resourceDef";
 import { Range } from "./range";
 import { SensemakerStore } from "./sensemakerStore";
 import { NHDelegateReceiverConstructor } from "./delegate";
-import { AssessmentWidgetRenderers } from "./widget";
+import { AssessmentWidgetRenderers } from "./assessment_control";
 
 /**
  * Logo and name of Neighbourhood
@@ -94,7 +94,7 @@ export type ResourceRenderers = Record<string, NHDelegateReceiverConstructor<Res
 
 /**
  * Main interface for applets, allows exporting the config, applet renderers,
- * resource renderers, and assessment widgets.
+ * resource renderers, and assessment controls.
  */
 export interface NeighbourhoodApplet {
   appletConfig: AppletConfigInput;

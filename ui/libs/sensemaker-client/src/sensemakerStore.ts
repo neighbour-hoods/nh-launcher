@@ -48,8 +48,6 @@ export class SensemakerStore {
 
   _resourceAssessments: Writable<{ [entryHash: string]: Array<Assessment> }> = writable({});
 
-  // _widgetRegistry: Writable<WidgetRegistry> = writable({});
-
   _activeMethod: Writable<{
     [resourceDefEh: string]: EntryHashB64 // mapping from resourceDefEh to active methodEh
   }> = writable({});
@@ -103,16 +101,9 @@ export class SensemakerStore {
     return derived(this._contextResults, contextResults => contextResults)
   }
 
-  // widgetRegistry() {
-  //   return derived(this._widgetRegistry, widgetRegistry => widgetRegistry)
-  // }
-
   activeMethod() {
     return derived(this._activeMethod, activeMethod => activeMethod)
   }
-  // methodDimensionMapping() {
-  //   return derived(this._methodDimensionMapping, methodDimensionMapping => methodDimensionMapping)
-  // }
 
   isAssessedByMeAlongDimension(resource_eh: EntryHashB64, dimension_eh: EntryHashB64) {
     return derived(this._resourceAssessments, resourceAssessments => {
@@ -397,8 +388,8 @@ export class SensemakerStore {
     return await this.service.getAssessmentWidgetTrayConfig(resourceDefEh)
   }
 
-  async setAssessmentWidgetTrayConfig(resourceDefEh: EntryHash, widgetConfigs: Array<AssessmentWidgetBlockConfig>): Promise<Boolean> {
-    await this.service.setAssessmentWidgetTrayConfig(resourceDefEh, widgetConfigs) // returns an array of config hashes, but not useful as yet
+  async setAssessmentWidgetTrayConfig(resourceDefEh: EntryHash, assessmentControlConfigs: Array<AssessmentWidgetBlockConfig>): Promise<Boolean> {
+    await this.service.setAssessmentWidgetTrayConfig(resourceDefEh, assessmentControlConfigs) // returns an array of config hashes, but not useful as yet
     return true
   }
 
@@ -439,8 +430,8 @@ export class SensemakerStore {
     return appletConfig;
   }
 
-  async registerWidget(widgetRegistration: AssessmentWidgetRegistrationInput): Promise<AssessmentWidgetRegistrationInput> {
-    const result = await this.service.registerWidget(widgetRegistration);
+  async registerWidget(assessmentControlRegistration: AssessmentWidgetRegistrationInput): Promise<AssessmentWidgetRegistrationInput> {
+    const result = await this.service.registerWidget(assessmentControlRegistration);
     return new EntryRecord<AssessmentWidgetRegistrationInput>(result).entry
   }
 

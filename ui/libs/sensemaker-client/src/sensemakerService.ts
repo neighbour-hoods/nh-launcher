@@ -90,11 +90,11 @@ export class SensemakerService {
   }
 
   async getAssessmentWidgetTrayConfig(resourceDefEh: EntryHash): Promise<Array<AssessmentWidgetBlockConfig>> {
-    return this.callZome('get_assessment_widget_tray_config', { resourceDefEh }, 'widgets')
+    return this.callZome('get_assessment_tray_config', { resourceDefEh }, 'assessment_tray')
   }
 
   async setAssessmentWidgetTrayConfig(resourceDefEh: EntryHash, widgetConfigs: Array<AssessmentWidgetBlockConfig>): Promise<Array<EntryHash>> {
-    return this.callZome('set_assessment_widget_tray_config', { resourceDefEh, widgetConfigs }, 'widgets')
+    return this.callZome('set_assessment_tray_config', { resourceDefEh, widgetConfigs }, 'assessment_tray')
   }
 
   async createCulturalContext(culturalContext: CulturalContext): Promise<HolochainRecord> {
@@ -117,12 +117,12 @@ export class SensemakerService {
     return this.callZome('register_applet', appletConfig);
   }
   
-  async registerWidget(widgetRegistration: AssessmentWidgetRegistrationInput) : Promise<HolochainRecord> {
-    return this.callZome('register_assessment_widget', widgetRegistration, 'widgets');
+  async registerWidget(assessmentControlRegistration: AssessmentWidgetRegistrationInput) : Promise<HolochainRecord> {
+    return this.callZome('register_assessment_control', assessmentControlRegistration, 'assessment_control');
   }
 
   async getRegisteredWidgets(): Promise<Array<HolochainRecord>> {
-    return this.callZome('get_assessment_widget_registrations', null, 'widgets');
+    return this.callZome('get_assessment_control_registrations', null, 'assessment_control');
   }
 
   private callZome(fn_name: string, payload: any, zomeName = this.zomeName) {
