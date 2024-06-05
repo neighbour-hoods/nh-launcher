@@ -1,4 +1,4 @@
-import { DnaSource, Record, ActionHash, EntryHash, AppEntryDef, Create } from "@holochain/client";
+import { DnaSource, Record, ActionHash, EntryHash, AppEntryDef } from "@holochain/client";
 import {
   pause,
   runScenario,
@@ -8,7 +8,7 @@ import {
   cleanAllConductors,
 } from "@holochain/tryorama";
 import { decode } from "@msgpack/msgpack";
-import { AppletConfig, AppletConfigInput, Assessment, CreateAssessmentInput, Method, RangeValueInteger } from "#client";
+import { AppletConfig, AppletConfigInput, Assessment, CreateAssessmentInput, Dimension, Method, RangeValueInteger } from "#client";
 import { ok } from "assert";
 import pkg from "tape-promise/tape";
 import { installAgent, sampleAppletConfig, setUpAliceandBob } from "../../utils";
@@ -129,10 +129,45 @@ export default () => {
         // Wait for the created entry to be propagated to the other node.
         await pause(pauseDuration);
 
+
+        // Create range and dimensions now not created in register_applet
+        const integerRange = {
+          name: "10-scale",
+          kind: {
+            Integer: { min: 0, max: 10 },
+          },
+        };
+
+        const rangeRecord: Record = await callZomeAlice(
+          "sensemaker",
+          "create_range",
+          integerRange,
+          true
+        );
+        const rangeEntryRecord = new EntryRecord<Range>(rangeRecord);
+        const rangeHash = rangeEntryRecord.entryHash;
+
+        const createDimension = {
+          name: "likeness",
+          range_eh: rangeHash,
+          computed: false,
+        };
+
+        const createDimensionRecord: Record = await callZomeAlice(
+          "sensemaker",
+          "create_dimension",
+          createDimension,
+          true
+        );
+        const likenessDimensionEntryHash = new EntryRecord<Dimension>(
+          createDimensionRecord
+        ).entryHash;
+        t.ok(likenessDimensionEntryHash);
+
         // create an assessment on the Post
         const createP1Assessment: CreateAssessmentInput = {
           value: { Integer: 4 },
-          dimension_eh: appletConfig.dimensions["likeness"],
+          dimension_eh: likenessDimensionEntryHash,
           resource_eh: createPostEntryHash,
           resource_def_eh: appletConfig.resource_defs["angryPost"],
           maybe_input_dataset: null,
@@ -153,7 +188,7 @@ export default () => {
         // create a second assessment on the Post
         const createP1Assessment2: CreateAssessmentInput = {
           value: { Integer: 4 },
-          dimension_eh: appletConfig.dimensions["likeness"],
+          dimension_eh: likenessDimensionEntryHash,
           resource_eh: createPostEntryHash,
           resource_def_eh: appletConfig.resource_defs["angryPost"],
           maybe_input_dataset: null,
@@ -170,7 +205,7 @@ export default () => {
 
         const createP2Assessment: CreateAssessmentInput = {
           value: { Integer: 3 },
-          dimension_eh: appletConfig.dimensions["likeness"],
+          dimension_eh: likenessDimensionEntryHash,
           resource_eh: createPostEntryHash2,
           resource_def_eh: appletConfig.resource_defs["angryPost"],
           maybe_input_dataset: null,
@@ -188,7 +223,7 @@ export default () => {
         // create an assessment on the Post
         const createP2Assessment2: CreateAssessmentInput = {
           value: { Integer: 3 },
-          dimension_eh: appletConfig.dimensions["likeness"],
+          dimension_eh: likenessDimensionEntryHash,
           resource_eh: createPostEntryHash2,
           resource_def_eh: appletConfig.resource_defs["angryPost"],
           maybe_input_dataset: null,
@@ -209,7 +244,7 @@ export default () => {
         // create a second assessment on the Post
         const createP3Assessment: CreateAssessmentInput = {
           value: { Integer: 2 },
-          dimension_eh: appletConfig.dimensions["likeness"],
+          dimension_eh: likenessDimensionEntryHash,
           resource_eh: createPostEntryHash3,
           resource_def_eh: appletConfig.resource_defs["angryPost"],
           maybe_input_dataset: null,
@@ -226,7 +261,7 @@ export default () => {
 
         const createP3Assessment2: CreateAssessmentInput = {
           value: { Integer: 2 },
-          dimension_eh: appletConfig.dimensions["likeness"],
+          dimension_eh: likenessDimensionEntryHash,
           resource_eh: createPostEntryHash3,
           resource_def_eh: appletConfig.resource_defs["angryPost"],
           maybe_input_dataset: null,
