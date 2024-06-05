@@ -65,7 +65,7 @@ export default () => {
         // Test 0: Given no registered controls Then Alice can read all registered controls and get an empty array
 
         const getAll1 : Record[] = await callZomeAlice(
-          "assessment_control",
+          "assessment_tray",
           "get_assessment_control_registrations",
           null
         );
@@ -80,13 +80,13 @@ export default () => {
         };
         const testAssessmentControlRegistration: AssessmentWidgetRegistrationInput = {
           appletId: installedAppId,
-          widgetKey: 'importance',
+          controlKey: 'importance',
           name: 'Importance Control',
           rangeKind: twentyScaleRangeKind,
           kind: 'input'
         };
         const controlRegistrationCreationRecord : Record = await callZomeAlice(
-          "assessment_control",
+          "assessment_tray",
           "register_assessment_control",
           testAssessmentControlRegistration,
           true
@@ -100,7 +100,7 @@ export default () => {
         // Test 2: Given a created registration entry Then Alice can read that control registration entry
 
         const get1 = await callZomeAlice(
-          "assessment_control",
+          "assessment_tray",
           "get_assessment_control_registration",
           controlRegistrationCreationEntryRecord.entryHash
         );
@@ -109,10 +109,10 @@ export default () => {
         const getAssessmentControlRegistrationEntryRecord = new EntryRecord<AssessmentWidgetRegistrationInput>(get1);
         t.deepEqual(getAssessmentControlRegistrationEntryRecord.entry.rangeKind, twentyScaleRangeKind, "got assessment control registration with the correct range");
 
-        // Test 3: Given a created registration entry Then Alice can read all registered assessment_control and get an array of one
+        // Test 3: Given a created registration entry Then Alice can read all registered assessment_tray and get an array of one
 
         const getAll2 : Record[] = await callZomeAlice(
-          "assessment_control",
+          "assessment_tray",
           "get_assessment_control_registrations",
           null
         );
@@ -124,7 +124,7 @@ export default () => {
         // Test 4: Given a created registration entry Then Alice can delete that control registration entry
 
         const delete1 = await callZomeAlice(
-          "assessment_control",
+          "assessment_tray",
           "delete_assessment_control_registration",
           controlRegistrationCreationEntryRecord.actionHash
         );
@@ -138,7 +138,7 @@ export default () => {
 
       // And Then getting all registration entries returns an empty array
       const getAll3 : Record[] = await callZomeAlice(
-        "assessment_control",
+        "assessment_tray",
         "get_assessment_control_registrations",
         null
       );
