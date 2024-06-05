@@ -1,4 +1,4 @@
-import { Action, AppEntryDef, Create, EntryHash, Record, fakeEntryHash } from "@holochain/client";
+import { Action, AppEntryDef, Create, EntryHash, Record, encodeHashToBase64, fakeEntryHash } from "@holochain/client";
 import { cleanAllConductors, pause, runScenario } from "@holochain/tryorama";
 import {
   AppletConfig,
@@ -25,36 +25,46 @@ export default () =>
     test("test Sensemaker Configuration", async (t) => {
         await runScenario(async (scenario) => {
             const {
-                alice,
-                bob,
-                cleanup,
-                alice_agent_key,
-                bob_agent_key,
-                ss_cell_id_alice,
-                ss_cell_id_bob,
-                provider_cell_id_alice,
-                provider_cell_id_bob,
-            } = await setUpAliceandBob(true, app_entry_def);
-
+              alice,
+              bob,
+              cleanup,
+              alice_agent_key,
+              bob_agent_key,
+              ss_cell_id_alice,
+              ss_cell_id_bob,
+              provider_cell_id_alice,
+              provider_cell_id_bob,
+            } = await setUpAliceandBob();
+      
             const callZomeAlice = async (
+              zome_name,
+              fn_name,
+              payload,
+              is_ss = true
+            ) => {
+              return await alice.callZome({
+                cap_secret: null,
+                cell_id: is_ss ? ss_cell_id_alice : provider_cell_id_alice,
                 zome_name,
                 fn_name,
                 payload,
-                is_ss = false
-            ) => {
-                return await alice.callZome({
-                    cap_secret: null,
-                    cell_id: is_ss ? ss_cell_id_alice : provider_cell_id_alice,
-                    zome_name,
-                    fn_name,
-                    payload,
-                    provenance: alice_agent_key,
-                });
+                provenance: alice_agent_key,
+              });
             };
-
+            const callZomeBob = async (zome_name, fn_name, payload, is_ss = true) => {
+              return await bob.callZome({
+                cap_secret: null,
+                cell_id: is_ss ? ss_cell_id_bob : provider_cell_id_bob,
+                zome_name,
+                fn_name,
+                payload,
+                provenance: bob_agent_key,
+              });
+            };
+            const pauseDuration = 1000;
             try {
-                await scenario.shareAllAgents();
-                await pause(500);
+              await scenario.shareAllAgents();
+              await pause(pauseDuration);
 
                 const applet_eh = await fakeEntryHash()
 
@@ -268,9 +278,17 @@ export default () =>
                     appletConfigInput,
                     true
                 );
-                console.log("this is the applet config added", returnedAppletConfig);
                 t.ok(returnedAppletConfig);
-                t.deepEqual(JSON.stringify(returnedAppletConfig), JSON.stringify(appletConfig))
+
+                // We cannot do a serialised comparison as we need to test that config dimensions don't get created
+                // If we test the entry hashes (Object.values of each hash map) then we know the entries are the same
+                t.equal(returnedAppletConfig.name, appletConfig.name);
+                t.equal(encodeHashToBase64(returnedAppletConfig.applet_eh), encodeHashToBase64(appletConfig.applet_eh));
+                t.deepEqual(Object.values(returnedAppletConfig.ranges).map(hash => encodeHashToBase64(hash as Uint8Array)), Object.values(appletConfig.ranges).map(hash => encodeHashToBase64(hash as Uint8Array)));
+                t.equal(Object.values(returnedAppletConfig.dimensions).length, 0); // Dimensions are no longer created from config
+                t.deepEqual(Object.values(returnedAppletConfig.resource_defs).map(hash => encodeHashToBase64(hash as Uint8Array)), Object.values(appletConfig.resource_defs).map(hash => encodeHashToBase64(hash as Uint8Array)));
+                t.deepEqual(Object.values(returnedAppletConfig.methods).map(hash => encodeHashToBase64(hash as Uint8Array)), Object.values(appletConfig.methods).map(hash => encodeHashToBase64(hash as Uint8Array)));
+                t.deepEqual(Object.values(returnedAppletConfig.cultural_contexts).map(hash => encodeHashToBase64(hash as Uint8Array)), Object.values(appletConfig.cultural_contexts).map(hash => encodeHashToBase64(hash as Uint8Array)));
 
                 maybeAppletConfig = await callZomeAlice(
                     "sensemaker",
@@ -279,8 +297,16 @@ export default () =>
                     true
                 );
                 t.ok(maybeAppletConfig);
-                t.deepEqual(JSON.stringify(maybeAppletConfig), JSON.stringify(appletConfig))
-                console.log(maybeAppletConfig)
+                
+                // We cannot do a serialised comparison as we need to test that config dimensions don't get created
+                // If we test the entry hashes (Object.values of each hash map) then we know the entries are the same
+                t.equal(maybeAppletConfig.name, appletConfig.name);
+                t.equal(encodeHashToBase64(maybeAppletConfig.applet_eh), encodeHashToBase64(appletConfig.applet_eh));
+                t.deepEqual(Object.values(maybeAppletConfig.ranges).map(hash => encodeHashToBase64(hash as Uint8Array)), Object.values(appletConfig.ranges).map(hash => encodeHashToBase64(hash as Uint8Array)));
+                t.equal(Object.values(maybeAppletConfig.dimensions).length, 0); // Dimensions are no longer created from config
+                t.deepEqual(Object.values(maybeAppletConfig.resource_defs).map(hash => encodeHashToBase64(hash as Uint8Array)), Object.values(appletConfig.resource_defs).map(hash => encodeHashToBase64(hash as Uint8Array)));
+                t.deepEqual(Object.values(maybeAppletConfig.methods).map(hash => encodeHashToBase64(hash as Uint8Array)), Object.values(appletConfig.methods).map(hash => encodeHashToBase64(hash as Uint8Array)));
+                t.deepEqual(Object.values(maybeAppletConfig.cultural_contexts).map(hash => encodeHashToBase64(hash as Uint8Array)), Object.values(appletConfig.cultural_contexts).map(hash => encodeHashToBase64(hash as Uint8Array)));
             } catch (e) {
                 console.log(e);
                 t.ok(null);
