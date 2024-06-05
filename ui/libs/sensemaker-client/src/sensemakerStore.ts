@@ -48,8 +48,6 @@ export class SensemakerStore {
 
   _resourceAssessments: Writable<{ [entryHash: string]: Array<Assessment> }> = writable({});
 
-  // _widgetRegistry: Writable<WidgetRegistry> = writable({});
-
   _activeMethod: Writable<{
     [resourceDefEh: string]: EntryHashB64 // mapping from resourceDefEh to active methodEh
   }> = writable({});
@@ -103,16 +101,9 @@ export class SensemakerStore {
     return derived(this._contextResults, contextResults => contextResults)
   }
 
-  // widgetRegistry() {
-  //   return derived(this._widgetRegistry, widgetRegistry => widgetRegistry)
-  // }
-
   activeMethod() {
     return derived(this._activeMethod, activeMethod => activeMethod)
   }
-  // methodDimensionMapping() {
-  //   return derived(this._methodDimensionMapping, methodDimensionMapping => methodDimensionMapping)
-  // }
 
   isAssessedByMeAlongDimension(resource_eh: EntryHashB64, dimension_eh: EntryHashB64) {
     return derived(this._resourceAssessments, resourceAssessments => {
@@ -449,9 +440,9 @@ export class SensemakerStore {
     return appletConfig;
   }
 
-  async registerWidget(widgetRegistration: AssessmentWidgetRegistrationInput): Promise<EntryRecord<AssessmentWidgetRegistrationInput>> {
-    const result = await this.service.registerWidget(widgetRegistration);
-    return new EntryRecord<AssessmentWidgetRegistrationInput>(result)
+  async registerWidget(assessmentControlRegistration: AssessmentWidgetRegistrationInput): Promise<AssessmentWidgetRegistrationInput> {
+    const result = await this.service.registerWidget(assessmentControlRegistration);
+    return new EntryRecord<AssessmentWidgetRegistrationInput>(result).entry
   }
 
   async getRegisteredWidgets(): Promise<Record<EntryHashB64, AssessmentWidgetRegistrationInput>> {
