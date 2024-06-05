@@ -3,7 +3,7 @@ import {
   AppBlockDelegate,
   ResourceBlockDelegate,
   InputAssessmentControlDelegate,
-  OutputAssessmentWidgetDelegate,
+  OutputAssessmentControlDelegate,
   Assessment
 } from "../"
 import { LitElement } from "lit"
@@ -48,7 +48,7 @@ export class InputAssessmentControl extends DelegateReceiverClass<InputAssessmen
   }
 }
 
-export class OutputAssessmentControl extends DelegateReceiverClass<OutputAssessmentWidgetDelegate> {
+export class OutputAssessmentControl extends DelegateReceiverClass<OutputAssessmentControlDelegate> {
   @property()
   assessment: Assessment | undefined
 

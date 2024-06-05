@@ -11,7 +11,7 @@ import {
   DimensionEh,
   InputAssessmentControlDelegate,
   NeighbourhoodInfo,
-  OutputAssessmentWidgetDelegate,
+  OutputAssessmentControlDelegate,
   RangeValue,
   RangeValueInteger,
   ResourceBlockDelegate,
@@ -89,17 +89,17 @@ export function createResourceBlockDelegate(
 /**
  * Creates an ResourceBlockDelegate to be passed into an resource block
  */
-export function createOutputAssessmentWidgetDelegate(
+export function createOutputAssessmentControlDelegate(
   sensemakerStore: SensemakerStore,
   dimensionEh: DimensionEh,
   resourceEh: ResourceEh,
   initialAssessment?: Assessment
-): OutputAssessmentWidgetDelegate {
+): OutputAssessmentControlDelegate {
   const subscribers = new SubscriberManager()
 
   let assessment: Assessment | undefined = initialAssessment;
 
-  const delegate: OutputAssessmentWidgetDelegate = {
+  const delegate: OutputAssessmentControlDelegate = {
     /**
      * Get the latest computed assessment for the resource
      *
