@@ -3,7 +3,7 @@ import {
   NHDelegateReceiverComponent,
   NHDelegateReceiverConstructor,
   InputAssessmentControlDelegate,
-  OutputAssessmentWidgetDelegate,
+  OutputAssessmentControlDelegate,
   ResourceBlockDelegate,
   AppBlockDelegate
 } from "@neighbourhoods/client"
@@ -131,4 +131,4 @@ export class BlockRenderer<D> extends HTMLElement implements NHDelegateReceiver<
 export class AppBlockRenderer extends BlockRenderer<AppBlockDelegate> {}
 export class ResourceBlockRenderer extends BlockRenderer<ResourceBlockDelegate> {}
 export class InputAssessmentRenderer extends BlockRenderer<InputAssessmentControlDelegate> {}
-export class OutputAssessmentRenderer extends BlockRenderer<OutputAssessmentWidgetDelegate> {}
+export class OutputAssessmentRenderer extends BlockRenderer<OutputAssessmentControlDelegate> {}

@@ -6,7 +6,7 @@ import {
   Dimension,
   InputAssessmentControlDelegate,
   Method,
-  OutputAssessmentWidgetDelegate,
+  OutputAssessmentControlDelegate,
   ResourceDef,
   SensemakerStore,
   sensemakerStoreContext,
@@ -29,7 +29,7 @@ import NHComponent from '@neighbourhoods/design-system-components/ancestors/base
 
 type DecoratorProps = {
   renderer: AssessmentWidgetRenderer,
-  delegate: OutputAssessmentWidgetDelegate
+  delegate: OutputAssessmentControlDelegate
 }
 
 export class DashboardFilterMap extends NHComponent {

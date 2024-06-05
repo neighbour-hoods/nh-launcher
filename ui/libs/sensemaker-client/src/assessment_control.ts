@@ -28,7 +28,7 @@ export interface InputAssessmentControlDelegate {
  * This allows passing in a delegate that allows fetching and subscribing to
  * assessment changes without exposing the sensemaker store AppAgentClient.
  */
-export interface OutputAssessmentWidgetDelegate {
+export interface OutputAssessmentControlDelegate {
   getLatestAssessment(): Promise<Assessment | undefined> // get the latest computed assessment value (regardless of user, for computed dimensions)
   subscribe(_:CallbackFn): UnsubscribeFn // subscribe to when the current computed dimension changes
 }
@@ -44,7 +44,7 @@ export type AssessmentWidgetKind = 'input' | 'output';
 export type AssessmentWidgetRenderer = {
   name: string,         // Likely appended to the App name in the dashboard configuration screen
   rangeKind: RangeKind,         // Output components must support a range of [-INF, INF] unless it is used with an AVG.
-  component: NHDelegateReceiverConstructor<InputAssessmentControlDelegate> | NHDelegateReceiverConstructor<OutputAssessmentWidgetDelegate>, // Intersection of HTML Element and the delegate interface for
+  component: NHDelegateReceiverConstructor<InputAssessmentControlDelegate> | NHDelegateReceiverConstructor<OutputAssessmentControlDelegate>, // Intersection of HTML Element and the delegate interface for
   kind: AssessmentWidgetKind
 }
 
