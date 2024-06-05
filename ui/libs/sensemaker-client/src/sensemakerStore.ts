@@ -23,7 +23,7 @@ import {
   ResourceDef,
   RunMethodInput,
   SignalPayload,
-  AssessmentWidgetBlockConfig,
+  AssessmentControlConfig,
   AssessmentControlRegistrationInput,
   GetMethodsForDimensionQueryParams,
 } from './index';
@@ -395,12 +395,12 @@ export class SensemakerStore {
     return contextResult;
   }
 
-  async getAssessmentTrayConfig(resourceDefEh: EntryHash): Promise<Array<AssessmentWidgetBlockConfig>> {
+  async getAssessmentTrayConfig(resourceDefEh: EntryHash): Promise<Array<AssessmentControlConfig>> {
     return await this.service.getAssessmentTrayConfig(resourceDefEh)
   }
 
-  async setAssessmentWidgetTrayConfig(resourceDefEh: EntryHash, widgetConfigs: Array<AssessmentWidgetBlockConfig>): Promise<Array<EntryHash>> {
-    return this.service.setAssessmentWidgetTrayConfig(resourceDefEh, widgetConfigs)
+  async setAssessmentWidgetTrayConfig(resourceDefEh: EntryHash, assessmentControlConfigs: Array<AssessmentControlConfig>): Promise<Array<EntryHash>> {
+    return this.service.setAssessmentTrayConfig(resourceDefEh, assessmentControlConfigs)
   }
 
   async updateAppletConfig(appletConfig: AppletConfig): Promise<AppletConfig> {
