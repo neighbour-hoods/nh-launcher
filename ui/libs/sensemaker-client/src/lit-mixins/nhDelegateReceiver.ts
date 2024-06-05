@@ -2,7 +2,7 @@ import { EntryHash } from "@holochain/client";
 import {
   AppBlockDelegate,
   ResourceBlockDelegate,
-  InputAssessmentWidgetDelegate,
+  InputAssessmentControlDelegate,
   OutputAssessmentWidgetDelegate,
   Assessment
 } from "../"
@@ -36,7 +36,7 @@ export class RenderBlock extends DelegateReceiverClass<ResourceBlockDelegate> {
   }
 }
 
-export class InputAssessmentControl extends DelegateReceiverClass<InputAssessmentWidgetDelegate> {
+export class InputAssessmentControl extends DelegateReceiverClass<InputAssessmentControlDelegate> {
   @property()
   assessment: Assessment | undefined
 
