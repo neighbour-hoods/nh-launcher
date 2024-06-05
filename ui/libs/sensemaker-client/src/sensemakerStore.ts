@@ -384,12 +384,12 @@ export class SensemakerStore {
     return contextResult;
   }
 
-  async getAssessmentWidgetTrayConfig(resourceDefEh: EntryHash): Promise<Array<AssessmentWidgetBlockConfig>> {
-    return await this.service.getAssessmentWidgetTrayConfig(resourceDefEh)
+  async getAssessmentTrayConfig(resourceDefEh: EntryHash): Promise<Array<AssessmentWidgetBlockConfig>> {
+    return await this.service.getAssessmentTrayConfig(resourceDefEh)
   }
 
-  async setAssessmentWidgetTrayConfig(resourceDefEh: EntryHash, assessmentControlConfigs: Array<AssessmentWidgetBlockConfig>): Promise<Boolean> {
-    await this.service.setAssessmentWidgetTrayConfig(resourceDefEh, assessmentControlConfigs) // returns an array of config hashes, but not useful as yet
+  async setAssessmentTrayConfig(resourceDefEh: EntryHash, assessmentControlConfigs: Array<AssessmentWidgetBlockConfig>): Promise<Boolean> {
+    await this.service.setAssessmentTrayConfig(resourceDefEh, assessmentControlConfigs) // returns an array of config hashes, but not useful as yet
     return true
   }
 

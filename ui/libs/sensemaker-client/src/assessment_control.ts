@@ -114,7 +114,7 @@ export interface AssessmentWidgetBlockConfig {
 /**
  * A named assessment tray config
  */
-export interface AssessmentWidgetTrayConfig {
+export interface AssessmentTrayConfig {
   name: string,
   assessmentControlConfigs: AssessmentWidgetBlockConfig[]
 }

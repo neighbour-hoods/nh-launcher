@@ -8,7 +8,7 @@ import {
   addAllAgentsToAllConductors,
   cleanAllConductors,
 } from "@holochain/tryorama";
-import { AssessmentWidgetTrayConfig } from "#client";
+import { AssessmentTrayConfig } from "#client";
 import { setUpAliceandBob } from "../../utils";
 
 import pkg from "tape-promise/tape";
@@ -72,7 +72,7 @@ export default () => {
           false,
         );
 
-        let getEmpty: AssessmentWidgetTrayConfig = await callZomeAlice(
+        let getEmpty: AssessmentTrayConfig = await callZomeAlice(
           "assessment_tray",
           "get_assessment_tray_config",
           dummyEntryHash
@@ -116,7 +116,7 @@ export default () => {
         t.ok(create1, "creating a new tray config succeeds");
         await pause(pauseDuration);
 
-        const entryRecordCreate1 = new EntryRecord<AssessmentWidgetTrayConfig>(create1);
+        const entryRecordCreate1 = new EntryRecord<AssessmentTrayConfig>(create1);
 
         // read config back out & check for correctness
         const read1 = await callZomeBob(
@@ -124,7 +124,7 @@ export default () => {
           "get_assessment_tray_config",
           entryRecordCreate1.entryHash
         );
-        const entryRecordRead1 = new EntryRecord<AssessmentWidgetTrayConfig>(read1);
+        const entryRecordRead1 = new EntryRecord<AssessmentTrayConfig>(read1);
         t.ok(entryRecordRead1.entry, "Tray config retrievable by other agent");
         t.equal(entryRecordRead1.entry.name, "test config", "retrieved tray config name is the same");
         t.deepEqual(entryRecordRead1.entry.assessmentControlConfigs, [testControlConfig1, testControlConfig2], "retrieved tray config blocks are the same, have same order");
@@ -132,7 +132,7 @@ export default () => {
         // bob creates config
         // assert 'permission denied' error, only the CA can create
         try {
-          let _config: AssessmentWidgetTrayConfig = await callZomeBob(
+          let _config: AssessmentTrayConfig = await callZomeBob(
             "assessment_tray",
             "set_assessment_tray_config",
             {
@@ -174,7 +174,7 @@ export default () => {
           "get_default_assessment_tray_config_for_resource_def",
           dummyEntryHash,
         );
-        const entrygetDefault2 = new EntryRecord<AssessmentWidgetTrayConfig>(getDefault2);
+        const entrygetDefault2 = new EntryRecord<AssessmentTrayConfig>(getDefault2);
         t.equal(entrygetDefault2.entry.name, "test config", "Getting a default tray config when it was set to the test entry returns the test entry");
         t.deepEqual(entrygetDefault2.entry.assessmentControlConfigs, [testControlConfig1, testControlConfig2], "retrieved tray config blocks are the same, have same order");
 
@@ -221,7 +221,7 @@ export default () => {
         t.ok(create2, "Creating another new tray config succeeds");
         await pause(pauseDuration);
 
-        const entryRecordCreate2 = new EntryRecord<AssessmentWidgetTrayConfig>(create2);
+        const entryRecordCreate2 = new EntryRecord<AssessmentTrayConfig>(create2);
 
         // set default again to the new entry
         const setDefault2 = await callZomeAlice(
@@ -241,7 +241,7 @@ export default () => {
           dummyEntryHash,
         );
 
-        const entrygetDefault3 = new EntryRecord<AssessmentWidgetTrayConfig>(getDefault3);
+        const entrygetDefault3 = new EntryRecord<AssessmentTrayConfig>(getDefault3);
         t.equal(entrygetDefault3.entry.name, "test config 2", "Getting a default tray config when it was set to the second test entry returns the second test entry");
         t.deepEqual(entrygetDefault3.entry.assessmentControlConfigs, [testControlConfig3, testControlConfig4], "retrieved tray config blocks are the same, have same order");
 

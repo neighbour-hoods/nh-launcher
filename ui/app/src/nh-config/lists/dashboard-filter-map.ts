@@ -348,7 +348,7 @@ export class DashboardFilterMap extends NHComponent {
       const configs = {} as {EntryHashB64: AssessmentWidgetBlockConfig[]};
       serializeAsyncActions<Array<AssessmentWidgetBlockConfig>>([...this.resourceDefEntries.map(
         (resourceDef: any) => {
-          return async () => { return Promise.resolve(this._widgetConfigBlocksForResourceDef[encodeHashToBase64(resourceDef.resource_def_eh) as EntryHashB64] = await this._sensemakerStore.getAssessmentWidgetTrayConfig(resourceDef.resource_def_eh))}
+          return async () => { return Promise.resolve(this._widgetConfigBlocksForResourceDef[encodeHashToBase64(resourceDef.resource_def_eh) as EntryHashB64] = await this._sensemakerStore.getAssessmentTrayConfig(resourceDef.resource_def_eh))}
         }
       ), async() => Promise.resolve(console.log('fetched widget config blocks for resource defs :>> ',  this._widgetConfigBlocksForResourceDef) as any)])
 

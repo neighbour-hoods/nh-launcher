@@ -89,11 +89,11 @@ export class SensemakerService {
     return this.callZome('get_methods_for_dimension', { query: queryParams || null })
   }
 
-  async getAssessmentWidgetTrayConfig(resourceDefEh: EntryHash): Promise<Array<AssessmentWidgetBlockConfig>> {
+  async getAssessmentTrayConfig(resourceDefEh: EntryHash): Promise<Array<AssessmentWidgetBlockConfig>> {
     return this.callZome('get_assessment_tray_config', { resourceDefEh }, 'assessment_tray')
   }
 
-  async setAssessmentWidgetTrayConfig(resourceDefEh: EntryHash, assessmentControlConfigs: Array<AssessmentWidgetBlockConfig>): Promise<Array<EntryHash>> {
+  async setAssessmentTrayConfig(resourceDefEh: EntryHash, assessmentControlConfigs: Array<AssessmentWidgetBlockConfig>): Promise<Array<EntryHash>> {
     return this.callZome('set_assessment_tray_config', { resourceDefEh, assessmentControlConfigs }, 'assessment_tray')
   }
 
