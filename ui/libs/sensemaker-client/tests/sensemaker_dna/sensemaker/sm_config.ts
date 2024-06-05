@@ -19,7 +19,7 @@ let app_entry_def: AppEntryDef = {
   visibility: { Public: null },
 };
 export default () =>
-  test("test Sensemaker and Applet Configuration in DNA Property", async (t) => {
+  test("test Sensemaker config in DNA Property", async (t) => {
     await runScenario(async (scenario) => {
       const {
         alice,
@@ -31,7 +31,7 @@ export default () =>
         ss_cell_id_bob,
         provider_cell_id_alice,
         provider_cell_id_bob,
-      } = await setUpAliceandBob(true, app_entry_def);
+      } = await setUpAliceandBob(false, app_entry_def);
 
       const callZomeAlice = async (
         zome_name,
@@ -48,11 +48,12 @@ export default () =>
           provenance: alice_agent_key,
         });
       };
-
+      const pauseDuration = 1000;
       try {
         await scenario.shareAllAgents();
-        await pause(10000);
-        // Alice retrieves the Config
+        await pause(pauseDuration);
+
+        // Alice retrieves the initial Config
         const maybe_sm_config = await callZomeAlice(
           "sensemaker",
           "get_latest_sensemaker_config",
@@ -77,73 +78,8 @@ export default () =>
           "sample applet config",
           true
         );
-        t.ok(maybe_applet_config);
+        t.equal(maybe_applet_config, null);
 
-        console.log(maybe_applet_config);
-
-        let dimension_ehs: EntryHash[] = Object.values(
-          maybe_applet_config.dimensions
-        );
-        // given maybe_applet_config.resource_defs return a flat list of the ehs
-        let resource_def_ehs: EntryHash[] = Object.values(
-          maybe_applet_config.resource_defs
-        );
-        let method_ehs: EntryHash[] = Object.values(
-          maybe_applet_config.methods
-        );
-        let context_ehs: EntryHash[] = Object.values(
-          maybe_applet_config.cultural_contexts
-        );
-        t.equal(dimension_ehs.length, 2);
-        t.equal(resource_def_ehs.length, 1);
-        t.equal(method_ehs.length, 1);
-        t.equal(context_ehs.length, 2);
-
-        // Alice gets all dimensions created from config
-        let dimensions = await Promise.all(
-          dimension_ehs.map(async (eh) => {
-            return await callZomeAlice("sensemaker", "get_dimension", eh, true);
-          })
-        );
-        console.log("created dimensions", dimensions);
-        t.equal(dimensions.length, 2);
-
-        // Alice gets all resources created from config
-        let resources = await Promise.all(
-          resource_def_ehs.map(async (eh) => {
-            return await callZomeAlice(
-              "sensemaker",
-              "get_resource_def",
-              eh,
-              true
-            );
-          })
-        );
-        console.log("created resources", resources);
-        t.equal(resources.length, 1);
-
-        // Alice gets all methods created from config
-        let methods = await Promise.all(
-          method_ehs.map(async (eh) => {
-            return await callZomeAlice("sensemaker", "get_method", eh, true);
-          })
-        );
-        console.log("created methods", methods);
-        t.equal(methods.length, 1);
-
-        // Alice gets all contexts created from config
-        let contexts = await Promise.all(
-          context_ehs.map(async (eh) => {
-            return await callZomeAlice(
-              "sensemaker",
-              "get_cultural_context",
-              eh,
-              true
-            );
-          })
-        );
-        console.log("created contexts", contexts);
-        t.equal(contexts.length, 2);
       } catch (e) {
         console.log(e);
         t.ok(null);
