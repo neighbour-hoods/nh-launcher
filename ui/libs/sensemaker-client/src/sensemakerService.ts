@@ -117,7 +117,7 @@ export class SensemakerService {
     return this.callZome('register_applet', appletConfig);
   }
   
-  async registerWidget(assessmentControlRegistration: AssessmentControlRegistrationInput) : Promise<HolochainRecord> {
+  async registerAssessmentControl(assessmentControlRegistration: AssessmentControlRegistrationInput) : Promise<HolochainRecord> {
     return this.callZome('register_assessment_control', assessmentControlRegistration, 'assessment_tray');
   }
 
