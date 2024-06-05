@@ -119,9 +119,3 @@ export interface AssessmentTrayConfig {
   name: string,
   assessmentControlConfigs: AssessmentControlConfig[]
 }
-
-/**
- * This is currently associated with each resource type.
- * In the future, it may be matched by [resource def, context].
- */
-export type AssessmentTrayConfig = AssessmentControlConfig[]
