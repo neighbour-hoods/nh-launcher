@@ -30,7 +30,7 @@ import { b64images } from '@neighbourhoods/design-system-styles';
 
 import { property, query, queryAll, state } from 'lit/decorators.js';
 import {
-  AssessmentWidgetBlockConfig,
+  AssessmentControlConfig,
   AssessmentWidgetConfig,
   AssessmentControlRegistrationInput,
   AssessmentControlRenderer,
@@ -94,19 +94,19 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   @state() selectedWidgetKey: string | undefined; // nh-form select options for the 2nd/3rd selects are configured dynamically when this state change triggers a re-render
   @state() selectedInputDimensionEh: EntryHash | undefined; // used to filter for the 3rd select
 
-  @state() _workingWidgetControls: AssessmentWidgetBlockConfig[] = [];
+  @state() _workingWidgetControls: AssessmentControlConfig[] = [];
   @state() _workingWidgetControlRendererCache: Map<string, (delegate?: InputAssessmentControlDelegate, component?: unknown) => TemplateResult> = new Map();
 
   @state() private _trayName!: string; // Text input value for the name
   @state() private _trayNameFieldErrored: boolean = false; // Flag for errored status on name field
   
-  // AssessmentWidgetBlockConfig (group) and AssessmentControlRegistrationInputs (individual)
-  @state() private _fetchedConfig!: AssessmentWidgetBlockConfig[];
-  @state() private _updateToFetchedConfig!: AssessmentWidgetBlockConfig[];
+  // AssessmentControlConfig (group) and AssessmentControlRegistrationInputs (individual)
+  @state() private _fetchedConfig!: AssessmentControlConfig[];
+  @state() private _updateToFetchedConfig!: AssessmentControlConfig[];
   @state() private _registeredWidgets: Record<EntryHashB64, AssessmentControlRegistrationInput> = {};
 
   // Derived from _fetchedConfig
-  @state() configuredInputWidgets!: AssessmentWidgetBlockConfig[];
+  @state() configuredInputWidgets!: AssessmentControlConfig[];
 
   @state() private _inputDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
   @state() private _outputDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
@@ -156,7 +156,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   }
 
   private getCombinedWorkingAndFetchedWidgets() {
-    let widgets: AssessmentWidgetBlockConfig[]
+    let widgets: AssessmentControlConfig[]
     if((this._updateToFetchedConfig || this._fetchedConfig) && this._workingWidgetControls && this._workingWidgetControls.length > 0) {
       widgets = this._fetchedConfig.length > 0 ? [
         ...(this._updateToFetchedConfig || this._fetchedConfig), ...this._workingWidgetControls
@@ -220,7 +220,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   }
 
   render(): TemplateResult {
-    let renderableWidgets = (this.configuredInputWidgets || this.getCombinedWorkingAndFetchedWidgets())?.map((widgetRegistrationEntry: AssessmentWidgetBlockConfig) => widgetRegistrationEntry.inputAssessmentWidget as AssessmentWidgetConfig)
+    let renderableWidgets = (this.configuredInputWidgets || this.getCombinedWorkingAndFetchedWidgets())?.map((widgetRegistrationEntry: AssessmentControlConfig) => widgetRegistrationEntry.inputAssessmentWidget as AssessmentWidgetConfig)
     
     const foundEditableWidget = this.editMode && this.selectedWidgetIndex !== -1 && renderableWidgets[this.selectedWidgetIndex as number] && Object.values(this._registeredWidgets)?.find(widget => widget.name == renderableWidgets[this.selectedWidgetIndex as number]?.componentName);
     const foundEditableWidgetConfig = this.editMode && this.selectedWidgetIndex as number !== -1 && renderableWidgets[this.selectedWidgetIndex as number]

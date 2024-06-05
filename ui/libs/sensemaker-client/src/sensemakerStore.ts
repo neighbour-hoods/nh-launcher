@@ -23,7 +23,7 @@ import {
   ResourceDef,
   RunMethodInput,
   SignalPayload,
-  AssessmentWidgetBlockConfig,
+  AssessmentControlConfig,
   AssessmentControlRegistrationInput,
   GetMethodsForDimensionQueryParams,
 } from './index';
@@ -384,11 +384,11 @@ export class SensemakerStore {
     return contextResult;
   }
 
-  async getAssessmentTrayConfig(resourceDefEh: EntryHash): Promise<Array<AssessmentWidgetBlockConfig>> {
+  async getAssessmentTrayConfig(resourceDefEh: EntryHash): Promise<Array<AssessmentControlConfig>> {
     return await this.service.getAssessmentTrayConfig(resourceDefEh)
   }
 
-  async setAssessmentTrayConfig(resourceDefEh: EntryHash, assessmentControlConfigs: Array<AssessmentWidgetBlockConfig>): Promise<Boolean> {
+  async setAssessmentTrayConfig(resourceDefEh: EntryHash, assessmentControlConfigs: Array<AssessmentControlConfig>): Promise<Boolean> {
     await this.service.setAssessmentTrayConfig(resourceDefEh, assessmentControlConfigs) // returns an array of config hashes, but not useful as yet
     return true
   }
