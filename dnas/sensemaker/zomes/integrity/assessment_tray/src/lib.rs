@@ -1,5 +1,5 @@
 use hdi::prelude::*;
-use sensemaker_integrity_structs::{Properties, AssessmentWidgetRegistration};
+use sensemaker_integrity_structs::{Properties, AssessmentControlRegistration};
 
 #[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
 #[serde(rename_all = "camelCase")]
@@ -13,31 +13,31 @@ pub struct DimensionControlMapping {
 
 #[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
 #[serde(rename_all = "camelCase")]
-pub struct AssessmentWidgetBlockConfig {
-    input_assessment_widget: DimensionControlMapping,
-    output_assessment_widget: DimensionControlMapping,
+pub struct AssessmentControlConfig {
+    input_assessment_control: DimensionControlMapping,
+    output_assessment_control: DimensionControlMapping,
 }
 
 #[hdk_entry_helper]
 #[serde(rename_all = "camelCase")]
 #[derive(Clone)]
-pub struct AssessmentWidgetTrayConfig {
+pub struct AssessmentTrayConfig {
     pub name: String,
-    pub assessment_widget_blocks: Vec<AssessmentWidgetBlockConfig>,
+    pub assessment_control_configs: Vec<AssessmentControlConfig>,
 }
 
 #[hdk_entry_defs]
 #[unit_enum(UnitEntryTypes)]
 pub enum EntryTypes {
     #[entry_def()]
-    AssessmentWidgetTrayConfig(AssessmentWidgetTrayConfig),
-    AssessmentWidgetRegistration(AssessmentWidgetRegistration),
+    AssessmentTrayConfig(AssessmentTrayConfig),
+    AssessmentControlRegistration(AssessmentControlRegistration),
 }
 
 #[hdk_link_types]
 pub enum LinkTypes {
     AssessmentTrayConfig,
-    WidgetRegistration,
+    AssessmentControlRegistration,
     ResourceDefDefaultAssessmentTrayConfig,
 }
 
@@ -118,7 +118,7 @@ fn validate_author_as_ca(
     return match entry_type {
         EntryType::App(app_entry_def) => {
             return match app_entry_def.entry_index {
-                // AssessmentWidgetBlockConfig
+                // AssessmentControlConfig
                 EntryDefIndex(0) => {
                     let author = match op_types {
                         OpTypes::StoreEntry(entry) => entry.clone().action.hashed.author().clone(),
