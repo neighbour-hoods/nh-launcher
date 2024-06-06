@@ -445,8 +445,8 @@ export class SensemakerStore {
     return new EntryRecord<AssessmentControlRegistrationInput>(result).entry
   }
 
-  async getRegisteredWidgets(): Promise<Record<EntryHashB64, AssessmentControlRegistrationInput>> {
-    const result : HolochainRecord[] = await this.service.getRegisteredWidgets();
+  async getRegisteredAssessmentControls(): Promise<Record<EntryHashB64, AssessmentControlRegistrationInput>> {
+    const result : HolochainRecord[] = await this.service.getRegisteredAssessmentControls();
     return result.reduce((record, value) => {
       const entryRecord = new EntryRecord<AssessmentControlRegistrationInput>(value);
       const key: EntryHashB64 = encodeHashToBase64(entryRecord.entryHash);

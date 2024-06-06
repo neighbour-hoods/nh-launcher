@@ -831,7 +831,7 @@ export default class NHAssessmentControlConfig extends NHComponent {
 
   async fetchRegisteredWidgets() {
     try {
-      this._registeredWidgets = await this.sensemakerStore!.getRegisteredWidgets();
+      this._registeredWidgets = await this.sensemakerStore!.getRegisteredAssessmentControls();
     } catch (error) {
       console.log('Error fetching widget registrations: ', error);
     }
