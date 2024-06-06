@@ -26,6 +26,7 @@ import {
   AssessmentControlConfig,
   AssessmentControlRegistrationInput,
   GetMethodsForDimensionQueryParams,
+  AssessmentTrayConfig,
 } from './index';
 import { derived, Readable, Writable, writable } from 'svelte/store';
 import { compareUint8Arrays, getLatestAssessment, Option, serializeAsyncActions } from './utils';
@@ -396,11 +397,21 @@ export class SensemakerStore {
   }
 
   async getAssessmentTrayConfig(resourceDefEh: EntryHash): Promise<Array<AssessmentControlConfig>> {
-    return await this.service.getAssessmentTrayConfig(resourceDefEh)
+    return this.service.getAssessmentTrayConfig(resourceDefEh)
   }
 
   async setAssessmentTrayConfig(resourceDefEh: EntryHash, assessmentControlConfigs: Array<AssessmentControlConfig>): Promise<Array<EntryHash>> {
     return this.service.setAssessmentTrayConfig(resourceDefEh, assessmentControlConfigs)
+  }
+
+  async getDefaultAssessmentTrayForResourceDef(resourceDefEh: EntryHash): Promise<EntryRecord<AssessmentTrayConfig> | null> {
+    const record = this.service.getDefaultAssessmentTrayForResourceDef(resourceDefEh);
+    if(!record) return null;
+    return new EntryRecord<AssessmentTrayConfig>(record as any)
+  }
+
+  async setDefaultAssessmentTrayForResourceDef(resourceDefEh: EntryHash, assessmentTrayEh: EntryHash): Promise<EntryHash> {
+    return this.service.setDefaultAssessmentTrayForResourceDef(resourceDefEh, assessmentTrayEh)
   }
 
   async updateAppletConfig(appletConfig: AppletConfig): Promise<AppletConfig> {
