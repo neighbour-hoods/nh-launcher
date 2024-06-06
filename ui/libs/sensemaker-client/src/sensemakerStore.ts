@@ -396,18 +396,21 @@ export class SensemakerStore {
     return contextResult;
   }
 
-  async getAssessmentTrayConfig(resourceDefEh: EntryHash): Promise<Array<AssessmentControlConfig>> {
-    return this.service.getAssessmentTrayConfig(resourceDefEh)
+  async getAssessmentTrayConfig(resourceDefEh: EntryHash): Promise<EntryRecord<AssessmentTrayConfig> | null> {
+    const record = await this.service.getAssessmentTrayConfig(resourceDefEh);
+    if(!record) return null;
+    return new EntryRecord<AssessmentTrayConfig>(record)
   }
 
-  async setAssessmentTrayConfig(resourceDefEh: EntryHash, assessmentControlConfigs: Array<AssessmentControlConfig>): Promise<Array<EntryHash>> {
-    return this.service.setAssessmentTrayConfig(resourceDefEh, assessmentControlConfigs)
+  async setAssessmentTrayConfig(assessmentTrayConfig: AssessmentTrayConfig): Promise<EntryRecord<AssessmentTrayConfig>> {
+    const record = await this.service.setAssessmentTrayConfig(assessmentTrayConfig);
+    return new EntryRecord<AssessmentTrayConfig>(record)
   }
 
   async getDefaultAssessmentTrayForResourceDef(resourceDefEh: EntryHash): Promise<EntryRecord<AssessmentTrayConfig> | null> {
-    const record = this.service.getDefaultAssessmentTrayForResourceDef(resourceDefEh);
+    const record = await this.service.getDefaultAssessmentTrayForResourceDef(resourceDefEh);
     if(!record) return null;
-    return new EntryRecord<AssessmentTrayConfig>(record as any)
+    return new EntryRecord<AssessmentTrayConfig>(record)
   }
 
   async setDefaultAssessmentTrayForResourceDef(resourceDefEh: EntryHash, assessmentTrayEh: EntryHash): Promise<EntryHash> {
