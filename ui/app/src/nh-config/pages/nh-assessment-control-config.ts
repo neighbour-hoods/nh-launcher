@@ -39,6 +39,7 @@ import {
   InputAssessmentControlDelegate,
   Method,
   SensemakerStore,
+  AssessmentTrayConfig,
 } from '@neighbourhoods/client';
 import {repeat} from 'lit/directives/repeat.js';
 import { InputAssessmentRenderer } from '@neighbourhoods/app-loader';
@@ -63,10 +64,10 @@ export default class NHAssessmentControlConfig extends NHComponent {
       //@ts-ignore
       return !!appletInstanceInfos && Object.values(appletInstanceInfos).some(appletInfo => appletInfo!.gui)
       //@ts-ignore
-        ? Object.fromEntries(Object.entries(appletInstanceInfos).map(([appletEh, appletInfo]) => {
+        ? Object.fromEntries((Object.entries(appletInstanceInfos) || [])?.map(([appletEh, appletInfo]) => {
           if(typeof appletInfo?.gui == 'undefined') return;
           return [appletEh, {...(appletInfo as any)?.gui?.resourceRenderers, ...(appletInfo as any).gui.assessmentControls}]
-        }))
+        }).filter(value => !!value) || [])
         : null
     }),
     () => [this.loaded],
@@ -99,8 +100,8 @@ export default class NHAssessmentControlConfig extends NHComponent {
   @state() private _trayNameFieldErrored: boolean = false; // Flag for errored status on name field
   
   // AssessmentControlConfig (group) and AssessmentControlRegistrationInputs (individual)
-  @state() private _fetchedConfig!: AssessmentControlConfig[];
-  @state() private _updateToFetchedConfig!: AssessmentControlConfig[];
+  @state() private _fetchedConfig!: AssessmentTrayConfig | undefined;
+  @state() private _updateToFetchedConfig!: AssessmentTrayConfig;
   @state() private _registeredWidgets: Record<EntryHashB64, AssessmentControlRegistrationInput> = {};
 
   // Derived from _fetchedConfig
@@ -122,11 +123,11 @@ export default class NHAssessmentControlConfig extends NHComponent {
       await this.fetchRangeEntries();
       await this.fetchMethodEntries();
       await this.partitionDimensionEntries();
-      await this.fetchRegisteredWidgets();
+      await this.fetchRegisteredAssessmentControls();
       if(this.editMode && this._updateToFetchedConfig) {
         this._fetchedConfig = this._updateToFetchedConfig;
       } else {
-        await this.fetchExistingWidgetConfigBlock();
+        this._fetchedConfig = await this.fetchExistingTrayConfig();
       }
 
       this.loading = false;
@@ -139,7 +140,7 @@ export default class NHAssessmentControlConfig extends NHComponent {
   protected async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     if(changedProperties.has('resourceDef') && typeof changedProperties.get('resourceDef') !== 'undefined') {
       await this.resetWorkingState()
-      await this.fetchExistingWidgetConfigBlock();
+      await this.fetchExistingTrayConfig();
     }
   }
 
@@ -168,7 +169,7 @@ export default class NHAssessmentControlConfig extends NHComponent {
   }
 
   private async resetWorkingState() {
-    await this.fetchExistingWidgetConfigBlock();
+    await this.fetchExistingTrayConfig();
     this.configuredWidgetsPersisted = true
     this.placeHolderWidget = undefined;
     this.selectedWidgetKey = undefined;
@@ -223,7 +224,7 @@ export default class NHAssessmentControlConfig extends NHComponent {
     const foundEditableWidget = this.editMode && this.selectedWidgetIndex !== -1 && renderableWidgets[this.selectedWidgetIndex as number] && Object.values(this._registeredWidgets)?.find(widget => widget.name == renderableWidgets[this.selectedWidgetIndex as number]?.componentName);
     const foundEditableWidgetConfig = this.editMode && this.selectedWidgetIndex as number !== -1 && renderableWidgets[this.selectedWidgetIndex as number]
     return html`
-      <div class="container" @assessment-widget-config-set=${async () => {await this.fetchRegisteredWidgets()}}>
+      <div class="container" @assessment-widget-config-set=${async () => {await this.fetchRegisteredAssessmentControls()}}>
         <nh-page-header-card .heading=${'Assessment Widget Config'}>
           <nh-button
             slot="secondary-action"
@@ -799,16 +800,13 @@ export default class NHAssessmentControlConfig extends NHComponent {
   `];
 
 
-  async fetchExistingWidgetConfigBlock() {
+  async fetchExistingTrayConfig() : Promise<AssessmentTrayConfig | undefined> {
     if (!this.sensemakerStore || !this.resourceDef) return;
-    try {
-      this._fetchedConfig = await this.sensemakerStore.getAssessmentTrayConfig(
-        this.resourceDef?.resource_def_eh,
-      );
-      console.log('fetched persisted widget config block :>> ', this._fetchedConfig);
-    } catch (error) {
-      console.error(error);
-    }
+    const defaultConfig = await this.sensemakerStore.getDefaultAssessmentTrayForResourceDef(
+      this.resourceDef?.resource_def_eh,
+    );
+    console.log('defaultConfig :>> ', defaultConfig);
+    return defaultConfig?.entry
   }
 
   async partitionDimensionEntries() {
@@ -829,7 +827,7 @@ export default class NHAssessmentControlConfig extends NHComponent {
     }
   }
 
-  async fetchRegisteredWidgets() {
+  async fetchRegisteredAssessmentControls() {
     try {
       this._registeredWidgets = await this.sensemakerStore!.getRegisteredAssessmentControls();
     } catch (error) {
