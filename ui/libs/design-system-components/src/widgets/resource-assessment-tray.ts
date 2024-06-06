@@ -20,7 +20,7 @@ export default class NHResourceAssessmentTray extends NHComponent {
 
   render() {
     return html`
-    <div class="assessment-widget-tray" data-expanded=${this.expanded}>
+    <div class="assessment-tray" data-expanded=${this.expanded}>
       <slot name="widgets"></slot>
       <slot name="controls"></slot>
       <nav class="assessment-widget-menu" @click=${() => {this.toggleExpanded(); this.requestUpdate()}}>
@@ -50,7 +50,7 @@ export default class NHResourceAssessmentTray extends NHComponent {
         flex-wrap: nowrap;
       }
 
-      .assessment-widget-tray {
+      .assessment-tray {
         background-color: var(--nh-theme-bg-surface);
         padding: 4px;
         border: 1px solid var(--nh-theme-accent-default);
