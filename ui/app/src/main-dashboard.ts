@@ -33,8 +33,9 @@ import NHSpinner from '@neighbourhoods/design-system-components/spinner';
 import NHTooltip from '@neighbourhoods/design-system-components/tooltip';
 import NHDialog from '@neighbourhoods/design-system-components/dialog';
 import NHProfileCard from '@neighbourhoods/design-system-components/profile/profile-card';
-import { b64images, SensemakerStore } from '@neighbourhoods/design-system-styles';
+import { b64images } from '@neighbourhoods/design-system-styles';
 import { ConfigPage } from './nh-config/types';
+import { AppletConfigInput, SensemakerStore } from '@neighbourhoods/client';
 
 export class MainDashboard extends ScopedRegistryHost(LitElement) {
   @consume({ context: matrixContext , subscribe: true })
@@ -78,8 +79,8 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
   @query('#open-create-nh-dialog') _createNHDialogButton!: HTMLElement;
   
   @query('configure-applet-dimensions-dialog') _configureAppletDimensionsDialog!: ConfigureAppletDimensions;
-  @state() private _currentlyConfiguringAppletEh!: EntryHash;
-  @state() private _currentlyConfiguringAppletConfig!: AppletConfigInput;
+  @state() private _currentlyConfiguringAppletEh!: EntryHash | undefined;
+  @state() private _currentlyConfiguringAppletConfig!: AppletConfigInput | undefined;
 
   @query('#component-card')
   _withProfile!: any;
@@ -229,8 +230,9 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
     this._dashboardMode = DashboardMode.WeGroupHome;
     this._selectedWeGroupId = weGroupId;
 
-    // initialize widgets for group
-    console.log("initializing views for group")
+    this._currentlyConfiguringAppletEh = undefined;
+    this._currentlyConfiguringAppletConfig = undefined;
+
     await this._matrixStore.initializeStateForGroup(weGroupId);
 
     await this.refreshProfileCard(weGroupId);
@@ -450,6 +452,9 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
     this.haveCreatedDimensions = true;
     this._dashboardMode = DashboardMode.AppletGroupInstanceRendering;
     this._navigationMode = NavigationMode.GroupCentric;
+
+    this._currentlyConfiguringAppletEh = undefined;
+    this._currentlyConfiguringAppletConfig = undefined;
 
     this.requestUpdate();
     await this.updateComplete;
