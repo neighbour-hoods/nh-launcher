@@ -258,7 +258,7 @@ export class DashboardFilterMap extends NHComponent {
           new CustomEvent("trigger-alert", {
             detail: { 
               title: "Some Controls Not Configured",
-              msg: "Your controls have not all been configured correctly -  go to the *Assessments* screen to configure them!",
+              msg: "Your controls have not all been configured correctly -  go to the *Assessment Trays* screen to configure them!",
               type: "danger",
               closable: true,
             },
@@ -352,7 +352,7 @@ export class DashboardFilterMap extends NHComponent {
         (resourceDef: any) => {
           return async () => { return Promise.resolve(this._assessmentControlConfigsForResourceDef[encodeHashToBase64(resourceDef.resource_def_eh) as EntryHashB64] = await this._sensemakerStore.getAssessmentTrayConfig(resourceDef.resource_def_eh))}
         }
-      ), async() => Promise.resolve(console.log('fetched widget config blocks for resource defs :>> ',  this._assessmentControlConfigsForResourceDef) as any)])
+      ), async() => Promise.resolve(console.log('fetched assessment control configs for resource defs :>> ',  this._assessmentControlConfigsForResourceDef) as any)])
 
     } catch (error) {
       console.error(error);
