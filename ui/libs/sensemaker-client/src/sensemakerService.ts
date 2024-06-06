@@ -89,12 +89,12 @@ export class SensemakerService {
     return this.callZome('get_methods_for_dimension', { query: queryParams || null })
   }
 
-  async getAssessmentTrayConfig(resourceDefEh: EntryHash): Promise<Array<AssessmentControlConfig>> {
-    return this.callZome('get_assessment_tray_config', { resourceDefEh }, 'assessment_tray')
+  async getAssessmentTrayConfig(assessmentTrayEh: EntryHash): Promise<HolochainRecord> {
+    return this.callZome('get_assessment_tray_config', assessmentTrayEh, 'assessment_tray')
   }
 
-  async setAssessmentTrayConfig(resourceDefEh: EntryHash, assessmentControlConfigs: Array<AssessmentControlConfig>): Promise<Array<EntryHash>> {
-    return this.callZome('set_assessment_tray_config', { resourceDefEh, assessmentControlConfigs }, 'assessment_tray')
+  async setAssessmentTrayConfig(assessmentTrayConfig: AssessmentTrayConfig): Promise<HolochainRecord> {
+    return this.callZome('set_assessment_tray_config', assessmentTrayConfig, 'assessment_tray')
   }
 
   async getDefaultAssessmentTrayForResourceDef(resourceDefEh: EntryHash): Promise<HolochainRecord | null> {
