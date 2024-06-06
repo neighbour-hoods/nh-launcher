@@ -98,7 +98,7 @@ export class SensemakerService {
   }
 
   async getDefaultAssessmentTrayForResourceDef(resourceDefEh: EntryHash): Promise<HolochainRecord | null> {
-    return this.callZome('get_default_assessment_tray_config_for_resource_def', { resourceDefEh }, 'assessment_tray')
+    return this.callZome('get_default_assessment_tray_config_for_resource_def', resourceDefEh, 'assessment_tray')
   }
 
   async setDefaultAssessmentTrayForResourceDef(resourceDefEh: EntryHash, assessmentTrayEh: EntryHash) {
