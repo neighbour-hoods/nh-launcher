@@ -121,7 +121,7 @@ export class SensemakerService {
     return this.callZome('register_assessment_control', assessmentControlRegistration, 'assessment_tray');
   }
 
-  async getRegisteredWidgets(): Promise<Array<HolochainRecord>> {
+  async getRegisteredAssessmentControls(): Promise<Array<HolochainRecord>> {
     return this.callZome('get_assessment_control_registrations', null, 'assessment_tray');
   }
 
