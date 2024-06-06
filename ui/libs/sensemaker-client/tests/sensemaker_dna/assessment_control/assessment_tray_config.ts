@@ -71,7 +71,8 @@ export default () => {
           { title: 'dummy', content: 'test' },
           false,
         );
-
+        
+        // Test 0: Given no created tray configs When Alice gets tray config with a dummy hash Then it returns null
         let getEmpty: AssessmentTrayConfig = await callZomeAlice(
           "assessment_tray",
           "get_assessment_tray_config",
@@ -79,7 +80,8 @@ export default () => {
         );
         t.equal(getEmpty, null, "Get assessment tray config when there is none at that eh returns null")
 
-        // create a config
+
+        // Test 1: Given we have created a config with two assessment control configs:
         const testControlConfig1 = {
           inputAssessmentControl: {
             dimensionEh: dummyEntryHash,
@@ -117,20 +119,23 @@ export default () => {
         await pause(pauseDuration);
 
         const entryRecordCreate1 = new EntryRecord<AssessmentTrayConfig>(create1);
-
-        // read config back out & check for correctness
+        // When Alice gets tray config with that entry hash
         const read1 = await callZomeBob(
           "assessment_tray",
           "get_assessment_tray_config",
           entryRecordCreate1.entryHash
         );
         const entryRecordRead1 = new EntryRecord<AssessmentTrayConfig>(read1);
+
+        // Then the same config is returned with control configs in the same order
         t.ok(entryRecordRead1.entry, "Tray config retrievable by other agent");
         t.equal(entryRecordRead1.entry.name, "test config", "retrieved tray config name is the same");
         t.deepEqual(entryRecordRead1.entry.assessmentControlConfigs, [testControlConfig1, testControlConfig2], "retrieved tray config blocks are the same, have same order");
 
-        // bob creates config
-        // assert 'permission denied' error, only the CA can create
+
+        // Test 2: Given config so far created by Alice
+        // When Bob creates a config
+        // Then 'permission denied' error, only the CA can create
         try {
           let _config: AssessmentTrayConfig = await callZomeBob(
             "assessment_tray",
@@ -147,16 +152,21 @@ export default () => {
           t.ok(e.message.match("only the community activator can create this entry"), "only network CA can configure assessment trays; more complex permission structures planned in future");
         }
 
-        // get default when there is none set
+
+        // Test 3: Given config so far created by Alice and a dummy entry hash for our Resource Def and no default set
+        // When we get the default for that entry hash
         const getDefault1 = await callZomeAlice(
           "assessment_tray",
           "get_default_assessment_tray_config_for_resource_def",
           dummyEntryHash,
         );
+        // Then we get null
         t.equal(getDefault1, null, "Getting a default tray config when there is none set returns null");
         await pause(pauseDuration);
 
-        // set default
+
+        // Test 4: Given config so far created by Alice and a dummy entry hash for our Resource Def and no default set
+        // When we set the default for that entry hash
         const setDefault1 = await callZomeAlice(
           "assessment_tray",
           "set_default_assessment_tray_config_for_resource_def",
@@ -165,20 +175,27 @@ export default () => {
             assessmentTrayEh: entryRecordCreate1.entryHash,
           }
         );
+        // Then we can set the default
         t.ok(setDefault1, "setting a default tray config succeeds");
         await pause(pauseDuration);
 
-        // get default when there is one set
+
+        // Test 5: Given config so far created by Alice and a dummy entry hash for our Resource Def and the default for that was set to our tray entry hash
+        // When we get the default for that entry hash
         const getDefault2 = await callZomeAlice(
           "assessment_tray",
           "get_default_assessment_tray_config_for_resource_def",
           dummyEntryHash,
         );
         const entrygetDefault2 = new EntryRecord<AssessmentTrayConfig>(getDefault2);
+
+        // Then we get back the tray config created by Alice in Test 1, with the same order of control configs.
         t.equal(entrygetDefault2.entry.name, "test config", "Getting a default tray config when it was set to the test entry returns the test entry");
         t.deepEqual(entrygetDefault2.entry.assessmentControlConfigs, [testControlConfig1, testControlConfig2], "retrieved tray config blocks are the same, have same order");
 
-        // Now create a totally different config and set as default
+
+        // Test 6: Given we already set the default
+        // and then we create a new dummy resource def entry hash, a new tray config with a new name and new control configs
         const dummyEntryHash2: EntryHash = await callZomeAlice(
           "test_provider",
           "create_post",
@@ -223,7 +240,7 @@ export default () => {
 
         const entryRecordCreate2 = new EntryRecord<AssessmentTrayConfig>(create2);
 
-        // set default again to the new entry
+        // When we set the default for our previous resource def entry hash to the new tray config's entry hash
         const setDefault2 = await callZomeAlice(
           "assessment_tray",
           "set_default_assessment_tray_config_for_resource_def",
@@ -232,16 +249,18 @@ export default () => {
             assessmentTrayEh: entryRecordCreate2.entryHash,
           }
         );
+        // Then we can set the default
         t.ok(setDefault2, "setting this new entry as default tray config succeeds");
 
-        // get default when a new one was set
+        // And when we get the default
         const getDefault3 = await callZomeAlice(
           "assessment_tray",
           "get_default_assessment_tray_config_for_resource_def",
           dummyEntryHash,
         );
-
         const entrygetDefault3 = new EntryRecord<AssessmentTrayConfig>(getDefault3);
+
+        // Then a new one was set with the correct details and order of control configs 
         t.equal(entrygetDefault3.entry.name, "test config 2", "Getting a default tray config when it was set to the second test entry returns the second test entry");
         t.deepEqual(entrygetDefault3.entry.assessmentControlConfigs, [testControlConfig3, testControlConfig4], "retrieved tray config blocks are the same, have same order");
 
