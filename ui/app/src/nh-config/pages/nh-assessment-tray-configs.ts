@@ -735,11 +735,6 @@ export default class NHAssessmentControlConfig extends NHComponent {
         text-align: center;
       }
 
-      input-assessment-renderer {
-        display: flex;
-        align-items: center;
-      }
-
       /* Typo */
       h2 {
         text-align: center;
