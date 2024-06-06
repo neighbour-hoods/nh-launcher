@@ -31,7 +31,7 @@ import { b64images } from '@neighbourhoods/design-system-styles';
 import { property, query, queryAll, state } from 'lit/decorators.js';
 import {
   AssessmentControlConfig,
-  AssessmentWidgetConfig,
+  DimensionControlMapping,
   AssessmentControlRegistrationInput,
   AssessmentControlRenderer,
   Constructor,
@@ -48,7 +48,7 @@ import { FakeInputAssessmentControlDelegate } from '@neighbourhoods/app-loader';
 import { dimensionIncludesControlRange } from '../../utils';
 import { ResourceBlockRenderer } from '@neighbourhoods/app-loader';
 
-export default class NHAssessmentWidgetConfig extends NHComponent {
+export default class NHAssessmentControlConfig extends NHComponent {
   @property() loaded!: boolean;
 
   sensemakerStore!: SensemakerStore;
@@ -218,7 +218,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   }
 
   render(): TemplateResult {
-    let renderableWidgets = (this.configuredInputWidgets || this.getCombinedWorkingAndFetchedWidgets())?.map((widgetRegistrationEntry: AssessmentControlConfig) => widgetRegistrationEntry.inputAssessmentWidget as AssessmentWidgetConfig)
+    let renderableWidgets = (this.configuredInputWidgets || this.getCombinedWorkingAndFetchedWidgets())?.map((widgetRegistrationEntry: AssessmentControlConfig) => widgetRegistrationEntry.inputAssessmentControl as DimensionControlMapping)
     
     const foundEditableWidget = this.editMode && this.selectedWidgetIndex !== -1 && renderableWidgets[this.selectedWidgetIndex as number] && Object.values(this._registeredWidgets)?.find(widget => widget.name == renderableWidgets[this.selectedWidgetIndex as number]?.componentName);
     const foundEditableWidgetConfig = this.editMode && this.selectedWidgetIndex as number !== -1 && renderableWidgets[this.selectedWidgetIndex as number]
@@ -252,7 +252,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
             ></nh-text-input>
           </div>
           <div class="widget-block-config">
-            <assessment-widget-tray
+            <assessment-tray
               .editable=${true}
               .editing=${!!this.editingConfig}
             >
@@ -262,7 +262,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                     ? repeat(renderableWidgets, (widget) => `${encodeHashToBase64(widget.dimensionEh)}-${(widget as any).componentName.replace(" ","")}`, (inputWidgetConfig, idx) => {
                         const appletEh = (inputWidgetConfig as any)?.appletId;
                         const appletKey = appletEh && encodeHashToBase64(appletEh);
-                        const appletRenderers = this._appletInstanceRenderers.value[appletKey] as (AssessmentWidgetConfig | ResourceBlockRenderer)[];
+                        const appletRenderers = this._appletInstanceRenderers.value[appletKey] as (DimensionControlMapping | ResourceBlockRenderer)[];
                         if(!appletRenderers) throw new Error('Could not get applet renderers linked to this ResourcDef');
 
                         const foundComponent = Object.values(appletRenderers).find(component => component.name == (inputWidgetConfig as { dimensionEh: EntryHash, appletId: string, componentName: string }).componentName);
@@ -320,7 +320,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                   }
                 </div>
               </div>
-            </assessment-widget-tray>
+            </assessment-tray>
             <nh-button
               id="set-widget-config"
               .variant=${'primary'}
@@ -387,16 +387,16 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
       appletId: assessment_widget.appletId,
       componentName: assessment_widget.name,
       dimensionEh: decodeHashFromBase64(input_dimension),
-    } as AssessmentWidgetConfig;
+    } as DimensionControlMapping;
     const outputDimensionBinding = {
       type: "applet",
       appletId: assessment_widget.appletId,
       componentName: assessment_widget.name,
       dimensionEh: decodeHashFromBase64(output_dimension),
-    } as AssessmentWidgetConfig;
+    } as DimensionControlMapping;
     const input = {
-      inputAssessmentWidget: inputDimensionBinding,
-      outputAssessmentWidget: outputDimensionBinding,
+      inputAssessmentControl: inputDimensionBinding,
+      outputAssessmentControl: outputDimensionBinding,
     }
     const isFromWorkingConfig = this.selectedWidgetIndex > this._fetchedConfig.length;
     let newIndex = isFromWorkingConfig ? (this.selectedWidgetIndex - this._fetchedConfig.length - 1) : this.selectedWidgetIndex;
@@ -422,16 +422,16 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
       appletId: assessment_widget.name.appletId,
       componentName: assessment_widget.name,
       dimensionEh: decodeHashFromBase64(input_dimension),
-    } as AssessmentWidgetConfig;
+    } as DimensionControlMapping;
     const outputDimensionBinding = {
       type: "applet",
       appletId: assessment_widget.name.appletId,
       componentName: assessment_widget,
       dimensionEh: decodeHashFromBase64(output_dimension),
-    } as AssessmentWidgetConfig;
+    } as DimensionControlMapping;
     const input = {
-      inputAssessmentWidget: inputDimensionBinding,
-      outputAssessmentWidget: outputDimensionBinding,
+      inputAssessmentControl: inputDimensionBinding,
+      outputAssessmentControl: outputDimensionBinding,
     }
     this.configuredInputWidgets = [ ...this?.getCombinedWorkingAndFetchedWidgets(), input];
     this._workingWidgetControls = [ ...(this?._workingWidgetControls || []), input];
@@ -520,7 +520,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     `
   }
 
-  private renderMainForm(foundEditableWidget?: AssessmentControlRegistrationInput | null, foundEditableWidgetConfig?: AssessmentWidgetConfig | null): TemplateResult {
+  private renderMainForm(foundEditableWidget?: AssessmentControlRegistrationInput | null, foundEditableWidgetConfig?: DimensionControlMapping | null): TemplateResult {
     return html`
       <nh-form
         class="responsive"
@@ -696,7 +696,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     'nh-spinner': NHSpinner,
     'nh-alert': NHAlert,
     'nh-text-input': NHTextInput,
-    'assessment-widget-tray': NHResourceAssessmentTray,
+    'assessment-tray': NHResourceAssessmentTray,
     'input-assessment-renderer': InputAssessmentRenderer,
     'assessment-container': NHAssessmentContainer,
   };

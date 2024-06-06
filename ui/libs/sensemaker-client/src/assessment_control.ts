@@ -40,7 +40,7 @@ export interface OutputAssessmentControlDelegate {
 export type AssessmentControlKind = 'input' | 'output';
 
 /**
- * Defines an Assessment Widget in an Applet config
+ * Defines an Assessment Control in an Applet config
  */
 export type AssessmentControlRenderer = {
   name: string,         // Likely appended to the App name in the dashboard configuration screen
@@ -58,8 +58,8 @@ export type AssessmentControlRenderers = Record<string, AssessmentControlRendere
  * Defines the shape of the data sent to the sensemaker to register a an assessment control
  */
 export interface AssessmentControlRegistrationInput {
-  appletId: string, // Applet id
-  controlKey: string,  // keyof an AssessmentWidgetConfigDict
+  appletId: string,
+  controlKey: string,
   name: string,
   rangeKind: RangeKind,
   kind: AssessmentControlKind
@@ -68,7 +68,7 @@ export interface AssessmentControlRegistrationInput {
 /**
  * Shape of object used to update the assessment control registration
  */
-export type AssessmentWidgetRegistrationUpdateInput = {
+export type AssessmentControlRegistrationUpdateInput = {
   assessmentRegistrationEh: EntryHash,
   assessmentRegistrationUpdate: AssessmentControlRegistrationInput
 }
@@ -76,7 +76,7 @@ export type AssessmentWidgetRegistrationUpdateInput = {
 /**
  * Maps dimensions to assessment controls
  */
-export type AssessmentWidgetConfig = {
+export type DimensionControlMapping = {
   dimensionEh: EntryHash,
   /**
    * This is specifically for when components are separated out into their own
@@ -104,12 +104,12 @@ export interface AssessmentControlConfig {
    * This is the control that allows making an assessment and displaying the
    * user's chosen selection if the user can select one of many options.
    */
-  inputAssessmentControl: AssessmentWidgetConfig,
+  inputAssessmentControl: DimensionControlMapping,
   /**
    * This is the control that displays the computed result, for the case where
    * output and input and separate, as in the Todo applet.
    */
-  outputAssessmentControl: AssessmentWidgetConfig
+  outputAssessmentControl: DimensionControlMapping
 }
 
 /**
