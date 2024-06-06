@@ -73,7 +73,7 @@ export class DashboardFilterMap extends NHComponent {
   @property() selectedContextEhB64!: EntryHashB64;
   @property() resourceDefEntries!: object[];
   
-  @state() private _widgetConfigBlocksForResourceDef: {EntryHashB64: AssessmentControlConfig[]} | {} = {};
+  @state() private _assessmentControlConfigsForResourceDef: {EntryHashB64: AssessmentControlConfig[]} | {} = {};
   @state() private _dimensionEntries!: EntryRecord<Dimension>[];
   @state() private _methodEntries!: Method[];
   @state() private _objectiveDimensionNames: string[] = [];
@@ -86,7 +86,7 @@ export class DashboardFilterMap extends NHComponent {
 
   async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     await this.fetchSelectedDimensionEntries();
-    await this.fetchWidgetControlConfigs();
+    await this.fetchAssessmentControlConfigs();
     await this.fetchMethods();
     this.partitionDimensionEntries();
   }
@@ -236,9 +236,9 @@ export class DashboardFilterMap extends NHComponent {
     try {
       for (let dimensionEntry of this._dimensionEntries) {
         if(dimensionEntry.entry.computed) continue; // Exclude objective dimensions
-        if(compareUint8Arrays(assessment.dimension_eh, dimensionEntry.entryHash) && this._widgetConfigBlocksForResourceDef[encodeHashToBase64(assessment.resource_def_eh)]) {
+        if(compareUint8Arrays(assessment.dimension_eh, dimensionEntry.entryHash) && this._assessmentControlConfigsForResourceDef[encodeHashToBase64(assessment.resource_def_eh)]) {
           // Assume that validation on client/zome has enforced XOR on input/output dimensions and use dimension EH comparison to find widget control
-          const controls = this._widgetConfigBlocksForResourceDef[encodeHashToBase64(assessment.resource_def_eh)].find(widgetConfig => compareUint8Arrays(dimensionEntry.entryHash, widgetConfig.inputAssessmentControl.dimensionEh))
+          const controls = this._assessmentControlConfigsForResourceDef[encodeHashToBase64(assessment.resource_def_eh)].find(widgetConfig => compareUint8Arrays(dimensionEntry.entryHash, widgetConfig.inputAssessmentControl.dimensionEh))
           if(!controls) throw new Error('Could not find a widget control in the widget config block that matches your assessment dimension');
 
           const inputControlName = controls.inputAssessmentControl.componentName;
@@ -344,15 +344,15 @@ export class DashboardFilterMap extends NHComponent {
       `,
   ];
 
-  async fetchWidgetControlConfigs() {
+  async fetchAssessmentControlConfigs() {
     if (!this._sensemakerStore || !this.resourceDefEntries) return;
     try {
       const configs = {} as {EntryHashB64: AssessmentControlConfig[]};
       serializeAsyncActions<Array<AssessmentControlConfig>>([...this.resourceDefEntries.map(
         (resourceDef: any) => {
-          return async () => { return Promise.resolve(this._widgetConfigBlocksForResourceDef[encodeHashToBase64(resourceDef.resource_def_eh) as EntryHashB64] = await this._sensemakerStore.getAssessmentTrayConfig(resourceDef.resource_def_eh))}
+          return async () => { return Promise.resolve(this._assessmentControlConfigsForResourceDef[encodeHashToBase64(resourceDef.resource_def_eh) as EntryHashB64] = await this._sensemakerStore.getAssessmentTrayConfig(resourceDef.resource_def_eh))}
         }
-      ), async() => Promise.resolve(console.log('fetched widget config blocks for resource defs :>> ',  this._widgetConfigBlocksForResourceDef) as any)])
+      ), async() => Promise.resolve(console.log('fetched widget config blocks for resource defs :>> ',  this._assessmentControlConfigsForResourceDef) as any)])
 
     } catch (error) {
       console.error(error);
