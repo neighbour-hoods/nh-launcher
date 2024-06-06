@@ -8,7 +8,7 @@ import { currentAppletEhContext, appletInstanceInfosContext, matrixContext, reso
 import { DnaHash, EntryHash, EntryHashB64, encodeHashToBase64 } from '@holochain/client';
 
 import DimensionsConfig from './pages/nh-dimensions-config';
-import AssessmentControlConfig from './pages/nh-assessment-control-config';
+import AssessmentTrayConfigs from './pages/nh-assessment-tray-configs';
 import NHDashBoardOverview from './pages/nh-dashboard-overview';
 
 import NHMenu from '@neighbourhoods/design-system-components/menu';
@@ -134,22 +134,24 @@ export default class NHGlobalConfig extends NHComponent {
         return html`<dashboard-overview .loaded=${this.loaded} .sensemakerStore=${this._sensemakerStore.value} .resourceDefEntries=${this._resourceDefEntries}></dashboard-overview>`;
       case ConfigPage.Dimensions:
         return html`<dimensions-config></dimensions-config>`;
-      case ConfigPage.Widgets:
-        return html`<assessment-control-config .loaded=${this.loaded} .sensemakerStore=${this._sensemakerStore.value} .resourceDef=${this.selectedResourceDef}></assessment-control-config>`;
+      case ConfigPage.AssessmentTrays:
+        return html`<assessment-tray-configs .loaded=${this.loaded} .sensemakerStore=${this._sensemakerStore.value} .resourceDef=${this.selectedResourceDef}></assessment-tray-configs>`;
+      case ConfigPage.AssessmentTrayDefaults:
+        return html`<p>Coming Soon</p>`;
       default:
         return html`<p>Coming Soon</p>`;
     }
   }
 
-  choosePageFromSubMenuItemId(itemId: string, mainMenuItemIndex: number) {
+  choosePageFromSubMenuItemId(itemId: string, mainMenuItemIndex: number, subMenuItemIndex: number) {
     switch (itemId) {
       case 'Sensemaker':
         if(mainMenuItemIndex == 0) {
           return ConfigPage.DashboardOverview
         } else if (mainMenuItemIndex == 1) {
           return ConfigPage.Dimensions 
-        } else { // 2
-          return ConfigPage.Widgets
+        } else {
+          return subMenuItemIndex == 0 ? ConfigPage.AssessmentTrays : ConfigPage.AssessmentTrayDefaults
         }
       default:
         return
@@ -181,8 +183,8 @@ export default class NHGlobalConfig extends NHComponent {
           ? html`<nh-menu
           @sub-nav-item-selected=${(e: CustomEvent) => {
             const [mainMenuItemName, mainMenuItemIndex, subMenuItemIndex] = e.detail.itemId.split(/\-/);
-            this.page = this.choosePageFromSubMenuItemId(mainMenuItemName, mainMenuItemIndex);
-            if (!(['Sensemaker'].includes(mainMenuItemName))) {
+            this.page = this.choosePageFromSubMenuItemId(mainMenuItemName, mainMenuItemIndex, subMenuItemIndex);
+            if (mainMenuItemName !== 'Sensemaker') {
               this.selectedResourceDef = undefined;
               return;
             };
@@ -218,12 +220,14 @@ export default class NHGlobalConfig extends NHComponent {
                   },
                 },
                 {
-                  label: 'Assessments',
-                  subSectionMembers: this._resourceDefEntries.map(rd =>  cleanForUI(rd.resource_name)),
+                  label: 'Assessment Trays',
+                  subSectionMembers: ["Edit", "Defaults"],
                   callback: () => {
                     this.selectedResourceDef = this._resourceDefEntries[0];
-                    if(this?._menu) this!._menu!.selectedMenuItemId = "Sensemaker-2-0"; // pick the first resource as a default
-                    this.page = ConfigPage.Widgets
+                    if(this?._menu) {
+                      this!._menu!.selectedMenuItemId = "Sensemaker-2-0";
+                      this.page = ConfigPage.AssessmentTrays;
+                    }
                   },
                 },
                 {
@@ -268,7 +272,7 @@ export default class NHGlobalConfig extends NHComponent {
   static elementDefinitions = {
     'nh-menu': NHMenu,
     'dimensions-config': DimensionsConfig,
-    'assessment-control-config': AssessmentControlConfig,
+    'assessment-tray-configs': AssessmentTrayConfigs,
     'dashboard-overview': NHDashBoardOverview,
   };
 
