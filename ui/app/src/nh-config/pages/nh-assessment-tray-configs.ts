@@ -2,7 +2,6 @@ import { html, css, TemplateResult, PropertyValueMap, CSSResult } from 'lit';
 import { consume } from '@lit/context';
 import { StoreSubscriber } from 'lit-svelte-stores';
 
-import { object, string } from 'yup';
 import { appletInstanceInfosContext } from '../../context';
 import {
   EntryHash,
@@ -10,7 +9,7 @@ import {
   decodeHashFromBase64,
   encodeHashToBase64,
 } from '@holochain/client';
-import { compareUint8Arrays } from '@neighbourhoods/app-loader';
+import { FakeInputAssessmentControlDelegate, ResourceBlockRenderer, compareUint8Arrays } from '@neighbourhoods/app-loader';
 
 import NHAlert from '@neighbourhoods/design-system-components/alert';
 import NHAssessmentContainer from '@neighbourhoods/design-system-components/widgets/assessment-container';
@@ -26,28 +25,27 @@ import NHSpinner from '@neighbourhoods/design-system-components/spinner';
 import NHTooltip from '@neighbourhoods/design-system-components/tooltip';
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 import NHTextInput from '@neighbourhoods/design-system-components/input/text';
-import { b64images } from '@neighbourhoods/design-system-styles';
+import { b64images } from "@neighbourhoods/design-system-styles";
 
 import { property, query, queryAll, state } from 'lit/decorators.js';
 import {
   AssessmentControlConfig,
   DimensionControlMapping,
   AssessmentControlRegistrationInput,
-  AssessmentControlRenderer,
   Constructor,
   Dimension,
   InputAssessmentControlDelegate,
   Method,
   SensemakerStore,
   AssessmentTrayConfig,
+  AssessmentControlRenderer,
 } from '@neighbourhoods/client';
 import {repeat} from 'lit/directives/repeat.js';
 import { InputAssessmentRenderer } from '@neighbourhoods/app-loader';
 import { derived } from 'svelte/store';
 import { Applet } from '../../types';
-import { FakeInputAssessmentControlDelegate } from '@neighbourhoods/app-loader';
+import { object, string } from 'yup';
 import { dimensionIncludesControlRange } from '../../utils';
-import { ResourceBlockRenderer } from '@neighbourhoods/app-loader';
 
 export default class NHAssessmentControlConfig extends NHComponent {
   @property() loaded!: boolean;
@@ -113,7 +111,6 @@ export default class NHAssessmentControlConfig extends NHComponent {
   @state() private _unpartitionedDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
   @state() private _rangeEntries!: Array<Range & { range_eh: EntryHash }>;
   @state() private _methodEntries!: Method[] | undefined;
-
 
   async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     this.loading = true;
@@ -225,7 +222,7 @@ export default class NHAssessmentControlConfig extends NHComponent {
     const foundEditableWidgetConfig = this.editMode && this.selectedWidgetIndex as number !== -1 && renderableWidgets[this.selectedWidgetIndex as number]
     return html`
       <div class="container" @assessment-widget-config-set=${async () => {await this.fetchRegisteredAssessmentControls()}}>
-        <nh-page-header-card .heading=${'Assessment Widget Config'}>
+        <nh-page-header-card .heading=${'Assessment Tray Configurations'}>
           <nh-button
             slot="secondary-action"
             .variant=${'neutral'}

@@ -1,7 +1,8 @@
 import { Assessment, DimensionEh } from '@neighbourhoods/client';
 
 export enum ConfigPage {
-  Widgets = 'widgets',
+  AssessmentTrayDefaults = 'assessment-tray-defaults',
+  AssessmentTrays = 'assessment-trays',
   Dimensions = 'dimensions',
   DashboardOverview = 'overview',
 }

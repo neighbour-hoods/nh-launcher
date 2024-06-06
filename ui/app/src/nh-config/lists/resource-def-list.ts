@@ -11,32 +11,9 @@ import NHComponent from '@neighbourhoods/design-system-components/ancestors/base
 import { b64images } from "@neighbourhoods/design-system-styles";
 
 export default class ResourceDefList extends NHComponent {
-  @property()
-  sensemakerStore!: SensemakerStore;
+  @property() sensemakerStore!: SensemakerStore;
 
-  @state()
-  private _resourceDefEntries: Array<ResourceDef> = [ {
-    "resource_name": "Feed Post",
-    "base_types": [],
-    "role_name": "test_provider_dna",
-    "zome_name": "provider",
-  },{
-    "resource_name": "Todo Item",
-    "base_types": [],
-    "role_name": "test_provider_dna",
-    "zome_name": "provider",
-  },{
-    "resource_name": "Photo",
-    "base_types": [],
-    "role_name": "test_provider_dna",
-    "zome_name": "provider",
-  },{
-    "resource_name": "Article",
-    "base_types": [],
-    "role_name": "test_provider_dna",
-    "zome_name": "provider",
-  },
-  ];
+  @state() private _resourceDefEntries: Array<ResourceDef>;
 
   protected async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
     const result = await this.sensemakerStore.getResourceDefs()
@@ -47,8 +24,9 @@ export default class ResourceDefList extends NHComponent {
   render() {
     return html`
       <nh-button-group class="content"  .direction=${"vertical"}
-      .fixedFirstItem=${true}
-      .addItemButton=${true}>
+        .fixedFirstItem=${true}
+        .addItemButton=${true}
+      >
         <nh-card-list
           class="nested"
           slot="buttons"
