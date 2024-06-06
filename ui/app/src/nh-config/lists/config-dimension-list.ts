@@ -122,7 +122,7 @@ export default class ConfigDimensionList extends NHComponent {
             <option value="inbound">Choose Inbound</option>
           </select><br /><br />`
         // Only input dimension overlaps:
-        case duplicateOf.overlap.fields.includes(PartialOverlapField.InputDimension) && duplicateOf.overlap.fields.length == 1:
+        case duplicateOf.overlap.type !== Overlap.CompleteOutput && duplicateOf.overlap.fields.includes(PartialOverlapField.InputDimension):
           const inboundDimensionLinkedMethods = this.configMethods.filter(method => matchesConfigMethodOutputDimension(inboundDimension, method)); 
           const inboundDimensionLinkedInputDimension = inboundDimensionLinkedMethods[0].input_dimensions[0];
           const existingOverlappingInputDimension = this.otherConfigDimensionList?.inboundDimensionDuplicates?.find(dim => dim == inboundDimensionLinkedInputDimension);
