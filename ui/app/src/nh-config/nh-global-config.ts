@@ -9,6 +9,7 @@ import { DnaHash, EntryHash, EntryHashB64, encodeHashToBase64 } from '@holochain
 
 import DimensionsConfig from './pages/nh-dimensions-config';
 import AssessmentTrayConfigs from './pages/nh-assessment-tray-configs';
+import AssessmentTrayDefaults from './pages/nh-assessment-tray-defaults';
 import NHDashBoardOverview from './pages/nh-dashboard-overview';
 
 import NHMenu from '@neighbourhoods/design-system-components/menu';
@@ -137,7 +138,7 @@ export default class NHGlobalConfig extends NHComponent {
       case ConfigPage.AssessmentTrays:
         return html`<assessment-tray-configs .loaded=${this.loaded} .sensemakerStore=${this._sensemakerStore.value} .resourceDef=${this.selectedResourceDef}></assessment-tray-configs>`;
       case ConfigPage.AssessmentTrayDefaults:
-        return html`<p>Coming Soon</p>`;
+        return html`<assessment-tray-defaults .loaded=${this.loaded} .sensemakerStore=${this._sensemakerStore.value}></assessment-tray-defaults>`;
       default:
         return html`<p>Coming Soon</p>`;
     }
@@ -273,6 +274,7 @@ export default class NHGlobalConfig extends NHComponent {
     'nh-menu': NHMenu,
     'dimensions-config': DimensionsConfig,
     'assessment-tray-configs': AssessmentTrayConfigs,
+    'assessment-tray-defaults': AssessmentTrayDefaults,
     'dashboard-overview': NHDashBoardOverview,
   };
 
