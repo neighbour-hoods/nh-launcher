@@ -396,8 +396,8 @@ export class SensemakerStore {
     return contextResult;
   }
 
-  async getAssessmentTrayConfig(resourceDefEh: EntryHash): Promise<EntryRecord<AssessmentTrayConfig> | null> {
-    const record = await this.service.getAssessmentTrayConfig(resourceDefEh);
+  async getAssessmentTrayConfig(assessmentTrayEh: EntryHash): Promise<EntryRecord<AssessmentTrayConfig> | null> {
+    const record = await this.service.getAssessmentTrayConfig(assessmentTrayEh);
     if(!record) return null;
     return new EntryRecord<AssessmentTrayConfig>(record)
   }
