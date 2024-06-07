@@ -9,8 +9,8 @@ import {
   decodeHashFromBase64,
   encodeHashToBase64,
 } from '@holochain/client';
-import { FakeInputAssessmentControlDelegate, ResourceBlockRenderer, compareUint8Arrays } from '@neighbourhoods/app-loader';
 
+import NHResourceDefList from  '../lists/resource-def-list';
 import NHAlert from '@neighbourhoods/design-system-components/alert';
 import NHAssessmentContainer from '@neighbourhoods/design-system-components/widgets/assessment-container';
 import NHButton from '@neighbourhoods/design-system-components/button';
@@ -84,6 +84,8 @@ export default class NHAssessmentControlConfig extends NHComponent {
           >
           </nh-button>
         </nh-page-header-card>
+        <resource-def-list .sensemakerStore=${this.sensemakerStore}>
+        </resource-def-list>
       </div>
     `
   }
@@ -101,6 +103,7 @@ export default class NHAssessmentControlConfig extends NHComponent {
     'nh-alert': NHAlert,
     'nh-text-input': NHTextInput,
     'assessment-tray': NHResourceAssessmentTray,
+    'resource-def-list': NHResourceDefList,
     'input-assessment-renderer': InputAssessmentRenderer,
     'assessment-container': NHAssessmentContainer,
   };
