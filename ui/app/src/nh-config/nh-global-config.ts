@@ -136,7 +136,7 @@ export default class NHGlobalConfig extends NHComponent {
       case ConfigPage.Dimensions:
         return html`<dimensions-config></dimensions-config>`;
       case ConfigPage.AssessmentTrays:
-        return html`<assessment-tray-configs .loaded=${this.loaded} .sensemakerStore=${this._sensemakerStore.value} .resourceDef=${this.selectedResourceDef}></assessment-tray-configs>`;
+        return html`<assessment-tray-configs .loaded=${this.loaded} .sensemakerStore=${this._sensemakerStore.value}></assessment-tray-configs>`;
       case ConfigPage.AssessmentTrayDefaults:
         return html`<assessment-tray-defaults .loaded=${this.loaded} .sensemakerStore=${this._sensemakerStore.value}></assessment-tray-defaults>`;
       default:
