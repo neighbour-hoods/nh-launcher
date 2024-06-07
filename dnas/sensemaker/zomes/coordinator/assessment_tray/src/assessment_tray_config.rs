@@ -12,6 +12,7 @@ fn get_assessment_tray_config(assessment_tray_eh: EntryHash) -> ExternResult<Opt
 
 #[hdk_extern]
 fn get_assessment_tray_configs(_:()) -> ExternResult<Vec<Record>> {
+    // TODO: test coverage for this extern
     let links = get_links(
         tray_configs_typed_path()?.path_entry_hash()?,
         LinkTypes::AssessmentTrayConfig,
