@@ -26,6 +26,7 @@ import { derived } from 'svelte/store';
 import { compareUint8Arrays, createInputAssessmentControlDelegate, InputAssessmentRenderer } from '../../../../libs/app-loader';
 import { appletInstanceInfosContext } from '../../context';
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+import { AssessmentTrayConfig } from '@neighbourhoods/client';
 
 type DecoratorProps = {
   renderer: AssessmentControlRenderer,
@@ -73,7 +74,7 @@ export class DashboardFilterMap extends NHComponent {
   @property() selectedContextEhB64!: EntryHashB64;
   @property() resourceDefEntries!: object[];
   
-  @state() private _assessmentControlConfigsForResourceDef: {EntryHashB64: AssessmentControlConfig[]} | {} = {};
+  @state() private _assessmentTrayConfigDefaultsForResourceDefs: {EntryHashB64: AssessmentTrayConfig} | {} = {};
   @state() private _dimensionEntries!: EntryRecord<Dimension>[];
   @state() private _methodEntries!: Method[];
   @state() private _objectiveDimensionNames: string[] = [];
@@ -236,9 +237,9 @@ export class DashboardFilterMap extends NHComponent {
     try {
       for (let dimensionEntry of this._dimensionEntries) {
         if(dimensionEntry.entry.computed) continue; // Exclude objective dimensions
-        if(compareUint8Arrays(assessment.dimension_eh, dimensionEntry.entryHash) && this._assessmentControlConfigsForResourceDef[encodeHashToBase64(assessment.resource_def_eh)]) {
+        if(compareUint8Arrays(assessment.dimension_eh, dimensionEntry.entryHash) && this._assessmentTrayConfigDefaultsForResourceDefs[encodeHashToBase64(assessment.resource_def_eh)]) {
           // Assume that validation on client/zome has enforced XOR on input/output dimensions and use dimension EH comparison to find widget control
-          const controls = this._assessmentControlConfigsForResourceDef[encodeHashToBase64(assessment.resource_def_eh)].find(widgetConfig => compareUint8Arrays(dimensionEntry.entryHash, widgetConfig.inputAssessmentControl.dimensionEh))
+          const controls = this._assessmentTrayConfigDefaultsForResourceDefs[encodeHashToBase64(assessment.resource_def_eh)]?.assessmentControlConfigs.find(widgetConfig => compareUint8Arrays(dimensionEntry.entryHash, widgetConfig.inputAssessmentControl.dimensionEh))
           if(!controls) throw new Error('Could not find a widget control in the widget config block that matches your assessment dimension');
 
           const inputControlName = controls.inputAssessmentControl.componentName;
@@ -350,10 +351,11 @@ export class DashboardFilterMap extends NHComponent {
       const configs = {} as {EntryHashB64: AssessmentControlConfig[]};
       serializeAsyncActions<Array<AssessmentControlConfig>>([...this.resourceDefEntries.map(
         (resourceDef: any) => {
-          return async () => { return Promise.resolve(this._assessmentControlConfigsForResourceDef[encodeHashToBase64(resourceDef.resource_def_eh) as EntryHashB64] = await this._sensemakerStore.getAssessmentTrayConfig(resourceDef.resource_def_eh))}
+          return async () => {
+            const maybeTray = await this._sensemakerStore.getDefaultAssessmentTrayForResourceDef(resourceDef.resource_def_eh);
+            return Promise.resolve(this._assessmentTrayConfigDefaultsForResourceDefs[encodeHashToBase64(resourceDef.resource_def_eh) as EntryHashB64] = maybeTray)}
         }
-      ), async() => Promise.resolve(console.log('fetched assessment control configs for resource defs :>> ',  this._assessmentControlConfigsForResourceDef) as any)])
-
+      ), async() => Promise.resolve(console.log('fetched default assessment trays for resource defs :>> ',  this._assessmentTrayConfigDefaultsForResourceDefs) as any)])
     } catch (error) {
       console.error(error);
     }
