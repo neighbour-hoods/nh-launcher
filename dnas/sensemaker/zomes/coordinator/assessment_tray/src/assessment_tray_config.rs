@@ -4,6 +4,9 @@ use nh_zome_assessment_tray_integrity::*;
 #[hdk_extern]
 fn get_assessment_tray_config(assessment_tray_eh: EntryHash) -> ExternResult<Option<Record>> {
     let maybe_tray = get(assessment_tray_eh, GetOptions::default())?;
+    // TODO: ensure we have a tray before returning
+
+    debug!("_+_+_+_+_+_+_+_+_+_ Maybe tray entry: {:#?}", maybe_tray.clone());
     Ok(maybe_tray)
 }
 
@@ -53,6 +56,8 @@ fn get_default_assessment_tray_config_for_resource_def(resource_def_eh: EntryHas
         None,
     )?;
 
+    debug!("_+_+_+_+_+_+_+_+_+_ Default tray links: {:#?}", links.clone());
+
     let default_link = links.iter().next();
     if let Some(link) = default_link {
         let link_target_eh = link.clone().target.into_entry_hash();
@@ -98,6 +103,8 @@ fn set_default_assessment_tray_config_for_resource_def(SetAssessmentTrayDefaultI
         LinkTypes::ResourceDefDefaultAssessmentTrayConfig,
         (),
     )?;
+
+    debug!("_+_+_+_+_+_+_+_+_+_ Created default tray link: {:#?}", _link_action_hash);
     Ok(assessment_tray_eh)
 }
 
