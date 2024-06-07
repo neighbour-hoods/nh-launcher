@@ -10,6 +10,31 @@ fn get_assessment_tray_config(assessment_tray_eh: EntryHash) -> ExternResult<Opt
     Ok(maybe_tray)
 }
 
+#[hdk_extern]
+fn get_assessment_tray_configs(_:()) -> ExternResult<Vec<Record>> {
+    let links = get_links(
+        tray_configs_typed_path()?.path_entry_hash()?,
+        LinkTypes::AssessmentTrayConfig,
+        None,
+    )?;
+    match links.last() {
+        Some(_link) => {
+            let collected_get_results: ExternResult<Vec<Option<Record>>> = links.into_iter().map(|link| {
+                let entry_hash = link.target.into_entry_hash()
+                    .ok_or_else(|| wasm_error!(WasmErrorInner::Guest(String::from("Invalid link target"))))?;
+
+                    get_assessment_tray_config(entry_hash)
+            }).collect();
+
+            // Handle the Result and then filter_map to remove None values
+            collected_get_results.map(|maybe_records| {
+                maybe_records.into_iter().filter_map(|maybe_record| maybe_record).collect::<Vec<Record>>()
+            })
+        }
+        None => Ok(vec![])
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
 #[serde(rename_all = "camelCase")]
 pub struct AssessmentTrayConfigInput {
