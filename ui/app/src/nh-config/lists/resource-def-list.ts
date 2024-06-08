@@ -38,7 +38,6 @@ export default class ResourceDefList extends NHComponent {
       } catch (e) {
         console.error(e)
       }
-      debugger;
     }
   }
 

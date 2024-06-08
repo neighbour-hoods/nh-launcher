@@ -1,55 +1,28 @@
-import { html, css, TemplateResult, PropertyValueMap, CSSResult } from 'lit';
-import { consume } from '@lit/context';
-import { StoreSubscriber } from 'lit-svelte-stores';
+import { css, CSSResult, html, PropertyValueMap } from "lit";
+import { property, query } from "lit/decorators.js";
 
-import { appletInstanceInfosContext } from '../../context';
-import {
-  EntryHash,
-  EntryHashB64,
-  decodeHashFromBase64,
-  encodeHashToBase64,
-} from '@holochain/client';
-import { FakeInputAssessmentControlDelegate, ResourceBlockRenderer, compareUint8Arrays } from '@neighbourhoods/app-loader';
-
-import NHAlert from '@neighbourhoods/design-system-components/alert';
-import NHAssessmentContainer from '@neighbourhoods/design-system-components/widgets/assessment-container';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 import NHButton from '@neighbourhoods/design-system-components/button';
 import NHButtonGroup from '@neighbourhoods/design-system-components/button-group';
 import NHCard from '@neighbourhoods/design-system-components/card';
 import NHDialog from '@neighbourhoods/design-system-components/dialog';
 import NHDropdownAccordion from '@neighbourhoods/design-system-components/dropdown-accordion';
 import NHForm from '@neighbourhoods/design-system-components/form/form';
-import NHPageHeaderCard from '@neighbourhoods/design-system-components/page-header-card';
-import NHResourceAssessmentTray from '@neighbourhoods/design-system-components/widgets/resource-assessment-tray';
-import NHSpinner from '@neighbourhoods/design-system-components/spinner';
-import NHTooltip from '@neighbourhoods/design-system-components/tooltip';
-import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
-import NHTextInput from '@neighbourhoods/design-system-components/input/text';
+import CreateOrEditTrayConfig from '../forms/create-edit-assessment-tray';
+import AssessmentTrayConfigList from '../lists/assessment-tray-config-list';
+import { SensemakerStore } from "@neighbourhoods/client";
 import { b64images } from "@neighbourhoods/design-system-styles";
 
-import { property, query, queryAll, state } from 'lit/decorators.js';
-import {
-  AssessmentControlConfig,
-  DimensionControlMapping,
-  AssessmentControlRegistrationInput,
-  Constructor,
-  Dimension,
-  InputAssessmentControlDelegate,
-  Method,
-  SensemakerStore,
-  AssessmentTrayConfig,
-  AssessmentControlRenderer,
-} from '@neighbourhoods/client';
-import {repeat} from 'lit/directives/repeat.js';
-import { InputAssessmentRenderer } from '@neighbourhoods/app-loader';
-import { derived } from 'svelte/store';
-import { Applet } from '../../types';
-import { object, string } from 'yup';
-import { dimensionIncludesControlRange } from '../../utils';
+export default class AssessmentTrayConfigs extends NHComponent {
+  @property() loaded: boolean = false;
 
-export default class NHAssessmentControlConfig extends NHComponent {
-  @property() loaded!: boolean;
+  @query('nh-dialog')
+  private _dialog;
 
+  @property()
+  createTrayConfigDialogButton!: HTMLElement;
+
+  @property()
   sensemakerStore!: SensemakerStore;
 
   @consume({ context: appletInstanceInfosContext })
@@ -221,464 +194,47 @@ export default class NHAssessmentControlConfig extends NHComponent {
     const foundEditableWidget = this.editMode && this.selectedWidgetIndex !== -1 && renderableWidgets[this.selectedWidgetIndex as number] && Object.values(this._registeredWidgets)?.find(widget => widget.name == renderableWidgets[this.selectedWidgetIndex as number]?.componentName);
     const foundEditableWidgetConfig = this.editMode && this.selectedWidgetIndex as number !== -1 && renderableWidgets[this.selectedWidgetIndex as number]
     return html`
-      <div class="container" @assessment-widget-config-set=${async () => {await this.fetchRegisteredAssessmentControls()}}>
-        <nh-page-header-card .heading=${'Assessment Tray Configurations'}>
-          <nh-button
-            slot="secondary-action"
-            .variant=${'neutral'}
-            .size=${'icon'}
-            .iconImageB64=${b64images.icons.backCaret}
-            @click=${() => this.onClickBackButton()}
+    <div class="container">
+      <nh-page-header-card .heading=${'Assessment Tray Configurations'}>
+        <nh-button
+          slot="secondary-action"
+          .variant=${'neutral'}
+          .size=${'icon'}
+          .iconImageB64=${b64images.icons.backCaret}
+          @click=${() => this.onClickBackButton()}
+        >
+        </nh-button>
+      </nh-page-header-card>
+
+      <nh-dialog
+        id="dialog"
+        class="no-title"
+        .dialogType=${"input-form"}
+        .title="Create Assessment Tray Config"
+        .handleOk=${() => {}}
+        .size=${"medium"}
+        .openButtonRef=${(() => this.createTrayConfigDialogButton)()}
+      >
+        <div slot="inner-content" class="row">
+          <create-or-edit-tray
+            .sensemakerStore=${this.sensemakerStore}
           >
-          </nh-button>
-        </nh-page-header-card>
-
-        <div class="description">
-          <p>Add as many widgets as you need - the changes won't be saved until the Update Config button is pressed</p>
+          </create-or-edit-tray>
         </div>
-        <div>
-          <div class="tray-name-field">
-            <nh-text-input
-              id="tray-name"
-              .name="tray-name"
-              .label=${"Name:"}
-              .size=${"medium"}
-              .placeholder=${"Enter a name"}
-              .required=${true}
-              .errored=${this._trayNameFieldErrored}
-              @change=${(e) => (this._trayName = e.target.value)}
-            ></nh-text-input>
-          </div>
-          <div class="widget-block-config">
-            <assessment-tray
-              .editable=${true}
-              .editing=${!!this.editingConfig}
-            >
-              <div slot="widgets">
-                ${
-                  this._appletInstanceRenderers?.value && (this._fetchedConfig && this._fetchedConfig.length > 0 || this?._workingWidgetControls)
-                    ? repeat(renderableWidgets, (widget) => `${encodeHashToBase64(widget.dimensionEh)}-${(widget as any).componentName.replace(" ","")}`, (inputWidgetConfig, idx) => {
-                        const appletEh = (inputWidgetConfig as any)?.appletId;
-                        const appletKey = appletEh && encodeHashToBase64(appletEh);
-                        const appletRenderers = this._appletInstanceRenderers.value[appletKey] as (DimensionControlMapping | ResourceBlockRenderer)[];
-                        if(!appletRenderers) throw new Error('Could not get applet renderers linked to this ResourcDef');
-
-                        const foundComponent = Object.values(appletRenderers).find(component => component.name == (inputWidgetConfig as { dimensionEh: EntryHash, appletId: string, componentName: string }).componentName);
-                        if(!foundComponent) return;
-
-                        const controlKey = Object.values(this._registeredWidgets).find(widget => widget.name == foundComponent.name)?.controlKey;
-                        const renderBlock = this._workingWidgetControlRendererCache.get(controlKey as string);
-                        if(!controlKey || !renderBlock) return;
-
-                        const templateResult = !!this.updatedComponent ? renderBlock(undefined, this.updatedComponent) : renderBlock(undefined, foundComponent.component);
-                        const hasUpdated = !!this.updatedComponent;
-                        if(hasUpdated) this.updatedComponent = undefined;
-
-                        return html`
-                          <assessment-container .editMode=${true}
-                            @selected=${this.handleAssessmentControlSelected}
-                            @deselected=${this.undoDeselect}
-                            .selected=${idx == this.selectedWidgetIndex}
-                          >
-                            <span slot="assessment-output">0</span>
-                            ${templateResult}
-                          </assessment-container>
-                        `;
-                      })
-                    : null
-                }
-                ${this.loading 
-                  ? html`<nh-spinner type=${"icon"}></nh-spinner>`
-                  : this.editingConfig || !this._fetchedConfig
-                    ? html` <assessment-container .editMode=${true}
-                              id="placeholder"
-                              @selected=${this.handleAssessmentControlSelected}
-                              @deselected=${this.undoDeselect}
-                              .selected=${this.selectedWidgetIndex == -1}
-                            >
-                              <span slot="assessment-output">0</span>
-                              ${this.renderWidgetControlPlaceholder()}
-                            </assessment-container>`
-                    : null}
-              </div>
-              <div slot="controls">
-                <div name="add-widget-icon" class="add-widget-icon" @click=${async (e: CustomEvent) => {
-                  this.resetAssessmentControlsSelected();
-                  this.reselectPlaceholderControl();
-                  this.editingConfig = true;
-                }}>
-                  ${
-                  this.editingConfig
-                  ? html`<nh-spinner type=${"icon"}></nh-spinner>`
-                  : html`
-                    <nh-tooltip .variant=${this.editingConfig ? "warning" : "success"} text="To add a widget, click the plus icon." class="right no-icon">
-                      <img slot="hoverable" class="add-assessment-icon" src=${`data:image/svg+xml;base64,${b64images.icons.plus}`} alt=${"Add a widget"} />
-                    </nh-tooltip>
-                  `
-                  }
-                </div>
-              </div>
-            </assessment-tray>
-            <nh-button
-              id="set-widget-config"
-              .variant=${'primary'}
-              .loading=${this.loading}
-              .disabled=${!this.loading && this._fetchedConfig && this.configuredWidgetsPersisted}
-              .size=${'md'}
-              @click=${async () => {
-                if(!this._trayName || this._trayName == "") {
-                  this._trayNameFieldErrored = true;
-                  return
-                }
-                try {
-                  await this.createEntries();
-                  this._trayNameFieldErrored = false;
-                } catch (error) {
-                  console.warn('error :>> ', error);
-                }
-                // this._successAlert.openToast();
-                this.configuredWidgetsPersisted = true
-              }}
-            >Update Config</nh-button>
-          </div>
-
-          <nh-dropdown-accordion
-            .open=${!!this.editingConfig}
-            @submit-successful=${async () => {
-              this.placeHolderWidget = undefined;
-              this.requestUpdate()
-              await this.updateComplete
-          }}>
-            <div slot="inner-content">
-              <h2>${this.editMode ? "Update Control" : "Add Control"}</h2>
-              ${this.renderMainForm(!!foundEditableWidget ? foundEditableWidget : null, !!foundEditableWidgetConfig ? foundEditableWidgetConfig : null)}
-            </div>
-            ${this.renderButtonGroup()}
-          </nh-dropdown-accordion>
-            
-          <nh-alert
-            id="success-toast"
-            .title=${"You have saved your changes."}
-            .description=${"You have saved your changes."}
-            .closable=${true}
-            .isToast=${true}
-            .open=${false}
-            .type=${"success"}></nh-alert>
-          </div>
-        </div>
-      </div>
-    </div>`;
-  }
-
-  async replaceInMemoryWidgetControl(model: any) {
-    if(typeof this.selectedWidgetIndex == 'undefined') throw new Error('No widget index so cannot replace widget control in working widgets array');
-    const { assessment_widget, input_dimension, output_dimension } = model;
-
-    const selectedWidgetDetails = Object.entries(this._registeredWidgets || {}).find(
-      ([_widgetEh, widget]) => widget.name == assessment_widget.name,
-    );
-    const selectedWidgetEh = selectedWidgetDetails?.[0];
-    if (!selectedWidgetEh) return Promise.reject('Could not get an entry hash for your selected widget.');
-
-    const inputDimensionBinding = {
-      type: "applet",
-      appletId: assessment_widget.appletId,
-      componentName: assessment_widget.name,
-      dimensionEh: decodeHashFromBase64(input_dimension),
-    } as DimensionControlMapping;
-    const outputDimensionBinding = {
-      type: "applet",
-      appletId: assessment_widget.appletId,
-      componentName: assessment_widget.name,
-      dimensionEh: decodeHashFromBase64(output_dimension),
-    } as DimensionControlMapping;
-    const input = {
-      inputAssessmentControl: inputDimensionBinding,
-      outputAssessmentControl: outputDimensionBinding,
-    }
-    const isFromWorkingConfig = this.selectedWidgetIndex > this._fetchedConfig.length;
-    let newIndex = isFromWorkingConfig ? (this.selectedWidgetIndex - this._fetchedConfig.length - 1) : this.selectedWidgetIndex;
-    (isFromWorkingConfig ? this._workingWidgetControls : this._fetchedConfig).splice(newIndex, 1, input);
-
-    this._updateToFetchedConfig = this._fetchedConfig;
-    this.configuredWidgetsPersisted = false;
-    
-    this.requestUpdate();
-  }
-  
-  async pushToInMemoryWidgetControls(model: any) {
-    const { assessment_widget, input_dimension, output_dimension } = model;
-
-    const selectedWidgetDetails = Object.entries(this._registeredWidgets || {}).find(
-      ([_widgetEh, widget]) => widget.name == assessment_widget.name,
-    );
-    const selectedWidgetEh = selectedWidgetDetails?.[0];
-    if (!selectedWidgetEh) return Promise.reject('Could not get an entry hash for your selected widget.');
-
-    const inputDimensionBinding = {
-      type: "applet",
-      appletId: assessment_widget.name.appletId,
-      componentName: assessment_widget.name,
-      dimensionEh: decodeHashFromBase64(input_dimension),
-    } as DimensionControlMapping;
-    const outputDimensionBinding = {
-      type: "applet",
-      appletId: assessment_widget.name.appletId,
-      componentName: assessment_widget,
-      dimensionEh: decodeHashFromBase64(output_dimension),
-    } as DimensionControlMapping;
-    const input = {
-      inputAssessmentControl: inputDimensionBinding,
-      outputAssessmentControl: outputDimensionBinding,
-    }
-    this.configuredInputWidgets = [ ...this?.getCombinedWorkingAndFetchedWidgets(), input];
-    this._workingWidgetControls = [ ...(this?._workingWidgetControls || []), input];
-    this.configuredWidgetsPersisted = false;
-
-    this.resetAssessmentControlsSelected();
-    this.selectedWidgetIndex = -1;
-    this.editMode = false;
-    this.reselectPlaceholderControl();
-    this.requestUpdate();
-  }
-
-  async createEntries() {
-    if(!this._workingWidgetControls || !(this._workingWidgetControls.length > 0)) throw Error('Nothing to persist, try adding another widget to the config.')
-    const resource_def_eh = this.resourceDef?.resource_def_eh;
-
-    try {
-      await (
-        this.sensemakerStore as SensemakerStore
-      ).setAssessmentTrayConfig(resource_def_eh, this.getCombinedWorkingAndFetchedWidgets());
-    } catch (error) {
-      return Promise.reject('Error setting assessment widget config');
-    }
-    await this.updateComplete;
-    this._form.dispatchEvent(
-      new CustomEvent('assessment-widget-config-set', {
-        bubbles: true,
-        composed: true,
-      }),
-    );
-  }
-
-  handleFormChange = async e => {
-    const widgets = typeof this._registeredWidgets == 'object' && Object.values(this._registeredWidgets) || []
-
-    const selectedWidget = widgets?.find(widget => widget.name == this._form._model.assessment_widget);
-    this.selectedWidgetKey = selectedWidget?.controlKey;
-
-    this.placeHolderWidget = this?._workingWidgetControlRendererCache.get(this.selectedWidgetKey as string) as (delegate?: InputAssessmentControlDelegate) => TemplateResult;
-
-    this.selectedInputDimensionEh = this._form._model.input_dimension;
-
-    e.currentTarget.requestUpdate();
-    await e.currentTarget.updateComplete;
-  }
-
-  private renderButtonGroup(): TemplateResult {
-    return html`
-      <nh-button-group
-        .direction=${'horizontal'}
-        class="action-buttons"
-        slot="actions"
+      </nh-dialog>
+      <assessment-tray-config-list
+        .sensemakerStore=${this.sensemakerStore}
       >
-        <span slot="buttons">
-          <nh-button
-            id="close-widget-config"
-            .variant=${'danger'}
-            .size=${'md'}
-            @click=${async () => {
-              this.editingConfig = false;
-              await this.resetWorkingState()
-            }}
-          >Cancel</nh-button>
-
-          <nh-button
-            id="reset-widget-config"
-            .variant=${'warning'}
-            .size=${'md'}
-            @click=${async () => {
-              if(this.editingConfig) {
-                await this.resetWorkingState();
-                this.reselectPlaceholderControl()
-              }
-              this._form.reset()
-            }}
-          >Reset</nh-button>
-
-          <nh-button
-            type="submit"
-            id="add-widget-config"
-            .variant=${'success'}
-            .size=${'md'}
-          >${this.editMode ? "Update" : "Add"}</nh-button>
-        </span>
-      </nh-button-group>
-    `
-  }
-
-  private renderMainForm(foundEditableWidget?: AssessmentControlRegistrationInput | null, foundEditableWidgetConfig?: DimensionControlMapping | null): TemplateResult {
-    return html`
-      <nh-form
-        class="responsive"
-        @change=${this.handleFormChange}
-        .config=${{
-          submitBtnRef: (() => this.submitBtn)(),
-          rows: [1, 1, 1],
-          fields: [
-            [
-              {
-                type: 'select',
-                placeholder: 'Select',
-                label: '1. Select an assessment control for this resource: ',
-                selectOptions: (() =>
-                  this?._registeredWidgets && this?._appletInstanceRenderers.value
-                    ? Object.values(this._registeredWidgets)!
-                      .filter((widget: AssessmentControlRegistrationInput) => {
-                        const linkedResourceDefApplet = Object.values(this._currentAppletInstances.value).find(applet => compareUint8Arrays(applet.appletId, this.resourceDef.applet_eh))
-                        const fromLinkedApplet = !!linkedResourceDefApplet && (linkedResourceDefApplet.appInfo.installed_app_id == widget.appletId)
-                        return fromLinkedApplet && widget.kind == "input"
-                      })
-                      .map((widget: AssessmentControlRegistrationInput) => {
-                          const possibleRenderers : ({string: AssessmentControlRenderer | ResourceBlockRenderer})[] = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)];
-                          const renderer = possibleRenderers[widget.controlKey];
-                          if(!renderer || renderer?.kind !== 'input') throw new Error('Could not fill using widget renderer as none could be found')
-                          let renderBlock = (delegate?: InputAssessmentControlDelegate, component?: any) => html`
-                            <input-assessment-renderer slot="assessment-control"
-                              .component=${component || renderer.component}
-                              .nhDelegate=${delegate || new FakeInputAssessmentControlDelegate()}
-                            ></input-assessment-renderer>`
-
-                          this._workingWidgetControlRendererCache?.set(widget.controlKey, renderBlock)
-                          return ({
-                            label: widget.name,
-                            value: widget.name,
-                            renderBlock
-                          })})
-                    : []
-                )(), // IIFE regenerates select options dynamically
-                name: 'assessment_widget',
-                id: 'assessment-widget',
-                size: 'large',
-                required: true,
-                handleInputChangeOverload: (_e, model) => { // Update the currently editable widget constrol renderer component
-                  if(this.editMode) {
-                    const possibleRenderers : ({string: AssessmentControlRenderer | ResourceBlockRenderer})[] = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)];
-                    const widget = Object.values(this._registeredWidgets)?.find(widget=> widget.name == model.assessment_widget);
-                    if(!widget?.controlKey || widget?.kind !== 'input' || !(possibleRenderers[widget.controlKey])) throw new Error('Could not update currently editable widget control')
-                    const renderer = possibleRenderers[widget.controlKey];
-                    this.updatedComponent = renderer.component;
-                    model.input_dimension = undefined;
-                    model.output_dimension = undefined;
-                  }
-                },
-                useDefault: () => !this._form?.touched.assessment_widget,
-                defaultValue: (() => !!foundEditableWidget ? ({
-                  label: foundEditableWidget.name,
-                  value: foundEditableWidget.name,
-                  renderBlock: this._workingWidgetControlRendererCache.get(foundEditableWidget.controlKey)
-                }) : null)()
-              },
-            ],
-
-            [
-              {
-                type: 'select',
-                placeholder: 'Select',
-                label: '2. Select the input dimension: ',
-                selectOptions: (() =>
-                  this._rangeEntries && this._rangeEntries.length
-                    ? this?._inputDimensionEntries
-                        ?.filter(dimension => {
-                          const selectedWidgetRangeKind = Object.values(
-                            this._registeredWidgets,
-                          ).find(widget => widget.controlKey == this.selectedWidgetKey)?.rangeKind;
-                          if (typeof this.selectedWidgetKey == 'undefined' || !selectedWidgetRangeKind) return false;
-
-                          const dimensionRange = this._rangeEntries!.find(range =>
-                            compareUint8Arrays(range.range_eh, dimension.range_eh),
-                          ) as any;
-                          return dimensionIncludesControlRange(
-                            dimensionRange.kind,
-                            selectedWidgetRangeKind,
-                          );
-                        })
-                        .map(dimension => {
-                          return {
-                            label: dimension.name,
-                            value: encodeHashToBase64(dimension.dimension_eh),
-                          };
-                        })
-                    : [])(),
-                name: 'input_dimension',
-                id: 'input-dimension',
-                size: 'large',
-                required: true,
-                useDefault: () => !(this?._form?.touched && this._form.touched.assessment_widget),
-                defaultValue: (() => {
-                  if(!!foundEditableWidgetConfig) {
-                    const dimensionName = this._inputDimensionEntries.find(dimension => compareUint8Arrays(dimension.dimension_eh, foundEditableWidgetConfig!.dimensionEh))?.name
-                    return {
-                      label: dimensionName || 'Could not retrieve dimension',
-                      value: encodeHashToBase64(foundEditableWidgetConfig!.dimensionEh),
-                    } 
-                  }
-                })()
-              },
-            ],
-
-            [
-              {
-                type: 'select',
-                placeholder: 'Select',
-                label: '3. Select the output dimension: ',
-                selectOptions: (() =>
-                this._methodEntries && this?._outputDimensionEntries
-                  ? this._outputDimensionEntries
-                    ?.filter(dimension => {
-                      if(typeof this._methodEntries !== 'undefined') {
-                        const inputDimensions = this.findInputDimensionsForOutputDimension(dimension.dimension_eh);
-                        return inputDimensions.map(eh => encodeHashToBase64(eh)).includes(this._form._model.input_dimension)
-                      } else return false
-                    })
-                    .map(dimension => ({
-                      label: dimension.name,
-                      value: encodeHashToBase64(dimension.dimension_eh),
-                    }))
-                  : []).bind(this)(),
-                name: 'output_dimension',
-                id: 'output-dimension',
-                size: 'large',
-                required: true,
-                useDefault: () => !(this?._form?.touched && this._form.touched.assessment_widget) && typeof this._methodEntries !== 'undefined',
-                defaultValue: (() => {
-                  const outputDimensionEh = foundEditableWidgetConfig && this.findOutputDimensionForInputDimension(foundEditableWidgetConfig!.dimensionEh);
-                  const outputDimension = outputDimensionEh && this._outputDimensionEntries.find(dimension => compareUint8Arrays(dimension.dimension_eh, outputDimensionEh))
-                  return !!outputDimension 
-                    ? { 
-                        label: outputDimension?.name || 'Could not retrieve dimension',
-                        value: encodeHashToBase64(outputDimensionEh)
-                      } 
-                    : null
-                })()
-              },
-            ],
-          ],
-          submitOverload: model => this.editMode ? this.replaceInMemoryWidgetControl(model) : this.pushToInMemoryWidgetControls(model),
-          schema: object({
-            assessment_widget: object()
-              .required('Select a widget'),
-            input_dimension: string()
-              .min(1, 'Must be at least 1 characters')
-              .required('Select an input dimension'),
-            output_dimension: string()
-              .min(1, 'Must be at least 1 characters')
-              .required('Select an output dimension'),
-          }),
-        }}
-      >
-      </nh-form>
+        <nh-button
+          slot="action-button"
+          @click=${() => this._dialog.showDialog()}
+          class="create-config"
+          .variant=${"primary"}
+          .iconImageB64=${b64images.icons.plus}
+          .size=${"md"}
+        >Add</nh-button>
+      </assessment-tray-config-list>
+    </div>
     `;
   }
 
@@ -688,15 +244,8 @@ export default class NHAssessmentControlConfig extends NHComponent {
     'nh-card': NHCard,
     'nh-form': NHForm,
     'nh-dialog': NHDialog,
-    'nh-page-header-card': NHPageHeaderCard,
-    'nh-tooltip': NHTooltip,
-    'nh-dropdown-accordion': NHDropdownAccordion,
-    'nh-spinner': NHSpinner,
-    'nh-alert': NHAlert,
-    'nh-text-input': NHTextInput,
-    'assessment-tray': NHResourceAssessmentTray,
-    'input-assessment-renderer': InputAssessmentRenderer,
-    'assessment-container': NHAssessmentContainer,
+    'assessment-tray-config-list': AssessmentTrayConfigList,
+    'create-or-edit-tray': CreateOrEditTrayConfig,
   };
 
   private onClickBackButton() {

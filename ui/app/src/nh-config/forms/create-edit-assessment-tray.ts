@@ -47,7 +47,7 @@ import { Applet } from '../../types';
 import { object, string } from 'yup';
 import { dimensionIncludesControlRange } from '../../utils';
 
-export default class CreateOrEditTray extends NHComponent {
+export default class CreateOrEditTrayConfig extends NHComponent {
   @property() loaded!: boolean;
 
   sensemakerStore!: SensemakerStore;
