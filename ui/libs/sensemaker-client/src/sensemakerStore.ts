@@ -402,6 +402,11 @@ export class SensemakerStore {
     return new EntryRecord<AssessmentTrayConfig>(record)
   }
 
+  async getAssessmentTrayConfigs(): Promise<Array<EntryRecord<AssessmentTrayConfig>>> {
+    const records = await this.service.getAssessmentTrayConfigs();
+    return records.map(record => new EntryRecord<AssessmentTrayConfig>(record))
+  }
+
   async setAssessmentTrayConfig(assessmentTrayConfig: AssessmentTrayConfig): Promise<EntryRecord<AssessmentTrayConfig>> {
     const record = await this.service.setAssessmentTrayConfig(assessmentTrayConfig);
     return new EntryRecord<AssessmentTrayConfig>(record)
