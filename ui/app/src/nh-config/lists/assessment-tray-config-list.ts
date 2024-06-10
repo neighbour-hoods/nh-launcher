@@ -15,7 +15,7 @@ export default class AssessmentTrayConfigList extends NHComponent {
 
   async fetchAssessmentTrayEntries() {
     try {
-      const entryRecords = await this.sensemakerStore.getAssessmentTrays();
+      const entryRecords = await this.sensemakerStore.getAssessmentTrayConfigs();
       this._assessmentTrayEntries = entryRecords.map(entryRecord => {
         return {
           ...entryRecord.entry,

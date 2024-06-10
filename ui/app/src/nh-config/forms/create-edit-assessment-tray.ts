@@ -510,7 +510,6 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   }
 
   private renderMainForm(foundEditableWidget?: AssessmentControlRegistrationInput | null, foundEditableWidgetConfig?: DimensionControlMapping | null): TemplateResult {
-    console.log('this?._appletInstanceRenderers.value :>> ', this?._registeredWidgets, this?._appletInstanceRenderers.value);
     return html`
       <nh-form
         class="responsive"
@@ -530,9 +529,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
                       .map((assessmentControl: AssessmentControlRegistrationInput) => {
                           const possibleRenderers = Object.values(this._appletInstanceRenderers.value)[0] as any;
                           const renderer = possibleRenderers[assessmentControl.controlKey];
-                          console.log('possibleRenderers, assessmentControl.controlKey :>> ', possibleRenderers, assessmentControl.controlKey);
                           if(!renderer || renderer?.kind !== 'input') return;
-                          console.log('renderer :>> ', renderer);
                           let renderBlock = (delegate?: InputAssessmentControlDelegate, component?: NHDelegateReceiverConstructor<InputAssessmentControlDelegate>) => html`
                             <input-assessment-renderer slot="assessment-control"
                               .component=${component || renderer.component}
