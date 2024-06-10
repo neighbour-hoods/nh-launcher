@@ -39,6 +39,7 @@ import {
   SensemakerStore,
   AssessmentTrayConfig,
   AssessmentControlRenderer,
+  NHDelegateReceiverConstructor,
 } from '@neighbourhoods/client';
 import {repeat} from 'lit/directives/repeat.js';
 import { InputAssessmentRenderer } from '@neighbourhoods/app-loader';
@@ -74,7 +75,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   // @property() // Selected from the sub-menu of the page
   // resourceDef!: ResourceDef & {resource_def_eh: EntryHash };
 
-  currentApplet!: Applet;
+  // currentApplet!: Applet;
 
   @query('nh-form') private _form;
   @query('#success-toast') private _successAlert;
@@ -93,7 +94,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   @state() selectedInputDimensionEh: EntryHash | undefined; // used to filter for the 3rd select
 
   @state() _workingWidgetControls: AssessmentControlConfig[] = [];
-  @state() _workingWidgetControlRendererCache: Map<string, (delegate?: InputAssessmentControlDelegate, component?: unknown) => TemplateResult> = new Map();
+  @state() _workingAssessmentControlRendererCache: Map<string, (delegate?: InputAssessmentControlDelegate, component?: NHDelegateReceiverConstructor<InputAssessmentControlDelegate>) => TemplateResult> = new Map();
 
   @state() private _trayName!: string; // Text input value for the name
   @state() private _trayNameFieldErrored: boolean = false; // Flag for errored status on name field
@@ -181,7 +182,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
 
   // Methods for managing the state of the placeholder/selected control
   renderWidgetControlPlaceholder() {
-    if(!this.editMode && typeof this.selectedWidgetKey != 'undefined' && this._workingWidgetControlRendererCache?.has(this.selectedWidgetKey) && this?.placeHolderWidget) {
+    if(!this.editMode && typeof this.selectedWidgetKey != 'undefined' && this._workingAssessmentControlRendererCache?.has(this.selectedWidgetKey) && this?.placeHolderWidget) {
       return repeat([this.selectedWidgetKey], () => +(new Date), (_, _idx) => this.placeHolderWidget!())
     }
     return html`<span slot="assessment-control"></span>`
@@ -257,7 +258,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
                         if(!foundComponent) return;
 
                         const controlKey = Object.values(this._registeredWidgets).find(widget => widget.name == foundComponent.name)?.controlKey;
-                        const renderBlock = this._workingWidgetControlRendererCache.get(controlKey as string);
+                        const renderBlock = this._workingAssessmentControlRendererCache.get(controlKey as string);
                         if(!controlKey || !renderBlock) return;
 
                         const templateResult = !!this.updatedComponent ? renderBlock(undefined, this.updatedComponent) : renderBlock(undefined, foundComponent.component);
@@ -458,7 +459,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
     const selectedWidget = widgets?.find(widget => widget.name == this._form._model.assessment_widget);
     this.selectedWidgetKey = selectedWidget?.controlKey;
 
-    this.placeHolderWidget = this?._workingWidgetControlRendererCache.get(this.selectedWidgetKey as string) as (delegate?: InputAssessmentControlDelegate) => TemplateResult;
+    this.placeHolderWidget = this?._workingAssessmentControlRendererCache.get(this.selectedWidgetKey as string) as (delegate?: InputAssessmentControlDelegate) => TemplateResult;
 
     this.selectedInputDimensionEh = this._form._model.input_dimension;
 
@@ -509,6 +510,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   }
 
   private renderMainForm(foundEditableWidget?: AssessmentControlRegistrationInput | null, foundEditableWidgetConfig?: DimensionControlMapping | null): TemplateResult {
+    console.log('this?._appletInstanceRenderers.value :>> ', this?._registeredWidgets, this?._appletInstanceRenderers.value);
     return html`
       <nh-form
         class="responsive"
@@ -525,27 +527,24 @@ export default class CreateOrEditTrayConfig extends NHComponent {
                 selectOptions: (() =>
                   this?._registeredWidgets && this?._appletInstanceRenderers.value
                     ? Object.values(this._registeredWidgets)!
-                      .filter((widget: AssessmentControlRegistrationInput) => {
-                        const linkedResourceDefApplet = Object.values(this._currentAppletInstances.value).find(applet => compareUint8Arrays(applet.appletId, this.resourceDef.applet_eh))
-                        const fromLinkedApplet = !!linkedResourceDefApplet && (linkedResourceDefApplet.appInfo.installed_app_id == widget.appletId)
-                        return fromLinkedApplet && widget.kind == "input"
-                      })
-                      .map((widget: AssessmentControlRegistrationInput) => {
-                          const possibleRenderers : ({string: AssessmentControlRenderer | ResourceBlockRenderer})[] = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)];
-                          const renderer = possibleRenderers[widget.controlKey];
-                          if(!renderer || renderer?.kind !== 'input') throw new Error('Could not fill using widget renderer as none could be found')
-                          let renderBlock = (delegate?: InputAssessmentControlDelegate, component?: any) => html`
+                      .map((assessmentControl: AssessmentControlRegistrationInput) => {
+                          const possibleRenderers = Object.values(this._appletInstanceRenderers.value)[0] as any;
+                          const renderer = possibleRenderers[assessmentControl.controlKey];
+                          console.log('possibleRenderers, assessmentControl.controlKey :>> ', possibleRenderers, assessmentControl.controlKey);
+                          if(!renderer || renderer?.kind !== 'input') return;
+                          console.log('renderer :>> ', renderer);
+                          let renderBlock = (delegate?: InputAssessmentControlDelegate, component?: NHDelegateReceiverConstructor<InputAssessmentControlDelegate>) => html`
                             <input-assessment-renderer slot="assessment-control"
                               .component=${component || renderer.component}
                               .nhDelegate=${delegate || new FakeInputAssessmentControlDelegate()}
                             ></input-assessment-renderer>`
 
-                          this._workingWidgetControlRendererCache?.set(widget.controlKey, renderBlock)
+                          this._workingAssessmentControlRendererCache?.set(assessmentControl.controlKey, renderBlock)
                           return ({
-                            label: widget.name,
-                            value: widget.name,
+                            label: assessmentControl.name,
+                            value: assessmentControl.name,
                             renderBlock
-                          })})
+                          })}).filter(value => value)
                     : []
                 )(), // IIFE regenerates select options dynamically
                 name: 'assessment_widget',
@@ -554,10 +553,10 @@ export default class CreateOrEditTrayConfig extends NHComponent {
                 required: true,
                 handleInputChangeOverload: (_e, model) => { // Update the currently editable widget constrol renderer component
                   if(this.editMode) {
-                    const possibleRenderers : ({string: AssessmentControlRenderer | ResourceBlockRenderer})[] = this._appletInstanceRenderers.value[encodeHashToBase64(this.resourceDef.applet_eh)];
-                    const widget = Object.values(this._registeredWidgets)?.find(widget=> widget.name == model.assessment_widget);
-                    if(!widget?.controlKey || widget?.kind !== 'input' || !(possibleRenderers[widget.controlKey])) throw new Error('Could not update currently editable widget control')
-                    const renderer = possibleRenderers[widget.controlKey];
+                    const possibleRenderers = Object.values(this._appletInstanceRenderers.value)[0] as any;
+                    const assessmentControl = Object.values(this._registeredWidgets)?.find(assessmentControl=> assessmentControl.name == model.assessment_widget);
+                    if(!assessmentControl?.controlKey || assessmentControl?.kind !== 'input' || !(possibleRenderers[assessmentControl.controlKey])) throw new Error('Could not update currently editable assessmentControl control')
+                    const renderer = possibleRenderers[assessmentControl.controlKey];
                     this.updatedComponent = renderer.component;
                     model.input_dimension = undefined;
                     model.output_dimension = undefined;
@@ -567,7 +566,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
                 defaultValue: (() => !!foundEditableWidget ? ({
                   label: foundEditableWidget.name,
                   value: foundEditableWidget.name,
-                  renderBlock: this._workingWidgetControlRendererCache.get(foundEditableWidget.controlKey)
+                  renderBlock: this._workingAssessmentControlRendererCache.get(foundEditableWidget.controlKey)
                 }) : null)()
               },
             ],
@@ -581,17 +580,17 @@ export default class CreateOrEditTrayConfig extends NHComponent {
                   this._rangeEntries && this._rangeEntries.length
                     ? this?._inputDimensionEntries
                         ?.filter(dimension => {
-                          const selectedWidgetRangeKind = Object.values(
+                          const selectedControlRangeKind = Object.values(
                             this._registeredWidgets,
-                          ).find(widget => widget.controlKey == this.selectedWidgetKey)?.rangeKind;
-                          if (typeof this.selectedWidgetKey == 'undefined' || !selectedWidgetRangeKind) return false;
+                          ).find(assessmentControl => assessmentControl.controlKey == this.selectedWidgetKey)?.rangeKind;
+                          if (typeof this.selectedWidgetKey == 'undefined' || !selectedControlRangeKind) return false;
 
                           const dimensionRange = this._rangeEntries!.find(range =>
                             compareUint8Arrays(range.range_eh, dimension.range_eh),
                           ) as any;
                           return dimensionIncludesControlRange(
                             dimensionRange.kind,
-                            selectedWidgetRangeKind,
+                            selectedControlRangeKind,
                           );
                         })
                         .map(dimension => {
