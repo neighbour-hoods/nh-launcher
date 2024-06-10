@@ -93,6 +93,10 @@ export class SensemakerService {
     return this.callZome('get_assessment_tray_config', assessmentTrayEh, 'assessment_tray')
   }
 
+  async getAssessmentTrayConfigs(): Promise<Array<HolochainRecord>> {
+    return this.callZome('get_assessment_tray_configs', null, 'assessment_tray')
+  }
+
   async setAssessmentTrayConfig(assessmentTrayConfig: AssessmentTrayConfig): Promise<HolochainRecord> {
     return this.callZome('set_assessment_tray_config', assessmentTrayConfig, 'assessment_tray')
   }
