@@ -37,7 +37,6 @@ import {
   Dimension,
   InputAssessmentWidgetDelegate,
   Method,
-  ResourceDef,
   SensemakerStore,
 } from '@neighbourhoods/client';
 import {repeat} from 'lit/directives/repeat.js';
@@ -78,7 +77,6 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
   currentApplet!: Applet;
 
   @query('nh-form') private _form;
-  @query('#success-toast') private _successAlert;
   @query("nh-button[type='submit']") private submitBtn;
   @queryAll("assessment-container") private _assessmentContainers;
 
@@ -106,7 +104,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
 
   @state() private _inputDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
   @state() private _outputDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
-  /* Temp - need to add Store method that returns records with entry hashes*/
+
   @state() private _unpartitionedDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
   @state() private _rangeEntries!: Array<Range & { range_eh: EntryHash }>;
   @state() private _methodEntries!: Method[] | undefined;
@@ -319,7 +317,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
                 } catch (error) {
                   console.warn('error :>> ', error);
                 }
-                this._successAlert.openToast();
+                // this._successAlert.openToast();
                 this.configuredWidgetsPersisted = true
               }}
             >Update Config</nh-button>
@@ -358,21 +356,21 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     const { assessment_widget, input_dimension, output_dimension } = model;
 
     const selectedWidgetDetails = Object.entries(this._registeredWidgets || {}).find(
-      ([_widgetEh, widget]) => widget.name == assessment_widget,
+      ([_widgetEh, widget]) => widget.name == assessment_widget.name,
     );
     const selectedWidgetEh = selectedWidgetDetails?.[0];
     if (!selectedWidgetEh) return Promise.reject('Could not get an entry hash for your selected widget.');
 
     const inputDimensionBinding = {
       type: "applet",
-      appletId: this.resourceDef.applet_eh as any,
-      componentName: assessment_widget,
+      appletId: assessment_widget.appletId,
+      componentName: assessment_widget.name,
       dimensionEh: decodeHashFromBase64(input_dimension),
     } as AssessmentWidgetConfig;
     const outputDimensionBinding = {
       type: "applet",
-      appletId: this.resourceDef.applet_eh as any,
-      componentName: assessment_widget,
+      appletId: assessment_widget.appletId,
+      componentName: assessment_widget.name,
       dimensionEh: decodeHashFromBase64(output_dimension),
     } as AssessmentWidgetConfig;
     const input = {
@@ -393,20 +391,20 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
     const { assessment_widget, input_dimension, output_dimension } = model;
 
     const selectedWidgetDetails = Object.entries(this._registeredWidgets || {}).find(
-      ([_widgetEh, widget]) => widget.name == assessment_widget,
+      ([_widgetEh, widget]) => widget.name == assessment_widget.name,
     );
     const selectedWidgetEh = selectedWidgetDetails?.[0];
     if (!selectedWidgetEh) return Promise.reject('Could not get an entry hash for your selected widget.');
 
     const inputDimensionBinding = {
       type: "applet",
-      appletId: this.resourceDef.applet_eh as any,
-      componentName: assessment_widget,
+      appletId: assessment_widget.name.appletId,
+      componentName: assessment_widget.name,
       dimensionEh: decodeHashFromBase64(input_dimension),
     } as AssessmentWidgetConfig;
     const outputDimensionBinding = {
       type: "applet",
-      appletId: this.resourceDef.applet_eh as any,
+      appletId: assessment_widget.name.appletId,
       componentName: assessment_widget,
       dimensionEh: decodeHashFromBase64(output_dimension),
     } as AssessmentWidgetConfig;
@@ -652,8 +650,7 @@ export default class NHAssessmentWidgetConfig extends NHComponent {
           submitOverload: model => this.editMode ? this.replaceInMemoryWidgetControl(model) : this.pushToInMemoryWidgetControls(model),
           progressiveValidation: true,
           schema: object({
-            assessment_widget: string()
-              .min(1, 'Must be at least 1 characters')
+            assessment_widget: object()
               .required('Select a widget'),
             input_dimension: string()
               .min(1, 'Must be at least 1 characters')
