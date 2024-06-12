@@ -35,16 +35,13 @@ import {
   Dimension,
   InputAssessmentControlDelegate,
   Method,
-  ResourceDef,
   SensemakerStore,
   AssessmentTrayConfig,
-  AssessmentControlRenderer,
   NHDelegateReceiverConstructor,
 } from '@neighbourhoods/client';
 import {repeat} from 'lit/directives/repeat.js';
 import { InputAssessmentRenderer } from '@neighbourhoods/app-loader';
 import { derived } from 'svelte/store';
-import { Applet } from '../../types';
 import { object, string } from 'yup';
 import { dimensionIncludesControlRange } from '../../utils';
 
@@ -72,13 +69,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
     () => [this.loaded],
   );
 
-  // @property() // Selected from the sub-menu of the page
-  // resourceDef!: ResourceDef & {resource_def_eh: EntryHash };
-
-  // currentApplet!: Applet;
-
   @query('nh-form') private _form;
-  @query('#success-toast') private _successAlert;
   @query("nh-button[type='submit']") private submitBtn;
   @queryAll("assessment-container") private _assessmentContainers;
 
@@ -109,7 +100,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
 
   @state() private _inputDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
   @state() private _outputDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
-  /* Temp - need to add Store method that returns records with entry hashes*/
+
   @state() private _unpartitionedDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
   @state() private _rangeEntries!: Array<Range & { range_eh: EntryHash }>;
   @state() private _methodEntries!: Method[] | undefined;
@@ -133,13 +124,6 @@ export default class CreateOrEditTrayConfig extends NHComponent {
     } catch (error) {
       console.error('Could not fetch/assign applet and widget data: ', error);
       this.loading = false;
-    }
-  }
-
-  protected async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
-    if(changedProperties.has('resourceDef') && typeof changedProperties.get('resourceDef') !== 'undefined') {
-      await this.resetWorkingState()
-      await this.fetchExistingTrayConfig();
     }
   }
 
@@ -327,7 +311,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
                 } catch (error) {
                   console.warn('error :>> ', error);
                 }
-                this._successAlert.openToast();
+                // this._successAlert.openToast();
                 this.configuredWidgetsPersisted = true
               }}
             >Update Config</nh-button>
@@ -347,15 +331,6 @@ export default class CreateOrEditTrayConfig extends NHComponent {
             ${this.renderButtonGroup()}
           </nh-dropdown-accordion>
             
-          <nh-alert
-            id="success-toast"
-            .title=${"You have saved your changes."}
-            .description=${"You have saved your changes."}
-            .closable=${true}
-            .isToast=${true}
-            .open=${false}
-            .type=${"success"}></nh-alert>
-          </div>
         </section>
       </div>
     </div>`;
@@ -366,21 +341,21 @@ export default class CreateOrEditTrayConfig extends NHComponent {
     const { assessment_widget, input_dimension, output_dimension } = model;
 
     const selectedWidgetDetails = Object.entries(this._registeredWidgets || {}).find(
-      ([_widgetEh, widget]) => widget.name == assessment_widget,
+      ([_widgetEh, widget]) => widget.name == assessment_widget.name,
     );
     const selectedWidgetEh = selectedWidgetDetails?.[0];
     if (!selectedWidgetEh) return Promise.reject('Could not get an entry hash for your selected widget.');
 
     const inputDimensionBinding = {
       type: "applet",
-      appletId: this.resourceDef.applet_eh as any,
-      componentName: assessment_widget,
+      appletId: assessment_widget.appletId,
+      componentName: assessment_widget.name,
       dimensionEh: decodeHashFromBase64(input_dimension),
     } as DimensionControlMapping;
     const outputDimensionBinding = {
       type: "applet",
-      appletId: this.resourceDef.applet_eh as any,
-      componentName: assessment_widget,
+      appletId: assessment_widget.appletId,
+      componentName: assessment_widget.name,
       dimensionEh: decodeHashFromBase64(output_dimension),
     } as DimensionControlMapping;
     const input = {
@@ -401,20 +376,20 @@ export default class CreateOrEditTrayConfig extends NHComponent {
     const { assessment_widget, input_dimension, output_dimension } = model;
 
     const selectedWidgetDetails = Object.entries(this._registeredWidgets || {}).find(
-      ([_widgetEh, widget]) => widget.name == assessment_widget,
+      ([_widgetEh, widget]) => widget.name == assessment_widget.name,
     );
     const selectedWidgetEh = selectedWidgetDetails?.[0];
     if (!selectedWidgetEh) return Promise.reject('Could not get an entry hash for your selected widget.');
 
     const inputDimensionBinding = {
       type: "applet",
-      appletId: this.resourceDef.applet_eh as any,
-      componentName: assessment_widget,
+      appletId: assessment_widget.name.appletId,
+      componentName: assessment_widget.name,
       dimensionEh: decodeHashFromBase64(input_dimension),
     } as DimensionControlMapping;
     const outputDimensionBinding = {
       type: "applet",
-      appletId: this.resourceDef.applet_eh as any,
+      appletId: assessment_widget.name.appletId,
       componentName: assessment_widget,
       dimensionEh: decodeHashFromBase64(output_dimension),
     } as DimensionControlMapping;
@@ -456,7 +431,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   handleFormChange = async e => {
     const widgets = typeof this._registeredWidgets == 'object' && Object.values(this._registeredWidgets) || []
 
-    const selectedWidget = widgets?.find(widget => widget.name == this._form._model.assessment_widget);
+    const selectedWidget = widgets?.find(widget => widget.name == this._form._model.assessment_widget.name);
     this.selectedWidgetKey = selectedWidget?.controlKey;
 
     this.placeHolderWidget = this?._workingAssessmentControlRendererCache.get(this.selectedWidgetKey as string) as (delegate?: InputAssessmentControlDelegate) => TemplateResult;
@@ -562,7 +537,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
                 useDefault: () => !this._form?.touched.assessment_widget,
                 defaultValue: (() => !!foundEditableWidget ? ({
                   label: foundEditableWidget.name,
-                  value: foundEditableWidget.name,
+                  value: foundEditableWidget,
                   renderBlock: this._workingAssessmentControlRendererCache.get(foundEditableWidget.controlKey)
                 }) : null)()
               },
@@ -653,8 +628,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
           ],
           submitOverload: model => this.editMode ? this.replaceInMemoryWidgetControl(model) : this.pushToInMemoryWidgetControls(model),
           schema: object({
-            assessment_widget: string()
-              .min(1, 'Must be at least 1 characters')
+            assessment_widget: object()
               .required('Select a widget'),
             input_dimension: string()
               .min(1, 'Must be at least 1 characters')
