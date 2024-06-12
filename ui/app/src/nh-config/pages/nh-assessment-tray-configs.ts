@@ -1,17 +1,26 @@
-import { css, CSSResult, html, PropertyValueMap } from "lit";
-import { property, query } from "lit/decorators.js";
+import { css, CSSResult, html, PropertyValueMap, TemplateResult } from "lit";
+import { property, query, queryAll, state } from "lit/decorators.js";
 
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 import NHButton from '@neighbourhoods/design-system-components/button';
 import NHButtonGroup from '@neighbourhoods/design-system-components/button-group';
 import NHCard from '@neighbourhoods/design-system-components/card';
 import NHDialog from '@neighbourhoods/design-system-components/dialog';
-import NHDropdownAccordion from '@neighbourhoods/design-system-components/dropdown-accordion';
 import NHForm from '@neighbourhoods/design-system-components/form/form';
 import CreateOrEditTrayConfig from '../forms/create-edit-assessment-tray';
 import AssessmentTrayConfigList from '../lists/assessment-tray-config-list';
 import { SensemakerStore } from "@neighbourhoods/client";
 import { b64images } from "@neighbourhoods/design-system-styles";
+import { consume } from "@lit/context";
+import { appletInstanceInfosContext } from "../../context";
+import { EntryHash, EntryHashB64 } from "@holochain/client";
+import { StoreSubscriber } from "lit-svelte-stores";
+import { repeat } from "lit/directives/repeat.js";
+import { derived } from "svelte/store";
+import { compareUint8Arrays } from "../../../../libs/app-loader/dist";
+import { NHAssessmentContainer } from "../../../../libs/design-system-components/dist";
+import { ResourceDef, Constructor, AssessmentControlConfig, InputAssessmentControlDelegate, AssessmentTrayConfig, AssessmentControlRegistrationInput, Dimension, Method, DimensionControlMapping } from "../../../../libs/sensemaker-client/dist";
+import { Applet } from "../../types";
 
 export default class AssessmentTrayConfigs extends NHComponent {
   @property() loaded: boolean = false;
