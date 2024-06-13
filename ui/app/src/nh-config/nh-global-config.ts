@@ -51,14 +51,40 @@ export default class NHGlobalConfig extends NHComponent {
         const linkedApplet : AppletInstanceInfo | undefined = appletInstanceInfos!.find(applet => compareUint8Arrays(resourceDef.applet_eh, applet.appletId))
         if(!linkedApplet) return acc
 
-        acc[appletEh] = {...linkedApplet, curriedResourceBlockDelegate: (resourceEntryHash: EntryHash) => this._matrixStore.createResourceBlockDelegate(linkedApplet.appletId, resourceEntryHash)};
-        if(!this.guis || !this.guis[encodeHashToBase64(resourceDef.applet_eh)]) return acc
-        
-        acc[appletEh].gui = this.guis[encodeHashToBase64(resourceDef.applet_eh)] as AppletGui;
+        try {
+          serializeAsyncActions<NeighbourhoodAppletRenderers>(
+            appletInstanceInfos?.map(
+              (appletInstanceInfo: AppletInstanceInfo) => {
+                return () => this._matrixStore.fetchAppletInstanceRenderers(appletInstanceInfo.appletId)
+              }
+            )
+          )
+          console.log('got all applet instance renderers')
+        } catch (error) {
+          console.log('Error fetching applet instance renderers ', error);
+        }
+        acc[appletEh] = {
+          ...linkedApplet,
+          curriedResourceBlockDelegate: (resourceEntryHash: EntryHash) => this._matrixStore.createResourceBlockDelegate(linkedApplet.appletId, resourceEntryHash),
+        }
+
+        try {
+          // Add GUIs so that correct assessment controls can be loaded later
+          serializeAsyncActions<AppletGui>([...(appletInstanceInfos?.map(
+            (appletInstanceInfo: AppletInstanceInfo) => this._matrixStore.queryAppletGui(appletInstanceInfo.applet.devhubGuiReleaseHash).then(gui => {
+              acc[appletEh].gui = gui as AppletGui
+            })
+          ) as any), async() => Promise.resolve(this.loaded = true)])
+          
+          console.log('fetched renderers and set guis')
+        } catch (error) {
+          console.error(error)
+        }
+
         return acc
       }, {} as {EntryHashB64: AppletInstanceInfo & {gui: AppletGui}})
     }),
-    () => [this.currentAppletInstanceEh, this.loaded],
+    () => [this.weGroupId, this._matrixStore, this._resourceDefEntries, this.currentAppletInstanceEh, this.loaded],
   );
 
   @provide({ context: resourceDefContext })
