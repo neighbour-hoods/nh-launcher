@@ -6,7 +6,7 @@ use sensemaker_integrity_structs::{Properties, AssessmentControlRegistration};
 pub struct DimensionControlMapping {
     pub dimension_eh: EntryHash,
     // id of the AppletConfig stored in companion zome
-    pub applet_id: EntryHash,
+    pub applet_id: String,
     // name of the component as exposed by the applet interface
     pub component_name: String,
 }
