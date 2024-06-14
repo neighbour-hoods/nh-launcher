@@ -622,6 +622,13 @@ export default class NHForm extends NHBaseForm {
           width: 8px;
           background: transparent !important;
         }
+
+        @media (min-width: 1680px) {
+          :host(.wide) form {
+            flex-wrap: initial;
+            min-height: 14rem;
+          }
+        }
       `,
     ];
   }

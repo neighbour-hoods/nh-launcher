@@ -66,17 +66,12 @@ export default class NHDropdownAccordion extends NHComponent {
           color: var(--nh-theme-fg-default);
         }
 
-        sl-details {
-          margin-top: 3em;
-        }
-
         sl-details.open::part(base) {
           opacity: 1;
         }
 
         sl-details::part(content) {
           min-height: 28rem;
-          padding: calc(1px * var(--nh-spacing-xl));
         }
 
         sl-details::part(base) {

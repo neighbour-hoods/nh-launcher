@@ -305,6 +305,10 @@ export default class NHDialog extends NHComponent {
         min-width: 24rem;
       }
 
+      #main.input-form.large::part(panel) {
+        min-width: 90%;
+      }
+
       #main.input-form::part(header) {
         height: 1px;
       }

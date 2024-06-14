@@ -312,7 +312,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
                 // this._successAlert.openToast();
                 this.configuredWidgetsPersisted = true
               }}
-            >Update Config</nh-button>
+            >Create Config</nh-button>
           </div>
 
           <nh-dropdown-accordion
@@ -323,7 +323,6 @@ export default class CreateOrEditTrayConfig extends NHComponent {
               await this.updateComplete
           }}>
             <div slot="inner-content">
-              <h2>${this.editMode ? "Update Control" : "Add Control"}</h2>
               ${this.renderMainForm(!!foundEditableWidget ? foundEditableWidget : null, !!foundEditableWidgetConfig ? foundEditableWidgetConfig : null)}
             </div>
             ${this.renderButtonGroup()}
@@ -482,7 +481,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   private renderMainForm(foundEditableWidget?: AssessmentControlRegistrationInput | null, foundEditableWidgetConfig?: DimensionControlMapping | null): TemplateResult {
     return html`
       <nh-form
-        class="responsive"
+        class="responsive wide"
         @change=${this.handleFormChange}
         .config=${{
           submitBtnRef: (() => this.submitBtn)(),

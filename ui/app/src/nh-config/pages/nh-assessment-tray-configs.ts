@@ -221,7 +221,7 @@ export default class AssessmentTrayConfigs extends NHComponent {
         .dialogType=${"input-form"}
         .title="Create Assessment Tray Config"
         .handleOk=${() => {}}
-        .size=${"medium"}
+        size=${"large"}
         .openButtonRef=${(() => this.createTrayConfigDialogButton)()}
       >
         <div slot="inner-content" class="row">
