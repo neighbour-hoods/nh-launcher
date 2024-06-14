@@ -408,11 +408,9 @@ export default class CreateOrEditTrayConfig extends NHComponent {
 
   async createEntries() {
     if(!this._workingWidgetControls || !(this._workingWidgetControls.length > 0)) throw Error('Nothing to persist, try adding another widget to the config.')
-
     try {
-      await (
-        this.sensemakerStore as SensemakerStore
-      ).setAssessmentTrayConfig({name: this._trayName, assessmentControlConfigs: this.getCombinedWorkingAndFetchedWidgets()});
+      const result = await this.sensemakerStore.setAssessmentTrayConfig({name: this._trayName, assessmentControlConfigs: [ ...this?.getCombinedWorkingAndFetchedWidgets(), ...this._workingWidgetControls ]});
+      console.log('tray created :>> ', result.entry);
     } catch (error) {
       return Promise.reject('Error setting assessment widget config');
     }
