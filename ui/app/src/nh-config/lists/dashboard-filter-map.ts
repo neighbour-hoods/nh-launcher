@@ -27,6 +27,7 @@ import { compareUint8Arrays, createInputAssessmentControlDelegate, InputAssessme
 import { appletInstanceInfosContext } from '../../context';
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 import { AssessmentTrayConfig } from '@neighbourhoods/client';
+import { decode } from '@msgpack/msgpack';
 
 type DecoratorProps = {
   renderer: AssessmentControlRenderer,
@@ -74,7 +75,7 @@ export class DashboardFilterMap extends NHComponent {
   @property() selectedContextEhB64!: EntryHashB64;
   @property() resourceDefEntries!: object[];
   
-  @state() private _assessmentTrayConfigDefaultsForResourceDefs: {EntryHashB64: AssessmentTrayConfig} | {} = {};
+  @state() private _assessmentTrayConfigDefaultsForResourceDefs = {};
   @state() private _dimensionEntries!: EntryRecord<Dimension>[];
   @state() private _methodEntries!: Method[];
   @state() private _objectiveDimensionNames: string[] = [];
@@ -239,6 +240,7 @@ export class DashboardFilterMap extends NHComponent {
         if(dimensionEntry.entry.computed) continue; // Exclude objective dimensions
         if(compareUint8Arrays(assessment.dimension_eh, dimensionEntry.entryHash) && this._assessmentTrayConfigDefaultsForResourceDefs[encodeHashToBase64(assessment.resource_def_eh)]) {
           // Assume that validation on client/zome has enforced XOR on input/output dimensions and use dimension EH comparison to find widget control
+          console.log('this._assessmentTrayConfigDefaultsForResourceDefs :>> ', this._assessmentTrayConfigDefaultsForResourceDefs);
           const controls = this._assessmentTrayConfigDefaultsForResourceDefs[encodeHashToBase64(assessment.resource_def_eh)]?.assessmentControlConfigs.find(widgetConfig => compareUint8Arrays(dimensionEntry.entryHash, widgetConfig.inputAssessmentControl.dimensionEh))
           if(!controls) throw new Error('Could not find a widget control in the widget config block that matches your assessment dimension');
 
@@ -353,7 +355,9 @@ export class DashboardFilterMap extends NHComponent {
         (resourceDef: any) => {
           return async () => {
             const maybeTray = await this._sensemakerStore.getDefaultAssessmentTrayForResourceDef(resourceDef.resource_def_eh);
-            return Promise.resolve(this._assessmentTrayConfigDefaultsForResourceDefs[encodeHashToBase64(resourceDef.resource_def_eh) as EntryHashB64] = maybeTray)}
+            if(!maybeTray) return;
+            const entryRecord = new EntryRecord<AssessmentTrayConfig>(maybeTray);
+            return Promise.resolve(this._assessmentTrayConfigDefaultsForResourceDefs[encodeHashToBase64(resourceDef.resource_def_eh) as EntryHashB64] = decode(entryRecord.record.record.entry['Present'].entry))}
         }
       ), async() => Promise.resolve(console.log('fetched default assessment trays for resource defs :>> ',  this._assessmentTrayConfigDefaultsForResourceDefs) as any)])
     } catch (error) {
