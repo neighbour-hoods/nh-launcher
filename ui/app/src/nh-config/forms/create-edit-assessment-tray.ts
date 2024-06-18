@@ -161,6 +161,8 @@ export default class CreateOrEditTrayConfig extends NHComponent {
     this._workingWidgetControls = [];
     this.configuredInputWidgets = this._fetchedConfig
     this.resetAssessmentControlsSelected()
+    this._trayName = "";
+    this._trayNameFieldErrored = false;
     this._form.reset()
     this.requestUpdate()
   }
@@ -296,7 +298,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
               id="set-widget-config"
               .variant=${'primary'}
               .loading=${this.loading}
-              .disabled=${!this.loading && this._fetchedConfig && this.configuredWidgetsPersisted}
+              .disabled=${!this.loading && (this._fetchedConfig && this.configuredWidgetsPersisted) || (this?._workingWidgetControls && this._workingWidgetControls.length == 0)}
               .size=${'md'}
               @click=${async () => {
                 if(!this._trayName || this._trayName == "") {
@@ -408,13 +410,13 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   async createEntries() {
     if(!this._workingWidgetControls || !(this._workingWidgetControls.length > 0)) throw Error('Nothing to persist, try adding another widget to the config.')
     try {
-      const result = await this.sensemakerStore.setAssessmentTrayConfig({name: this._trayName, assessmentControlConfigs: [ ...this?.getCombinedWorkingAndFetchedWidgets(), ...this._workingWidgetControls ]});
-      console.log('tray created :>> ', result.entry);
+      await this.sensemakerStore.setAssessmentTrayConfig({name: this._trayName, assessmentControlConfigs: [ ...this?.getCombinedWorkingAndFetchedWidgets(), ...this._workingWidgetControls ]});
     } catch (error) {
       return Promise.reject('Error setting assessment widget config');
     }
+    await this.resetWorkingState();
     await this.updateComplete;
-    this._form.dispatchEvent(
+    this.dispatchEvent(
       new CustomEvent('assessment-widget-config-set', {
         bubbles: true,
         composed: true,
