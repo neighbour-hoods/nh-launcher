@@ -38,7 +38,7 @@ export default class AssessmentTrayConfigList extends NHComponent {
         }).filter(value => !!value) || [])
         : null
     }),
-    () => [this.loaded],
+    () => [],
   );
 
   async fetchAssessmentTrayEntries() {
@@ -65,7 +65,7 @@ export default class AssessmentTrayConfigList extends NHComponent {
     const allRenderableAppletWidgets = this._appletInstanceRenderers?.value
       ? Object.values(this._appletInstanceRenderers.value).flatMap(renderers => Object.values(renderers as any)) as (DimensionControlMapping | ResourceBlockRenderer)[]
       : []
-console.log('allRenderableAppletWidgets :>> ', allRenderableAppletWidgets);
+
     return html`
       <div class="content">
         <div class="title-bar">
@@ -106,7 +106,6 @@ console.log('allRenderableAppletWidgets :>> ', allRenderableAppletWidgets);
       </div>
     `;
   }
-
 
   static elementDefinitions = {
     "nh-button": NHButton,

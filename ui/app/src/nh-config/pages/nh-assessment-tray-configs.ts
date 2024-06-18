@@ -9,20 +9,20 @@ import NHDialog from '@neighbourhoods/design-system-components/dialog';
 import NHForm from '@neighbourhoods/design-system-components/form/form';
 import CreateOrEditTrayConfig from '../forms/create-edit-assessment-tray';
 import AssessmentTrayConfigList from '../lists/assessment-tray-config-list';
-import { SensemakerStore } from "@neighbourhoods/client";
+import { SensemakerStore, AssessmentTrayConfig } from "@neighbourhoods/client";
 import { b64images } from "@neighbourhoods/design-system-styles";
 import { consume } from "@lit/context";
 import { appletInstanceInfosContext } from "../../context";
 import { StoreSubscriber } from "lit-svelte-stores";
-import { repeat } from "lit/directives/repeat.js";
 import { derived } from "svelte/store";
-import { ResourceDef, Constructor, AssessmentControlConfig, InputAssessmentControlDelegate, AssessmentTrayConfig, AssessmentControlRegistrationInput, Dimension, Method, DimensionControlMapping } from "../../../../libs/sensemaker-client/dist";
 
 export default class AssessmentTrayConfigs extends NHComponent {
   @property() loaded: boolean = false;
 
   @query('nh-dialog')
   private _dialog;
+  @query('assessment-tray-config-list')
+  private _list;
 
   @property()
   createTrayConfigDialogButton!: HTMLElement;
@@ -64,6 +64,14 @@ export default class AssessmentTrayConfigs extends NHComponent {
         </nh-page-header-card>
 
         <nh-dialog
+          @assessment-widget-config-set=${async(e: CustomEvent) => { 
+            this._dialog.isOpen = false;
+            this._dialog._dialog.hide();
+            await this._list.fetchAssessmentTrayEntries()
+            await this._list.updateComplete;
+            this.requestUpdate()
+            await this.updateComplete;
+          }}
           id="dialog"
           class="no-title"
           .dialogType=${"input-form"}
