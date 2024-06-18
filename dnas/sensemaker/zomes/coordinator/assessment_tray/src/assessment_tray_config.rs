@@ -43,6 +43,13 @@ pub struct AssessmentTrayConfigInput {
     pub assessment_control_configs: Vec<AssessmentControlConfig>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
+#[serde(rename_all = "camelCase")]
+pub struct AssessmentTrayConfigUpdateInput {
+    pub original_action_hash: ActionHash,
+    pub updated_assessment_tray_config: AssessmentTrayConfigInput,
+}
+
 impl TryFrom<AssessmentTrayConfigInput> for AssessmentTrayConfig {
     type Error = WasmError;
     fn try_from(value: AssessmentTrayConfigInput) -> Result<Self, Self::Error> {
@@ -72,6 +79,23 @@ fn set_assessment_tray_config(tray_config_input: AssessmentTrayConfigInput) -> E
         .ok_or(wasm_error!(WasmErrorInner::Guest("AssessmentTrayConfig could not be retrieved after creation".into())))?;
 
     Ok(record)
+}
+
+#[hdk_extern]
+fn update_assessment_tray_config(input: AssessmentTrayConfigUpdateInput) -> ExternResult<ActionHash> {
+    let updated_tray: AssessmentTrayConfig = input.updated_assessment_tray_config.clone().try_into()?;
+    let action_hash =update_entry(input.original_action_hash, updated_tray);
+
+    let eh = hash_entry(EntryTypes::AssessmentTrayConfig(input.updated_assessment_tray_config.clone().try_into()?))?;
+
+    create_link(
+        tray_configs_typed_path()?.path_entry_hash()?,
+        eh.clone(),
+        LinkTypes::AssessmentTrayConfig,
+        (),
+    )?;
+
+    action_hash.map_err(|_| wasm_error!(WasmErrorInner::Guest("AssessmentTrayConfig could not be updated".into())))
 }
 
 #[hdk_extern]
