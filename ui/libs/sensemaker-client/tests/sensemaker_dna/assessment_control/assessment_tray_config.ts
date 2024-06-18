@@ -85,24 +85,24 @@ export default () => {
         const testControlConfig1 = {
           inputAssessmentControl: {
             dimensionEh: dummyEntryHash,
-            appletId: dummyEntryHash,
+            appletId: "dummyAppletId",
             componentName: 'test-component',
           },
           outputAssessmentControl: {
             dimensionEh: dummyEntryHash,
-            appletId: dummyEntryHash,
+            appletId: "dummyAppletId",
             componentName: 'test-component',
           },
         };
         const testControlConfig2 = {
           inputAssessmentControl: {
             dimensionEh: dummyEntryHash,
-            appletId: dummyEntryHash,
+            appletId: "dummyAppletId",
             componentName: 'test-component',
           },
           outputAssessmentControl: {
             dimensionEh: dummyEntryHash,
-            appletId: dummyEntryHash,
+            appletId: "dummyAppletId",
             componentName: 'test-component',
           },
         };
@@ -205,24 +205,24 @@ export default () => {
         const testControlConfig3 = {
           inputAssessmentControl: {
             dimensionEh: dummyEntryHash2,
-            appletId: dummyEntryHash2,
+            appletId: "dummyAppletId",
             componentName: 'another-test-component',
           },
           outputAssessmentControl: {
             dimensionEh: dummyEntryHash2,
-            appletId: dummyEntryHash2,
+            appletId: "dummyAppletId",
             componentName: 'another-test-component',
           },
         };
         const testControlConfig4 = {
           inputAssessmentControl: {
             dimensionEh: dummyEntryHash2,
-            appletId: dummyEntryHash2,
+            appletId: "dummyAppletId",
             componentName: 'another-test-component',
           },
           outputAssessmentControl: {
             dimensionEh: dummyEntryHash2,
-            appletId: dummyEntryHash2,
+            appletId: "dummyAppletId",
             componentName: 'another-test-component',
           },
         };
