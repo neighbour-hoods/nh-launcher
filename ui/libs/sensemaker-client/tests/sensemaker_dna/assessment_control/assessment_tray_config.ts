@@ -164,8 +164,27 @@ export default () => {
         t.equal(getDefault1, null, "Getting a default tray config when there is none set returns null");
         await pause(pauseDuration);
 
+        // Test 4: Given config so far created by Alice
+        // When we update that config
+        const update1 = await callZomeAlice(
+          "assessment_tray",
+          "update_assessment_tray_config",
+          {
+            originalActionHash: entryRecordRead1.actionHash,
+            updatedAssessmentTrayConfig: {
+              name: 'updated test config',
+              assessmentControlConfigs: [testControlConfig1, testControlConfig2],
+            },
+          }
+        );
+        t.ok(update1, "Updating a tray config succeeds");
+        
+        // Then when we get the tray for that action hash
+        console.log('update1 :>> ', update1);
+        await pause(pauseDuration);
 
-        // Test 4: Given config so far created by Alice and a dummy entry hash for our Resource Def and no default set
+
+        // Test 5: Given config so far created by Alice and a dummy entry hash for our Resource Def and no default set
         // When we set the default for that entry hash
         const setDefault1 = await callZomeAlice(
           "assessment_tray",
@@ -180,7 +199,7 @@ export default () => {
         await pause(pauseDuration);
 
 
-        // Test 5: Given config so far created by Alice and a dummy entry hash for our Resource Def and the default for that was set to our tray entry hash
+        // Test 6: Given config so far created by Alice and a dummy entry hash for our Resource Def and the default for that was set to our tray entry hash
         // When we get the default for that entry hash
         const getDefault2 = await callZomeAlice(
           "assessment_tray",
@@ -194,7 +213,7 @@ export default () => {
         t.deepEqual(entrygetDefault2.entry.assessmentControlConfigs, [testControlConfig1, testControlConfig2], "retrieved tray config blocks are the same, have same order");
 
 
-        // Test 6: Given we already set the default
+        // Test 7: Given we already set the default
         // and then we create a new dummy resource def entry hash, a new tray config with a new name and new control configs
         const dummyEntryHash2: EntryHash = await callZomeAlice(
           "test_provider",
