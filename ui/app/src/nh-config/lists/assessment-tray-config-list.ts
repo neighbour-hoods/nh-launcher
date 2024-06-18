@@ -1,17 +1,45 @@
 import { html, css, PropertyValueMap } from "lit";
 import { property, state } from "lit/decorators.js";
 
-import { EntryHash } from "@holochain/client";
-import { AssessmentTrayConfig, SensemakerStore } from "@neighbourhoods/client";
+import { EntryHash, EntryHashB64 } from "@holochain/client";
+import { AssessmentTrayConfig, SensemakerStore, ResourceBlockRenderer, DimensionControlMapping } from "@neighbourhoods/client";
+import { FakeInputAssessmentControlDelegate, InputAssessmentRenderer } from "@neighbourhoods/app-loader";
 
 import NHButton from '@neighbourhoods/design-system-components/button';
 import NHCard from '@neighbourhoods/design-system-components/card';
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+import NHAssessmentContainer from '@neighbourhoods/design-system-components/widgets/assessment-container';
+import NHResourceAssessmentTray from '@neighbourhoods/design-system-components/widgets/resource-assessment-tray';
+
+import { repeat } from "lit/directives/repeat.js";
+import { consume } from "@lit/context";
+import { appletInstanceInfosContext } from "../../context";
+import { StoreSubscriber } from "lit-svelte-stores";
+import { derived } from "svelte/store";
 
 export default class AssessmentTrayConfigList extends NHComponent {  
   @property() sensemakerStore!: SensemakerStore;
 
   @state() private _assessmentTrayEntries!: Array<AssessmentTrayConfig & { assessment_tray_eh: EntryHash }>;
+
+  @consume({ context: appletInstanceInfosContext })
+  @property({attribute: false}) _currentAppletInstances;
+
+  // Asssessment/Resource renderer dictionary, keyed by Applet EH
+  @state() _appletInstanceRenderers : StoreSubscriber<any> = new StoreSubscriber(
+    this,
+    () =>  derived(this._currentAppletInstances.store, (appletInstanceInfos: any) => {
+      //@ts-ignore
+      return !!appletInstanceInfos && Object.values(appletInstanceInfos).some(appletInfo => appletInfo!.gui)
+      //@ts-ignore
+        ? Object.fromEntries((Object.entries(appletInstanceInfos) || [])?.map(([appletEh, appletInfo]) => {
+          if(typeof appletInfo?.gui == 'undefined') return;
+          return [appletEh, {...(appletInfo as any)?.gui?.resourceRenderers, ...(appletInfo as any).gui.assessmentControls}]
+        }).filter(value => !!value) || [])
+        : null
+    }),
+    () => [this.loaded],
+  );
 
   async fetchAssessmentTrayEntries() {
     try {
@@ -34,6 +62,10 @@ export default class AssessmentTrayConfigList extends NHComponent {
   }
 
   render() {
+    const allRenderableAppletWidgets = this._appletInstanceRenderers?.value
+      ? Object.values(this._appletInstanceRenderers.value).flatMap(renderers => Object.values(renderers as any)) as (DimensionControlMapping | ResourceBlockRenderer)[]
+      : []
+console.log('allRenderableAppletWidgets :>> ', allRenderableAppletWidgets);
     return html`
       <div class="content">
         <div class="title-bar">
@@ -41,7 +73,34 @@ export default class AssessmentTrayConfigList extends NHComponent {
           <slot class="action" name="action-button"></slot>
         </div>  
         ${this._assessmentTrayEntries && this._assessmentTrayEntries.length > 0
-          ? html`Hello world`
+          ? html`${repeat(this._assessmentTrayEntries, (entry) => entry.name, (entry, _idx) => html`
+              <div style="display:flex; justify-content: space-between; align-items: center;">  
+                <p style="flex: 2">${entry.name}</p>
+                <nh-assessment-tray
+                  style="flex: 3"
+                  .editable=${false}
+                  .editing=${false}
+                >
+                  <div slot="widgets">
+                    ${entry.assessmentControlConfigs.map(config => 
+                      { 
+                        const component = allRenderableAppletWidgets.find(control => control.name == config.inputAssessmentControl.componentName)?.component;
+                        if(!component) return null;
+                        return html`
+                          <nh-assessment-container>
+                            <input-assessment-renderer slot="assessment-control"
+                              .component=${component}
+                              .nhDelegate=${new FakeInputAssessmentControlDelegate()}
+                            ></input-assessment-renderer>
+                          </nh-assessment-container>
+                        `
+                      }
+                    )}
+                  </div>
+                  </nh-assessment-tray>
+                </div>
+              `
+          )}`
           : 'No trays have been created'
         }
       </div>
@@ -52,6 +111,9 @@ export default class AssessmentTrayConfigList extends NHComponent {
   static elementDefinitions = {
     "nh-button": NHButton,
     "nh-card": NHCard,
+    'input-assessment-renderer': InputAssessmentRenderer,
+    'nh-assessment-container': NHAssessmentContainer,
+    'nh-assessment-tray': NHResourceAssessmentTray,
   }
 
   static get styles() {
