@@ -178,10 +178,20 @@ export default () => {
           }
         );
         t.ok(update1, "Updating a tray config succeeds");
-        
-        // Then when we get the tray for that action hash
-        console.log('update1 :>> ', update1);
+        // Then when we get back a response
         await pause(pauseDuration);
+
+        // And When we get the tray for the returned hash
+        const getUpdate1 = await callZomeAlice(
+          "assessment_tray",
+          "get_assessment_tray_config",
+          update1
+        );
+        // Then when we get back a response
+        t.ok(getUpdate1, "and we can get a tray config with the returned hash");
+        // And we get back the updated details response
+        const getUpdateEntryRecord = new EntryRecord<AssessmentTrayConfig>(getUpdate1);
+        t.ok('updated test config', getUpdateEntryRecord.entry.name, "and it has the right updated details.");
 
 
         // Test 5: Given config so far created by Alice and a dummy entry hash for our Resource Def and no default set
