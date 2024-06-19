@@ -1,4 +1,4 @@
-import { AgentPubKey, AppAgentCallZomeRequest, AppAgentClient, EntryHash, EntryHashB64, Record as HolochainRecord, RoleName } from '@holochain/client';
+import { ActionHash, AgentPubKey, AppAgentCallZomeRequest, AppAgentClient, EntryHash, EntryHashB64, Record as HolochainRecord, RoleName } from '@holochain/client';
 import { AppletConfig, AppletConfigInput, Assessment, AssessmentControlConfig, AssessmentControlRegistrationInput, AssessmentTrayConfig, ComputeContextInput, CreateAssessmentInput, CulturalContext, Dimension, GetAssessmentsForResourceInput, GetMethodsForDimensionQueryParams, Method, Range, ResourceDef, RunMethodInput } from './index';
 import { Option } from './utils';
 
@@ -99,6 +99,10 @@ export class SensemakerService {
 
   async setAssessmentTrayConfig(assessmentTrayConfig: AssessmentTrayConfig): Promise<HolochainRecord> {
     return this.callZome('set_assessment_tray_config', assessmentTrayConfig, 'assessment_tray')
+  }
+
+  async updateAssessmentTrayConfig(originalActionHash: ActionHash, updatedAssessmentTrayConfig: AssessmentTrayConfig): Promise<EntryHash> {
+    return this.callZome('update_assessment_tray_config', {originalActionHash, updatedAssessmentTrayConfig}, 'assessment_tray')
   }
 
   async getDefaultAssessmentTrayForResourceDef(resourceDefEh: EntryHash): Promise<HolochainRecord | null> {

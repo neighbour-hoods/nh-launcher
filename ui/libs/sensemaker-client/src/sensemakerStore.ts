@@ -1,4 +1,5 @@
 import {
+  ActionHash,
   AgentPubKey,
   AppAgentClient,
   AppSignal,
@@ -410,6 +411,12 @@ export class SensemakerStore {
   async setAssessmentTrayConfig(assessmentTrayConfig: AssessmentTrayConfig): Promise<EntryRecord<AssessmentTrayConfig>> {
     const record = await this.service.setAssessmentTrayConfig(assessmentTrayConfig);
     return new EntryRecord<AssessmentTrayConfig>(record)
+  }
+
+  async updateAssessmentTrayConfig(originalActionHash: ActionHash, updatedAssessmentTrayConfig: AssessmentTrayConfig): Promise<EntryRecord<AssessmentTrayConfig> | null> {
+    const newEntryHash = await this.service.updateAssessmentTrayConfig(originalActionHash, updatedAssessmentTrayConfig);
+    if(!newEntryHash) return null; // TODO: decide if this should actually just return an eH and break with the entry record return convention established elsewhere
+    return this.getAssessmentTrayConfig(newEntryHash)
   }
 
   async getDefaultAssessmentTrayForResourceDef(resourceDefEh: EntryHash): Promise<EntryRecord<AssessmentTrayConfig> | null> {
