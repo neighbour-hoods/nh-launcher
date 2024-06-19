@@ -90,7 +90,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   @state() private _trayName!: string; // Text input value for the name
   @state() private _trayNameFieldErrored: boolean = false; // Flag for errored status on name field
   
-  // AssessmentControlConfig (group) and AssessmentControlRegistrationInputs (individual)
+  // AssessmentTrayConfig (group) and AssessmentControlRegistrationInputs (individual)
   @state() private _fetchedConfig!: AssessmentTrayConfig | undefined;
   @state() private _updateToFetchedConfig!: AssessmentTrayConfig;
   @state() private _registeredWidgets: Record<EntryHashB64, AssessmentControlRegistrationInput> = {};
@@ -212,7 +212,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
     return html`
       <div class="container" @assessment-widget-config-set=${async () => {await this.fetchRegisteredAssessmentControls()}}>
         <div class="description">
-          <p>Add as many widgets as you need - the changes won't be saved until the Update Config button is pressed</p>
+          <p>Add as many widgets as you need - the changes won't be saved until the Create Config button is pressed</p>
         </div>
         <section class="form">
           <div class="tray-name-field">

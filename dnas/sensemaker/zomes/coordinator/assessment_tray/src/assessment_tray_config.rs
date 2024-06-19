@@ -82,9 +82,9 @@ fn set_assessment_tray_config(tray_config_input: AssessmentTrayConfigInput) -> E
 }
 
 #[hdk_extern]
-fn update_assessment_tray_config(input: AssessmentTrayConfigUpdateInput) -> ExternResult<ActionHash> {
+fn update_assessment_tray_config(input: AssessmentTrayConfigUpdateInput) -> ExternResult<EntryHash> {
     let updated_tray: AssessmentTrayConfig = input.updated_assessment_tray_config.clone().try_into()?;
-    let action_hash =update_entry(input.original_action_hash, updated_tray);
+    let _action_hash =update_entry(input.original_action_hash, updated_tray);
 
     let eh = hash_entry(EntryTypes::AssessmentTrayConfig(input.updated_assessment_tray_config.clone().try_into()?))?;
 
@@ -95,7 +95,7 @@ fn update_assessment_tray_config(input: AssessmentTrayConfigUpdateInput) -> Exte
         (),
     )?;
 
-    action_hash.map_err(|_| wasm_error!(WasmErrorInner::Guest("AssessmentTrayConfig could not be updated".into())))
+    Ok(eh)
 }
 
 #[hdk_extern]
