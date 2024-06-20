@@ -4,6 +4,7 @@ import { StoreSubscriber } from 'lit-svelte-stores';
 
 import { appletInstanceInfosContext } from '../../context';
 import {
+  ActionHash,
   EntryHash,
   EntryHashB64,
   decodeHashFromBase64,
@@ -93,6 +94,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   
   // AssessmentTrayConfig (group) and AssessmentControlRegistrationInputs (individual)
   @property() fetchedConfig?: AssessmentTrayConfig | undefined;
+  @property() fetchedConfigAh?: ActionHash;
 
   @state() private _updateToFetchedConfig!: AssessmentTrayConfig;
   @state() private _registeredWidgets: Record<EntryHashB64, AssessmentControlRegistrationInput> = {};
@@ -117,7 +119,6 @@ export default class CreateOrEditTrayConfig extends NHComponent {
       await this.partitionDimensionEntries();
       await this.fetchRegisteredAssessmentControls();
       if(this.editingConfig && this._updateToFetchedConfig) {
-        debugger;
         this.fetchedConfig = this._updateToFetchedConfig;
       }
       this.loading = false;
@@ -158,6 +159,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
     this.selectedWidgetKey = undefined;
     this.selectedWidgetIndex = undefined;
     this.fetchedConfig = undefined;
+    this.fetchedConfigAh = undefined;
     this.editingConfig = false;
     this._workingWidgetControls = [];
     this.configuredInputWidgets = []
@@ -312,7 +314,7 @@ console.log('this.getCombinedWorkingAndFetchedWidgets() :>> ', this.getCombinedW
                   return
                 }
                 try {
-                  await !!this.fetchedConfig ? this.updateEntry() : this.createEntries();
+                  await (!!this.fetchedConfig ? this.updateEntry() : this.createEntries());
                   this._trayNameFieldErrored = false;
                 } catch (error) {
                   console.warn('error :>> ', error);
@@ -433,10 +435,10 @@ console.log('this.getCombinedWorkingAndFetchedWidgets() :>> ', this.getCombinedW
   }
 
   async updateEntry() {
-    if(!this._workingWidgetControls || !(this._workingWidgetControls.length > 0)) throw Error('Nothing to persist, try adding another widget to the config.')
+    const updatedWidgets = [ ...this?.getCombinedWorkingAndFetchedWidgets(), ...this._workingWidgetControls ];
+    if(updatedWidgets.length == 0 || !this.fetchedConfigAh) throw Error('Nothing to persist, try adding another widget to the config.')
     try {
-  debugger;
-      await this.sensemakerStore.updateAssessmentTrayConfig({name: this._trayName, assessmentControlConfigs: [ ...this?.getCombinedWorkingAndFetchedWidgets(), ...this._workingWidgetControls ]});
+      await this.sensemakerStore.updateAssessmentTrayConfig(this.fetchedConfigAh, {name: this._trayName, assessmentControlConfigs: updatedWidgets});
     } catch (error) {
       return Promise.reject('Error setting assessment widget config');
     }

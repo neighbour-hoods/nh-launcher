@@ -15,7 +15,8 @@ import { consume } from "@lit/context";
 import { appletInstanceInfosContext } from "../../context";
 import { StoreSubscriber } from "lit-svelte-stores";
 import { derived } from "svelte/store";
-import { EntryHash } from "@holochain/client";
+import { ActionHash, EntryHash } from "@holochain/client";
+import { EntryRecord } from "@holochain-open-dev/utils";
 
 export default class AssessmentTrayConfigs extends NHComponent {
   @property() loaded: boolean = false;
@@ -37,17 +38,17 @@ export default class AssessmentTrayConfigs extends NHComponent {
   @property({attribute: false}) _currentAppletInstances;
   
   @state()
-  _currentlyEditingTrayConfigEntry?: AssessmentTrayConfig;
+  _currentlyEditingTrayConfigEntry?: [ActionHash, AssessmentTrayConfig];
   
   @state()
   editingConfig: boolean = false;
 
-  async fetchExistingTrayConfig(editableTrayConfigEntryHash: EntryHash) : Promise<AssessmentTrayConfig | undefined> {
+  async fetchExistingTrayConfig(editableTrayConfigEntryHash: EntryHash) : Promise<EntryRecord<AssessmentTrayConfig> | undefined> {
     if (!this.sensemakerStore || !editableTrayConfigEntryHash) return;
     const defaultConfig = await this.sensemakerStore.getAssessmentTrayConfig(
       editableTrayConfigEntryHash
     );
-    return defaultConfig?.entry
+    return defaultConfig
   }
 
   // Asssessment/Resource renderer dictionary, keyed by Applet EH
@@ -72,7 +73,9 @@ export default class AssessmentTrayConfigs extends NHComponent {
         @edit-assessment-tray=${async(e: CustomEvent) => { 
           const trayEh: EntryHash = e.detail
           if(!trayEh) return;
-          this._currentlyEditingTrayConfigEntry = await this.fetchExistingTrayConfig(trayEh);
+          const entryRecord = await this.fetchExistingTrayConfig(trayEh);
+          if(!entryRecord) return;
+          this._currentlyEditingTrayConfigEntry = [entryRecord.actionHash, entryRecord.entry];
           await this._form.requestUpdate()
           await this._form.updateComplete;
           this.editingConfig = true;
@@ -112,7 +115,8 @@ export default class AssessmentTrayConfigs extends NHComponent {
             <create-or-edit-tray
               .editingConfig=${this.editingConfig}
               .sensemakerStore=${this.sensemakerStore}
-              .fetchedConfig=${this._currentlyEditingTrayConfigEntry}
+              .fetchedConfig=${this._currentlyEditingTrayConfigEntry?.[1]}
+              .fetchedConfigAh=${this._currentlyEditingTrayConfigEntry?.[0]}
             >
             </create-or-edit-tray>
           </div>
