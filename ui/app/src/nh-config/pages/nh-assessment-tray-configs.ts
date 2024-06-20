@@ -15,6 +15,7 @@ import { consume } from "@lit/context";
 import { appletInstanceInfosContext } from "../../context";
 import { StoreSubscriber } from "lit-svelte-stores";
 import { derived } from "svelte/store";
+import { EntryHash } from "@holochain/client";
 
 export default class AssessmentTrayConfigs extends NHComponent {
   @property() loaded: boolean = false;
@@ -23,6 +24,8 @@ export default class AssessmentTrayConfigs extends NHComponent {
   private _dialog;
   @query('assessment-tray-config-list')
   private _list;
+  @query('create-or-edit-tray')
+  private _form;
 
   @property()
   createTrayConfigDialogButton!: HTMLElement;
@@ -32,6 +35,20 @@ export default class AssessmentTrayConfigs extends NHComponent {
 
   @consume({ context: appletInstanceInfosContext })
   @property({attribute: false}) _currentAppletInstances;
+  
+  @state()
+  _currentlyEditingTrayConfigEntry?: AssessmentTrayConfig;
+  
+  @state()
+  editingConfig: boolean = false;
+
+  async fetchExistingTrayConfig(editableTrayConfigEntryHash: EntryHash) : Promise<AssessmentTrayConfig | undefined> {
+    if (!this.sensemakerStore || !editableTrayConfigEntryHash) return;
+    const defaultConfig = await this.sensemakerStore.getAssessmentTrayConfig(
+      editableTrayConfigEntryHash
+    );
+    return defaultConfig?.entry
+  }
 
   // Asssessment/Resource renderer dictionary, keyed by Applet EH
   @state() _appletInstanceRenderers : StoreSubscriber<any> = new StoreSubscriber(
@@ -51,7 +68,18 @@ export default class AssessmentTrayConfigs extends NHComponent {
 
   render(): TemplateResult {
     return html`
-      <div class="container">
+      <div class="container"
+        @edit-assessment-tray=${async(e: CustomEvent) => { 
+          const trayEh: EntryHash = e.detail
+          if(!trayEh) return;
+          this._currentlyEditingTrayConfigEntry = await this.fetchExistingTrayConfig(trayEh);
+          await this._form.requestUpdate()
+          await this._form.updateComplete;
+          this.editingConfig = true;
+          this._dialog.isOpen = true;
+          this._dialog._dialog.show();
+        }}
+      >
         <nh-page-header-card .heading=${'Assessment Tray Configurations'}>
           <nh-button
             slot="secondary-action"
@@ -82,7 +110,9 @@ export default class AssessmentTrayConfigs extends NHComponent {
         >
           <div slot="inner-content" class="row">
             <create-or-edit-tray
+              .editingConfig=${this.editingConfig}
               .sensemakerStore=${this.sensemakerStore}
+              .fetchedConfig=${this._currentlyEditingTrayConfigEntry}
             >
             </create-or-edit-tray>
           </div>
@@ -95,7 +125,13 @@ export default class AssessmentTrayConfigs extends NHComponent {
         >
           <nh-button
             slot="action-button"
-            @click=${() => this._dialog.showDialog()}
+            @click=${async () => {
+              this.editingConfig = false;
+              this._currentlyEditingTrayConfigEntry = undefined;
+              // await this._form.resetWorkingState();
+              await this._dialog.requestUpdate()
+              this._dialog.showDialog()
+            }}
             class="create-config"
             .variant=${"primary"}
             .iconImageB64=${b64images.icons.plus}
@@ -207,13 +243,4 @@ export default class AssessmentTrayConfigs extends NHComponent {
         }
       }
   `];
-
-
-  async fetchExistingTrayConfig() : Promise<AssessmentTrayConfig | undefined> {
-    if (!this.sensemakerStore || !this.resourceDef) return;
-    const defaultConfig = await this.sensemakerStore.getDefaultAssessmentTrayForResourceDef(
-      this.resourceDef?.resource_def_eh,
-    );
-    return defaultConfig?.entry
-  }
 }

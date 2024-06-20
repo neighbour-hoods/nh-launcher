@@ -75,7 +75,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
 
   @state() loading: boolean = false;
   @state() editMode: boolean = false;
-  @state() editingConfig: boolean = false;
+  @property() editingConfig: boolean = false;
   @state() updatedComponent!: Constructor<unknown> | undefined;
   @state() placeHolderWidget!: (() => TemplateResult) | undefined;
   @state() configuredWidgetsPersisted: boolean = true; // Is the in memory representation the same as on DHT?
@@ -87,15 +87,17 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   @state() _workingWidgetControls: AssessmentControlConfig[] = [];
   @state() _workingAssessmentControlRendererCache: Map<string, (delegate?: InputAssessmentControlDelegate, component?: NHDelegateReceiverConstructor<InputAssessmentControlDelegate>) => TemplateResult> = new Map();
 
+  @query("nh-text-input") trayNameInput!: NHTextInput;
   @state() private _trayName!: string; // Text input value for the name
   @state() private _trayNameFieldErrored: boolean = false; // Flag for errored status on name field
   
   // AssessmentTrayConfig (group) and AssessmentControlRegistrationInputs (individual)
-  @state() private _fetchedConfig!: AssessmentTrayConfig | undefined;
+  @property() fetchedConfig?: AssessmentTrayConfig | undefined;
+
   @state() private _updateToFetchedConfig!: AssessmentTrayConfig;
   @state() private _registeredWidgets: Record<EntryHashB64, AssessmentControlRegistrationInput> = {};
 
-  // Derived from _fetchedConfig
+  // Derived from fetchedConfig
   @state() configuredInputWidgets!: AssessmentControlConfig[];
 
   @state() private _inputDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
@@ -114,12 +116,9 @@ export default class CreateOrEditTrayConfig extends NHComponent {
       await this.fetchMethodEntries();
       await this.partitionDimensionEntries();
       await this.fetchRegisteredAssessmentControls();
-      if(this.editMode && this._updateToFetchedConfig) {
-        this._fetchedConfig = this._updateToFetchedConfig;
-      } else {
-        this._fetchedConfig = await this.fetchExistingTrayConfig();
+      if(this.editingConfig && this._updateToFetchedConfig) {
+        this.fetchedConfig = this._updateToFetchedConfig;
       }
-
       this.loading = false;
     } catch (error) {
       console.error('Could not fetch/assign applet and widget data: ', error);
@@ -140,12 +139,12 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   private getCombinedWorkingAndFetchedWidgets() {
     let widgets: AssessmentControlConfig[]
 
-    if((this._updateToFetchedConfig || this._fetchedConfig) && this._workingWidgetControls && this._workingWidgetControls.length > 0) {
-      widgets = this._fetchedConfig.length > 0 ? [
-        ...(this._updateToFetchedConfig || this._fetchedConfig), ...this._workingWidgetControls
+    if((this._updateToFetchedConfig || this.fetchedConfig) && this._workingWidgetControls && this._workingWidgetControls.length > 0) {
+      widgets = this.fetchedConfig.length > 0 ? [
+        ...(this._updateToFetchedConfig || this.fetchedConfig), ...this._workingWidgetControls
       ] : this._workingWidgetControls;
-    } else if(this._fetchedConfig) {
-      widgets = this._fetchedConfig;
+    } else if(this.fetchedConfig) {
+      widgets = this.fetchedConfig.assessmentControlConfigs;
     } else {
       widgets = [];
     }
@@ -153,15 +152,17 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   }
 
   private async resetWorkingState() {
-    await this.fetchExistingTrayConfig();
     this.configuredWidgetsPersisted = true
     this.placeHolderWidget = undefined;
     this.selectedWidgetKey = undefined;
     this.selectedWidgetIndex = undefined;
+    this.fetchedConfig = undefined;
+    this.editingConfig = false;
     this._workingWidgetControls = [];
-    this.configuredInputWidgets = this._fetchedConfig
+    this.configuredInputWidgets = []
     this.resetAssessmentControlsSelected()
     this._trayName = "";
+    this.trayNameInput._input.value = "";
     this._trayNameFieldErrored = false;
     this._form.reset()
     this.requestUpdate()
@@ -206,17 +207,18 @@ export default class CreateOrEditTrayConfig extends NHComponent {
 
   render(): TemplateResult {
     let renderableWidgets = (this.configuredInputWidgets || this.getCombinedWorkingAndFetchedWidgets())?.map((widgetRegistrationEntry: AssessmentControlConfig) => widgetRegistrationEntry.inputAssessmentControl as DimensionControlMapping)
-
+console.log('this.getCombinedWorkingAndFetchedWidgets() :>> ', this.getCombinedWorkingAndFetchedWidgets());
     const foundEditableWidget = this.editMode && this.selectedWidgetIndex !== -1 && renderableWidgets[this.selectedWidgetIndex as number] && Object.values(this._registeredWidgets)?.find(widget => widget.name == renderableWidgets[this.selectedWidgetIndex as number]?.componentName);
     const foundEditableWidgetConfig = this.editMode && this.selectedWidgetIndex as number !== -1 && renderableWidgets[this.selectedWidgetIndex as number]
     return html`
       <div class="container" @assessment-widget-config-set=${async () => {await this.fetchRegisteredAssessmentControls()}}>
         <div class="description">
-          <p>Add as many widgets as you need - the changes won't be saved until the Create Config button is pressed</p>
+          <p>Add as many widgets as you need - the changes won't be saved until the ${!this.fetchedConfig ? "Create" : "Update"} Config button is pressed</p>
         </div>
         <section class="form">
           <div class="tray-name-field">
             <nh-text-input
+              .value=${(this.editingConfig && this.fetchedConfig?.name) || ""}
               id="tray-name"
               .name="tray-name"
               .label=${"Name:"}
@@ -234,7 +236,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
             >
               <div slot="widgets">
                 ${
-                  this._appletInstanceRenderers?.value && (this._fetchedConfig && this._fetchedConfig.length > 0 || this?._workingWidgetControls)
+                  this._appletInstanceRenderers?.value && (this.fetchedConfig && this.fetchedConfig.length > 0 || this?._workingWidgetControls)
                     ? repeat(renderableWidgets, (widget) => `${encodeHashToBase64(widget.dimensionEh)}-${(widget as any).componentName.replace(" ","")}`, (inputWidgetConfig, idx) => {
                         const allAppletRenderers = Object.values(this._appletInstanceRenderers.value).flatMap(renderers => Object.values(renderers as any)) as (DimensionControlMapping | ResourceBlockRenderer)[];
                         if(!allAppletRenderers) throw new Error('Could not get applet renderers linked to this ResourcDef');
@@ -264,7 +266,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
                 }
                 ${this.loading 
                   ? html`<nh-spinner type=${"icon"}></nh-spinner>`
-                  : this.editingConfig || !this._fetchedConfig
+                  : this.editingConfig || !this.fetchedConfig
                     ? html` <assessment-container .editMode=${true}
                               id="placeholder"
                               @selected=${this.handleAssessmentControlSelected}
@@ -298,7 +300,10 @@ export default class CreateOrEditTrayConfig extends NHComponent {
               id="set-widget-config"
               .variant=${'primary'}
               .loading=${this.loading}
-              .disabled=${!this.loading && (this._fetchedConfig && this.configuredWidgetsPersisted) || (this?._workingWidgetControls && this._workingWidgetControls.length == 0)}
+              .disabled=${!this.loading &&
+                (this.editingConfig
+                  ? (this.fetchedConfig && this.configuredWidgetsPersisted && this.fetchedConfig.name == this._trayName)
+                  : (this.fetchedConfig && this.configuredWidgetsPersisted) || (this?._workingWidgetControls && this._workingWidgetControls.length == 0))}
               .size=${'md'}
               @click=${async () => {
                 if(!this._trayName || this._trayName == "") {
@@ -314,7 +319,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
                 // this._successAlert.openToast();
                 this.configuredWidgetsPersisted = true
               }}
-            >Create Config</nh-button>
+            >${!this.fetchedConfig ? "Create" : "Update"} Config</nh-button>
           </div>
 
           <nh-dropdown-accordion
@@ -361,11 +366,11 @@ export default class CreateOrEditTrayConfig extends NHComponent {
       inputAssessmentControl: inputDimensionBinding,
       outputAssessmentControl: outputDimensionBinding,
     }
-    const isFromWorkingConfig = this.selectedWidgetIndex > this._fetchedConfig.length;
-    let newIndex = isFromWorkingConfig ? (this.selectedWidgetIndex - this._fetchedConfig.length - 1) : this.selectedWidgetIndex;
-    (isFromWorkingConfig ? this._workingWidgetControls : this._fetchedConfig).splice(newIndex, 1, input);
+    const isFromWorkingConfig = this.selectedWidgetIndex > this.fetchedConfig.length;
+    let newIndex = isFromWorkingConfig ? (this.selectedWidgetIndex - this.fetchedConfig.length - 1) : this.selectedWidgetIndex;
+    (isFromWorkingConfig ? this._workingWidgetControls : this.fetchedConfig).splice(newIndex, 1, input);
 
-    this._updateToFetchedConfig = this._fetchedConfig;
+    this._updateToFetchedConfig = this.fetchedConfig;
     this.configuredWidgetsPersisted = false;
     
     this.requestUpdate();
@@ -749,12 +754,11 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   `];
 
 
-  async fetchExistingTrayConfig() : Promise<AssessmentTrayConfig | undefined> {
-    if (!this.sensemakerStore || !this.resourceDef) return;
-    const defaultConfig = await this.sensemakerStore.getDefaultAssessmentTrayForResourceDef(
-      this.resourceDef?.resource_def_eh,
+  async fetchExistingTrayConfig(editableTrayConfigEntryHash: EntryHash) : Promise<AssessmentTrayConfig | undefined> {
+    if (!this.sensemakerStore || !editableTrayConfigEntryHash) return;
+    const defaultConfig = await this.sensemakerStore.getAssessmentTrayConfig(
+      editableTrayConfigEntryHash
     );
-    console.log('defaultConfig :>> ', defaultConfig);
     return defaultConfig?.entry
   }
 
