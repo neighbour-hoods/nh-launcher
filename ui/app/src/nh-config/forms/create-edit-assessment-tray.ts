@@ -117,6 +117,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
       await this.partitionDimensionEntries();
       await this.fetchRegisteredAssessmentControls();
       if(this.editingConfig && this._updateToFetchedConfig) {
+        debugger;
         this.fetchedConfig = this._updateToFetchedConfig;
       }
       this.loading = false;
@@ -311,7 +312,7 @@ console.log('this.getCombinedWorkingAndFetchedWidgets() :>> ', this.getCombinedW
                   return
                 }
                 try {
-                  await this.createEntries();
+                  await !!this.fetchedConfig ? this.updateEntry() : this.createEntries();
                   this._trayNameFieldErrored = false;
                 } catch (error) {
                   console.warn('error :>> ', error);
@@ -345,21 +346,23 @@ console.log('this.getCombinedWorkingAndFetchedWidgets() :>> ', this.getCombinedW
     const { assessment_widget, input_dimension, output_dimension } = model;
 
     const selectedWidgetDetails = Object.entries(this._registeredWidgets || {}).find(
-      ([_widgetEh, widget]) => widget.name == assessment_widget.name,
+      ([_widgetEh, widget]) => widget.controlKey == assessment_widget,
     );
     const selectedWidgetEh = selectedWidgetDetails?.[0];
     if (!selectedWidgetEh) return Promise.reject('Could not get an entry hash for your selected widget.');
 
+    const {appletId, name} = selectedWidgetDetails?.[1];
+
     const inputDimensionBinding = {
       type: "applet",
-      appletId: assessment_widget.appletId,
-      componentName: assessment_widget.name,
+      appletId,
+      componentName: name,
       dimensionEh: decodeHashFromBase64(input_dimension),
     } as DimensionControlMapping;
     const outputDimensionBinding = {
       type: "applet",
-      appletId: assessment_widget.appletId,
-      componentName: assessment_widget.name,
+      appletId,
+      componentName: name,
       dimensionEh: decodeHashFromBase64(output_dimension),
     } as DimensionControlMapping;
     const input = {
@@ -368,7 +371,7 @@ console.log('this.getCombinedWorkingAndFetchedWidgets() :>> ', this.getCombinedW
     }
     const isFromWorkingConfig = this.selectedWidgetIndex > this.fetchedConfig.length;
     let newIndex = isFromWorkingConfig ? (this.selectedWidgetIndex - this.fetchedConfig.length - 1) : this.selectedWidgetIndex;
-    (isFromWorkingConfig ? this._workingWidgetControls : this.fetchedConfig).splice(newIndex, 1, input);
+    (isFromWorkingConfig ? this._workingWidgetControls : this.fetchedConfig.assessmentControlConfigs).splice(newIndex, 1, input);
 
     this._updateToFetchedConfig = this.fetchedConfig;
     this.configuredWidgetsPersisted = false;
@@ -416,6 +419,24 @@ console.log('this.getCombinedWorkingAndFetchedWidgets() :>> ', this.getCombinedW
     if(!this._workingWidgetControls || !(this._workingWidgetControls.length > 0)) throw Error('Nothing to persist, try adding another widget to the config.')
     try {
       await this.sensemakerStore.setAssessmentTrayConfig({name: this._trayName, assessmentControlConfigs: [ ...this?.getCombinedWorkingAndFetchedWidgets(), ...this._workingWidgetControls ]});
+    } catch (error) {
+      return Promise.reject('Error setting assessment widget config');
+    }
+    await this.resetWorkingState();
+    await this.updateComplete;
+    this.dispatchEvent(
+      new CustomEvent('assessment-widget-config-set', {
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+
+  async updateEntry() {
+    if(!this._workingWidgetControls || !(this._workingWidgetControls.length > 0)) throw Error('Nothing to persist, try adding another widget to the config.')
+    try {
+  debugger;
+      await this.sensemakerStore.updateAssessmentTrayConfig({name: this._trayName, assessmentControlConfigs: [ ...this?.getCombinedWorkingAndFetchedWidgets(), ...this._workingWidgetControls ]});
     } catch (error) {
       return Promise.reject('Error setting assessment widget config');
     }
@@ -527,7 +548,7 @@ console.log('this.getCombinedWorkingAndFetchedWidgets() :>> ', this.getCombinedW
                 handleInputChangeOverload: (_e, model) => { // Update the currently editable widget constrol renderer component
                   if(this.editMode) {
                     const possibleRenderers = Object.values(this._appletInstanceRenderers.value)[0] as any;
-                    const assessmentControl = Object.values(this._registeredWidgets)?.find(assessmentControl=> assessmentControl.name == model.assessment_widget);
+                    const assessmentControl = Object.values(this._registeredWidgets)?.find(assessmentControl=> assessmentControl.controlKey == model.assessment_widget);
                     if(!assessmentControl?.controlKey || assessmentControl?.kind !== 'input' || !(possibleRenderers[assessmentControl.controlKey])) throw new Error('Could not update currently editable assessmentControl control')
                     const renderer = possibleRenderers[assessmentControl.controlKey];
                     this.updatedComponent = renderer.component;
