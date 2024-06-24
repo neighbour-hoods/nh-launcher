@@ -124,9 +124,8 @@ export default class NHGlobalConfig extends NHComponent {
       const result = await this._sensemakerStore.value.getResourceDefs()
       this._resourceDefEntries = result.map((entryRec) => ({...entryRec.entry, resource_def_eh: entryRec.entryHash})); 
     }
-    if(changedProperties.has('applets') && typeof changedProperties.get('applets') !== 'undefined') { // Set current applet state whether or not Resource Def is selected from the menu
+    if(changedProperties.has('selectedResourceDef') || changedProperties.has('applets') && typeof changedProperties.get('applets') !== 'undefined') { // Set current applet state whether or not Resource Def is selected from the menu
       if(!this.applets?.length || this.applets?.length == 0) return
-      
       if(this.selectedResourceDef) {
         const linkedAppletDetails : [EntryHash, Applet, DnaHash[]] | undefined = this.applets!.find(appletDetails =>  compareUint8Arrays(appletDetails[0], (this.selectedResourceDef as ResourceDef).applet_eh))
         if(!linkedAppletDetails) return;

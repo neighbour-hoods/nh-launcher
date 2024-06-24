@@ -41,19 +41,12 @@ export class DashboardFilterMap extends NHComponent {
   @consume({ context: appletInstanceInfosContext })
   @property({attribute: false}) _currentAppletInstances;
 
-  @property() _rawAssessments = new StoreSubscriber(
-    this,
-    () =>  derived(this._sensemakerStore.resourceAssessments(), (assessments) => {
-      // Might want to mutate this in some way before returning
-      return assessments
-    }),
-    () => [this._sensemakerStore],
-  );
-
   @property() loaded: boolean = false;
   @property({ type: AssessmentTableType }) tableType;
   @property({ type: String }) resourceName;
   @property({ type: String }) resourceDefEh;
+
+  @state() assessmentsForResources;
 
   // Asssessment/Resource renderer dictionary, keyed by Applet EH
   @state() _appletInstanceRenderers : StoreSubscriber<any> = new StoreSubscriber(
@@ -91,12 +84,23 @@ export class DashboardFilterMap extends NHComponent {
     await this.fetchAssessmentControlConfigs();
     await this.fetchMethods();
     this.partitionDimensionEntries();
+    const rawAssessments = await this._sensemakerStore.getAssessmentsForResources({resource_def_ehs: [this.resourceDefEh.resource_def_eh]})
+    this.assessmentsForResources = rawAssessments 
+    if(typeof this.assessmentsForResources == "object") {
+      this.assessmentsForResources = Object.values(rawAssessments).flatMap(assessments => assessments)
+        .filter(assessment => (this.resourceDefEh && this.resourceDefEh !== "none")
+            ? compareUint8Arrays(this.resourceDefEh, (assessment as any).resource_def_eh)
+            : assessment
+        ) 
+    }
   }
 
   async updated(changedProps) {
     if (
       !!this.resourceDefEntries && !!this._dimensionEntries && (changedProps.has('_objectiveDimensionNames') // all fetching complete by this point, continue to filter/map assessments
-      || changedProps.has('resourceDefEh')) // ResourceDef has changed, need to refilter
+      || changedProps.has('resourceDefEh')
+      || changedProps.has('assessmentsForResources')
+    ) // ResourceDef or assessments have changed, need to refilter
     ) {
       this.fieldDefs = this.generateContextFieldDefs();
       this.filterMapRawAssessmentsToTableRecords();
@@ -105,7 +109,14 @@ export class DashboardFilterMap extends NHComponent {
 
   filterMapRawAssessmentsToTableRecords() {
     // Keyed by resource, (not resource-def)
-    const assessmentsDict : Record<EntryHashB64, Assessment[]> = this._rawAssessments.value;
+    const assessmentsDict : Record<EntryHashB64, Assessment[]> = this.assessmentsForResources
+      .reduce((acc, assessment) => {
+        acc[encodeHashToBase64(assessment.resource_eh)]
+          ? acc[encodeHashToBase64(assessment.resource_eh)].push(assessment)
+          : acc[encodeHashToBase64(assessment.resource_eh)] = [assessment];
+        return acc
+      } , {});
+    console.log('assessmentsDict :>> ', assessmentsDict);
     if(typeof assessmentsDict !== 'object' || !(
       Object.values(assessmentsDict) &&
       Object.values(assessmentsDict)?.length !== undefined &&
@@ -146,31 +157,7 @@ export class DashboardFilterMap extends NHComponent {
       );
     }
 
-    // By context && context results
-    let tripleFiltered;
-    if (
-      this.tableType === AssessmentTableType.Context &&
-      !!this._contextEntry?.thresholds &&
-      !!this._dimensionEntries
-    ) {
-      // tripleFiltered = this.filterByDimensionEh(
-      //   filteredByDimension,
-      //   encodeHashToBase64(this._contextEntry.thresholds[0].dimension_eh),
-      // );
-      // // TODO: cache each context's results and extract this all to a method
-      // tripleFiltered = tripleFiltered.filter(assessment => {
-      //   if(!this.contextEhsB64?.length) return false;
-      //   const matchingContextEntryDefHash = this.contextEhsB64.find((eHB64) => encodeHashToBase64(assessment.resource_eh) === eHB64)
-      //   if(matchingContextEntryDefHash) {
-      //     // Filter out the oldest objective dimension values (so we have the latest average)
-      //     const results = tripleFiltered.filter(assessment => encodeHashToBase64(assessment.resource_eh) === matchingContextEntryDefHash)
-      //     const latestAssessmentFromResults = results.sort((a, b) => b.timestamp > a.timestamp).slice(-1)
-      //     return latestAssessmentFromResults[0] == assessment
-      //   }
-      // })
-    }
-// console.log('tripleFiltered || filteredByMethodType :>> ', tripleFiltered || filteredByMethodType);
-    return tripleFiltered || filteredByDimension;
+    return filteredByDimension;
   }
 
   filterByResourceDefEh(resourceAssessments: Assessment[], filteringHash: EntryHash) {
@@ -319,6 +306,7 @@ export class DashboardFilterMap extends NHComponent {
   }
 
   render() {
+    // console.log('this.filteredTableRecords :>> ', this.filteredTableRecords);
     return html`
       <dashboard-table
         .resourceName=${this.resourceName}
