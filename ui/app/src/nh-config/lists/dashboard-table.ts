@@ -59,7 +59,7 @@ export class DashboardTable extends NHComponent {
 
   async updateTable() {
     this.tableStore.fieldDefs = this.generateFieldDefs(this.resourceName, this.contextFieldDefs);
-
+console.log('this.contextFieldDefs :>> ', this.contextFieldDefs);
     // Check if we have the necessary data to create the table
     if (!this.assessments || !this.tableStore.fieldDefs) {
       console.warn('No data or field definitions to create table.');
@@ -104,6 +104,7 @@ export class DashboardTable extends NHComponent {
   }
 
   async updated(changedProps) {
+    console.log('this.assessments :>> ', this.assessments);
     if (changedProps.has('assessments') || changedProps.has('resourceName')) {
       await this.updateTable();
       await this.updateComplete;

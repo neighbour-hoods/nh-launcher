@@ -94,7 +94,7 @@ export default class NHGlobalConfig extends NHComponent {
     this._matrixStore?.sensemakerStore(this.weGroupId),
   );
 
-  private _resourceDefEntries: Array<ResourceDef> = [];
+  @state() _resourceDefEntries: Array<ResourceDef> = [];
 
   _neighbourhoodInfo = new StoreSubscriber(
     this,
@@ -111,7 +111,6 @@ export default class NHGlobalConfig extends NHComponent {
   protected async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
       // get all applet entry hash, applet, and federated groups' dnahashes
       this.applets = get(await this._matrixStore.fetchAllApplets(this.weGroupId));
-      console.log('applet tuples fetched :>> ', this. applets);
   }
 
   protected async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
@@ -133,10 +132,9 @@ export default class NHGlobalConfig extends NHComponent {
       } else {
         this.currentAppletInstanceEh = null
       }
-      console.log('this.currentAppletInstanceEh set :>> ', this.currentAppletInstanceEh);
     }
 
-    if(changedProperties.has('currentAppletInstanceEh') && !!this._currentAppletInstances.value) { // By now the current ResourceDef with its linked Current AppletEh has been chosen (or set to null for All Resources)
+    if(changedProperties.has('_currentAppletInstances') && typeof this._currentAppletInstances.value !== 'undefined') { // By now the current ResourceDef with its linked Current AppletEh has been chosen (or set to null for All Resources)
       try {
         await this.fetchAllAppletInstanceRenderers();
 
