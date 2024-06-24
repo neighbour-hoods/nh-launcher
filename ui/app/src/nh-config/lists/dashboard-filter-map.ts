@@ -116,7 +116,7 @@ export class DashboardFilterMap extends NHComponent {
           : acc[encodeHashToBase64(assessment.resource_eh)] = [assessment];
         return acc
       } , {});
-    console.log('assessmentsDict :>> ', assessmentsDict);
+
     if(typeof assessmentsDict !== 'object' || !(
       Object.values(assessmentsDict) &&
       Object.values(assessmentsDict)?.length !== undefined &&
