@@ -47,7 +47,6 @@ export class DashboardTable extends NHComponent {
   @property() resourceDefEntries!: object[];
 
   @property() resourceName!: string;
-  @state() columns: number = 0;
   @state() loading: boolean = true;
   @state() showSkeleton: boolean = false;
 
@@ -73,6 +72,7 @@ export class DashboardTable extends NHComponent {
       this.showSkeleton = false;
     } 
 
+
     if(!this.loading && this.tableStore.records.length == 0 && this.assessments.length == 0) {
       this.dispatchEvent(
         new CustomEvent("trigger-alert", {
@@ -88,7 +88,6 @@ export class DashboardTable extends NHComponent {
       );
       this.showSkeleton = true;
     }
-    if(typeof this.contextFieldDefs == 'object') this.columns = Object.values(this.contextFieldDefs).length + 2
   }
   
   async connectedCallback() {
@@ -105,7 +104,7 @@ export class DashboardTable extends NHComponent {
   }
 
   async updated(changedProps) {
-    if (changedProps.has('assessments') || changedProps.has('contextFieldDefs') || changedProps.has('resourceName')) {
+    if (changedProps.has('assessments') || changedProps.has('resourceName')) {
       await this.updateTable();
       await this.updateComplete;
       await this._table?.updateComplete;
@@ -148,9 +147,9 @@ export class DashboardTable extends NHComponent {
     return !this.loading && this.contextFieldDefs
       ? html`<wc-table .tableStore=${this.tableStore}></wc-table>
         ${!this.loading && this.showSkeleton
-          ? html`<nh-skeleton type=${"dashboard-basic-grid"}></nh-skeleton>` : null
+          ? html`<nh-skeleton style="max-width: 100vw" type=${"dashboard-basic-grid"}></nh-skeleton>` : null
         }`
-      : html`<nh-skeleton type=${"dashboard-table-full"} .columns=${this.columns}></nh-skeleton>`;
+      : html`<nh-skeleton type=${"dashboard-table-full"}></nh-skeleton>`;
   }
 
   static elementDefinitions = {

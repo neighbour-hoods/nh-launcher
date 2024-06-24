@@ -30,8 +30,6 @@ export default class TabbedContextTables extends NHComponent {
 
   @property({ attribute: false }) resourceDefEntries!: object[];
   
-  @query('dashboard-filter-map') private _table;
-
   renderActionButtons() {
     return html`
       <div slot="buttons">
@@ -63,7 +61,6 @@ export default class TabbedContextTables extends NHComponent {
           .resourceDefEntries=${this.resourceDefEntries}
           .resourceName=${this.selectedResourceDef?.resource_name ? cleanForUI(this.selectedResourceDef.resource_name) : "All Resources"}
           .resourceDefEh=${this.selectedResourceDef?.resource_def_eh || "none"}
-          .selectedContextEhB64=${this.selectedContextEhB64}
           .loaded=${this.loaded}
         ></dashboard-filter-map>
       </div>
