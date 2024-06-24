@@ -41,27 +41,6 @@ export default class NHDashBoardOverview extends NHComponent {
 
   @state() currentAppletInstanceId : string = '';
 
-  _currentAppletConfig = new StoreSubscriber(
-    this,
-    () =>  derived(this._currentAppletInstances.store, async (applets: { EntryHashB64: AppletInstanceInfo & {gui: AppletGui}} | undefined) => {
-      if(!applets || !this.selectedResourceDef) return {}
-      const appletId = (this.selectedResourceDef as any).applet_eh;
-      return applets[encodeHashToBase64(appletId)]
-    }),
-    () => [this._currentAppletInstances],
-  );
-
-  @state() _currentAppletContexts : any[] = [];
-
-  protected async firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
-    // If we have a derived applet config, set its contexts in state so that the tab buttons are rendered
-    if(this._currentAppletConfig?.value) {
-      const currentConfig = await this._currentAppletConfig.value as AppletConfig;
-      if(typeof currentConfig?.cultural_contexts !== 'object') return
-      this._currentAppletContexts = Object.entries(currentConfig!.cultural_contexts);
-    }
-  }
-
   protected updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     if(this.loaded && !(this._currentAppletInstances?.value && Object.values(this._currentAppletInstances.value).length > 0)) {
       
@@ -99,7 +78,6 @@ export default class NHDashBoardOverview extends NHComponent {
           : html` <tabbed-context-tables
                     .resourceDefEntries=${this.resourceDefEntries}
                     .selectedAppletInstanceId=${this.currentAppletInstanceId}
-                    .contexts=${this._currentAppletContexts}
                     .loaded=${this.loaded}
                   ></tabbed-context-tables>`
         }
