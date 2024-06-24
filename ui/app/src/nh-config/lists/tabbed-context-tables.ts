@@ -24,7 +24,6 @@ export default class TabbedContextTables extends NHComponent {
   @property() loaded!: boolean;
   @property() selectedContextEhB64: string = 'none';
   @property() selectedAppletInstanceId: string = 'none';
-  @property() contexts: any;
 
   @consume({ context: resourceDefContext, subscribe: true })
   @property({ attribute: false }) selectedResourceDef!: object | undefined;
