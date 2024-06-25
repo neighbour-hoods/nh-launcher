@@ -39,8 +39,6 @@ export class AppletNotInstalled extends ScopedRegistryHost(LitElement) {
   }
 
   async joinApplet() {
-    // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).show();
-
     await this._matrixStore.joinApplet(this.weGroupId, this.appletInstanceId)
       .then(() => {
         this.dispatchEvent(
@@ -51,18 +49,12 @@ export class AppletNotInstalled extends ScopedRegistryHost(LitElement) {
             }
           )
         );
-        // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).close();
-        // (this.shadowRoot?.getElementById("success-snackbar") as Snackbar).show();
       }).catch((e) => {
         console.log("Installation Error: ", e);
-        // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).close();
-        // (this.shadowRoot?.getElementById("error-snackbar") as Snackbar).show();
       })
   }
 
   async reinstallApplet() {
-    // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).show();
-
     await this._matrixStore.reinstallApplet(this.weGroupId, this.appletInstanceId)
       .then(() => {
         this.dispatchEvent(
@@ -73,12 +65,8 @@ export class AppletNotInstalled extends ScopedRegistryHost(LitElement) {
             }
           )
         );
-        // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).close();
-        // (this.shadowRoot?.getElementById("success-snackbar") as Snackbar).show();
       }).catch((e) => {
         console.log("Installation Error: ", e);
-        // (this.shadowRoot?.getElementById("installing-progress") as Snackbar).close();
-        // (this.shadowRoot?.getElementById("error-snackbar") as Snackbar).show();
       })
   }
 
