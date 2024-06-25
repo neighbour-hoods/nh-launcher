@@ -120,17 +120,31 @@ export default () => {
 
         const entryRecordCreate1 = new EntryRecord<AssessmentTrayConfig>(create1);
         // When Alice gets tray config with that entry hash
-        const read1 = await callZomeBob(
+        const read1 = await callZomeAlice(
           "assessment_tray",
           "get_assessment_tray_config",
           entryRecordCreate1.entryHash
         );
         const entryRecordRead1 = new EntryRecord<AssessmentTrayConfig>(read1);
-
+        
         // Then the same config is returned with control configs in the same order
-        t.ok(entryRecordRead1.entry, "Tray config retrievable by other agent");
+        t.ok(entryRecordRead1.entry, "Tray config retrievable");
         t.equal(entryRecordRead1.entry.name, "test config", "retrieved tray config name is the same");
         t.deepEqual(entryRecordRead1.entry.assessmentControlConfigs, [testControlConfig1, testControlConfig2], "retrieved tray config blocks are the same, have same order");
+        
+        // Test 1.1: And When get_assessment_tray_configs is called
+        const readAll1 = await callZomeAlice(
+          "assessment_tray",
+          "get_assessment_tray_configs",
+          null
+        );
+
+        t.ok(readAll1, "Tray configs retrievable");
+        const entryRecordsReadAll1 = (readAll1 || []).map(entry => new EntryRecord<AssessmentTrayConfig>(entry))
+        t.equal(entryRecordsReadAll1.length, 1); 
+        t.equal(entryRecordsReadAll1[0].entry.name, "test config", "retrieved tray config name is the same");
+        t.deepEqual(entryRecordsReadAll1[0].entry.assessmentControlConfigs, [testControlConfig1, testControlConfig2], "retrieved tray config blocks are the same, have same order");
+        // It also returns this one result.
 
 
         // Test 2: Given config so far created by Alice
@@ -164,6 +178,7 @@ export default () => {
         t.equal(getDefault1, null, "Getting a default tray config when there is none set returns null");
         await pause(pauseDuration);
 
+
         // Test 4: Given config so far created by Alice
         // When we update that config
         const update1 = await callZomeAlice(
@@ -193,6 +208,16 @@ export default () => {
         const getUpdateEntryRecord = new EntryRecord<AssessmentTrayConfig>(getUpdate1);
         t.ok('updated test config', getUpdateEntryRecord.entry.name, "and it has the right updated details.");
 
+        // Test 4.1: And When get_assessment_tray_configs is called
+        const readAll2 = await callZomeAlice(
+          "assessment_tray",
+          "get_assessment_tray_configs",
+          null
+        );
+        t.ok(readAll2, "Tray configs retrievable");
+        const entryRecordsReadAll2 = (readAll2 || []).map(entry => new EntryRecord<AssessmentTrayConfig>(entry))
+        t.equal(entryRecordsReadAll2.length, 1); 
+        t.equal(entryRecordsReadAll2[0].entry.name, "updated test config", "retrieved tray config name is the same");
 
         // Test 5: Given config so far created by Alice and a dummy entry hash for our Resource Def and no default set
         // When we set the default for that entry hash
