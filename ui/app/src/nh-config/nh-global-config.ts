@@ -74,7 +74,7 @@ export default class NHGlobalConfig extends NHComponent {
             (appletInstanceInfo: AppletInstanceInfo) => this._matrixStore.queryAppletGui(appletInstanceInfo.applet.devhubGuiReleaseHash).then(gui => {
               acc[appletEh].gui = gui as AppletGui
             })
-          ) as any), async() => Promise.resolve(this.loaded = true)])
+          ) as any), async() => typeof console.log("Set loaded flag") == "undefined" && Promise.resolve(this.loaded = true)])
           
           console.log('fetched renderers and set guis')
         } catch (error) {
@@ -84,7 +84,7 @@ export default class NHGlobalConfig extends NHComponent {
         return acc
       }, {} as {EntryHashB64: AppletInstanceInfo & {gui: AppletGui}})
     }),
-    () => [this.weGroupId, this._matrixStore, this._resourceDefEntries, this.currentAppletInstanceEh, this.loaded],
+    () => [this.weGroupId, this._matrixStore, this._resourceDefEntries, this.currentAppletInstanceEh],
   );
 
   @provide({ context: resourceDefContext })

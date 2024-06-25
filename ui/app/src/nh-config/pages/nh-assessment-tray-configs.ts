@@ -64,7 +64,7 @@ export default class AssessmentTrayConfigs extends NHComponent {
         }).filter(value => !!value) || [])
         : null
     }),
-    () => [this.loaded],
+    () => [this._currentAppletInstances],
   );
 
   render(): TemplateResult {
@@ -126,6 +126,7 @@ export default class AssessmentTrayConfigs extends NHComponent {
         </nh-dialog>
         <assessment-tray-config-list
           .sensemakerStore=${this.sensemakerStore}
+          .loaded=${this.loaded}
         >
           <nh-button
             slot="action-button"
