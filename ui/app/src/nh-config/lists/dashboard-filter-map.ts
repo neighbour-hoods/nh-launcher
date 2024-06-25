@@ -221,14 +221,15 @@ export class DashboardFilterMap extends NHComponent {
     const delegate = this.getControlForAssessment(assessment);
     const gui = linkedResourceDefApplet?.gui;
     if (!delegate || !gui || !this._dimensionEntries) return baseRecord; // We are unable to return renedered assessments, but return the base record so data exists in the table
-    
+    const misconfiguredResources: boolean[] = [];
     try {
       for (let dimensionEntry of this._dimensionEntries) {
         if(dimensionEntry.entry.computed) continue; // Exclude objective dimensions
-        if(compareUint8Arrays(assessment.dimension_eh, dimensionEntry.entryHash) && this._assessmentTrayConfigDefaultsForResourceDefs[encodeHashToBase64(assessment.resource_def_eh)]) {
+        const assessmentTrayConfig = this._assessmentTrayConfigDefaultsForResourceDefs[encodeHashToBase64(assessment.resource_def_eh)];
+        if(typeof assessmentTrayConfig == 'undefined') misconfiguredResources.push(true);
+        if(compareUint8Arrays(assessment.dimension_eh, dimensionEntry.entryHash) && assessmentTrayConfig) {
           // Assume that validation on client/zome has enforced XOR on input/output dimensions and use dimension EH comparison to find widget control
-          console.log('this._assessmentTrayConfigDefaultsForResourceDefs :>> ', this._assessmentTrayConfigDefaultsForResourceDefs);
-          const controls = this._assessmentTrayConfigDefaultsForResourceDefs[encodeHashToBase64(assessment.resource_def_eh)]?.assessmentControlConfigs.find(widgetConfig => compareUint8Arrays(dimensionEntry.entryHash, widgetConfig.inputAssessmentControl.dimensionEh))
+          const controls = assessmentTrayConfig?.assessmentControlConfigs.find(widgetConfig => compareUint8Arrays(dimensionEntry.entryHash, widgetConfig.inputAssessmentControl.dimensionEh))
           if(!controls) throw new Error('Could not find a widget control in the widget config block that matches your assessment dimension');
 
           const inputControlName = controls.inputAssessmentControl.componentName;
@@ -243,6 +244,7 @@ export class DashboardFilterMap extends NHComponent {
           baseRecord[dimensionEntry.entry.name] = {};
         }
       }
+      if(misconfiguredResources.length > 0) throw new Error("Some assessment tray config wasn't found.")
     } catch (error) {
         this.dispatchEvent(
           new CustomEvent("trigger-alert", {
