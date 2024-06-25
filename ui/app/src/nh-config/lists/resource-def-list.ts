@@ -11,6 +11,7 @@ import NHCardList from '@neighbourhoods/design-system-components/card-list';
 import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
 import { EntryRecord } from "@holochain-open-dev/utils";
 import { EntryHash } from "@holochain/client";
+import { alertEvent } from "../../decorators/alert-event";
 
 export default class ResourceDefList extends NHComponent {
   @property() sensemakerStore!: SensemakerStore;
@@ -18,6 +19,8 @@ export default class ResourceDefList extends NHComponent {
   @state() private _resourceDefEntries: Array<ResourceDef & { resource_def_eh: EntryHash }> = [];
 
   @state() private _assessmentTrayEntries!: Array<AssessmentTrayConfig & { assessment_tray_eh: EntryHash }>;
+
+  @alertEvent() success 
 
   async fetchAssessmentTrayEntries() {
     try {
@@ -94,18 +97,10 @@ export default class ResourceDefList extends NHComponent {
                       const setDefaultResult = await this.sensemakerStore.setDefaultAssessmentTrayForResourceDef(resourceDef.resource_def_eh, defaultTrayEntryHash);
                       console.log('setDefaultResult :>> ', setDefaultResult);
                       await this.updateComplete;
-                      this.dispatchEvent(
-                        new CustomEvent("trigger-alert", {
-                          detail: { 
-                            title: "Default Tray Updated",
-                            msg: "You have linked the Resource Definition to a default Assessment Tray configuration",
-                            type: "success",
-                            closable: true,
-                          },
-                          bubbles: true,
-                          composed: true,
-                        })
-                      );
+                      this.success.emit({
+                        title: "Default Tray Updated",
+                        msg: "You have linked the Resource Definition to a default Assessment Tray configuration"
+                      })
                     } catch (error) {
                       console.log("Failed to set default tray for resource def: ", error)
                     }
