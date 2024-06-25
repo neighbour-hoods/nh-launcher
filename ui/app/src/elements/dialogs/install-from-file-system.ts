@@ -179,7 +179,8 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
             applet_name: string()
               .min(1, 'Must be at least 1 characters')
               .required('Enter a name for your new applet.')
-              .test('is_duplicate', 'This name has already been used', () => !this._duplicateName),
+              // .test('is_duplicate', 'This name has already been used', () => !this._duplicateName)
+              ,
             applet_description: string(),
             webhapp_file: string()
               .min(1, 'Your webhapp bundle have a valid path.')
