@@ -36,6 +36,7 @@ import NHProfileCard from '@neighbourhoods/design-system-components/profile/prof
 import { b64images } from '@neighbourhoods/design-system-styles';
 import { ConfigPage } from './nh-config/types';
 import { AppletConfigInput, SensemakerStore } from '@neighbourhoods/client';
+import { alertEvent } from './decorators/alert-event';
 
 export class MainDashboard extends ScopedRegistryHost(LitElement) {
   @consume({ context: matrixContext , subscribe: true })
@@ -56,7 +57,7 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
   @queryAsync('#nh-home')
   _neighbourhoodHome;
 
-
+  @alertEvent() success 
   /**
    * Defines the content of the dashboard
    */
@@ -459,18 +460,10 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
     this.requestUpdate();
     await this.updateComplete;
 
-    this.dispatchEvent(
-      new CustomEvent("trigger-alert", {
-        detail: { 
-          title: "Applet Installed",
-          msg: "You can now use your applet, and any assessments made in it will show up on your dashboard.",
-          type: "success",
-          closable: true,
-        },
-        bubbles: true,
-        composed: true,
-      })
-    );
+    this.success.emit({
+      title: "Applet Installed",
+      msg: "You can now use your applet, and any assessments made in it will show up on your dashboard."
+    })
   }
 
   goHome() {

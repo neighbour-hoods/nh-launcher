@@ -14,6 +14,7 @@ import NHSpinner from '@neighbourhoods/design-system-components/spinner';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import { object, string } from 'yup';
 import { isDataURL } from './helpers/functions';
+import { alertEvent } from '../../decorators/alert-event';
 
 export class ProfilePrompt extends NHComponent {
   @property()
@@ -21,6 +22,8 @@ export class ProfilePrompt extends NHComponent {
 
   @property()
   profilesStore!: ProfilesStore;
+
+  @alertEvent() danger; 
 
   @query("nh-button[type='submit']") private _submitBtn;
 
@@ -56,18 +59,10 @@ export class ProfilePrompt extends NHComponent {
       );
       await this.requestUpdate();
     } catch (e) {
-      this.dispatchEvent(
-        new CustomEvent('trigger-alert', {
-          detail: {
-            title: 'Profile could not be created',
-            msg: 'There was a problem creating your profile.',
-            type: 'danger',
-            closable: true,
-          },
-          bubbles: true,
-          composed: true,
-        }),
-      );
+      this.danger.emit({
+        title: "Profile could not be created",
+        msg: "There was a problem creating your profile."
+      })
       console.log('Installation error:', e);
     }
     this.loading = false;
