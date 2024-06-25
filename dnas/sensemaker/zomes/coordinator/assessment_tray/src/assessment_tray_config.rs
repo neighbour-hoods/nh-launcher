@@ -29,7 +29,6 @@ fn get_assessment_tray_config(assessment_tray_eh: EntryHash) -> ExternResult<Opt
 
 #[hdk_extern]
 fn get_assessment_tray_configs(_:()) -> ExternResult<Vec<Record>> {
-    // TODO: test coverage for this extern
     let links = get_links(
         tray_configs_typed_path()?.path_entry_hash()?,
         LinkTypes::AssessmentTrayConfig,
@@ -41,7 +40,7 @@ fn get_assessment_tray_configs(_:()) -> ExternResult<Vec<Record>> {
                 let entry_hash = link.target.into_entry_hash()
                     .ok_or_else(|| wasm_error!(WasmErrorInner::Guest(String::from("Invalid link target"))))?;
 
-                    get_assessment_tray_config(entry_hash)
+                    get_latest_assessment_tray(entry_hash)
             }).collect();
 
             // Handle the Result and then filter_map to remove None values
@@ -104,13 +103,6 @@ fn update_assessment_tray_config(input: AssessmentTrayConfigUpdateInput) -> Exte
     let _action_hash =update_entry(input.original_action_hash, updated_tray);
 
     let eh = hash_entry(EntryTypes::AssessmentTrayConfig(input.updated_assessment_tray_config.clone().try_into()?))?;
-
-    create_link(
-        tray_configs_typed_path()?.path_entry_hash()?,
-        eh.clone(),
-        LinkTypes::AssessmentTrayConfig,
-        (),
-    )?;
 
     Ok(eh)
 }
