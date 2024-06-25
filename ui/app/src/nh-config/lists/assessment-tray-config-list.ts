@@ -32,6 +32,7 @@ export default class AssessmentTrayConfigList extends NHComponent {
     this,
     () =>  derived(this._currentAppletInstances.store, (appletInstanceInfos: any) => {
       //@ts-ignore
+      console.log('appletInstanceInfos :>> ', appletInstanceInfos);
       return !!appletInstanceInfos && Object.values(appletInstanceInfos).some(appletInfo => appletInfo!.gui)
       //@ts-ignore
         ? Object.fromEntries((Object.entries(appletInstanceInfos) || [])?.map(([appletEh, appletInfo]) => {
@@ -40,7 +41,7 @@ export default class AssessmentTrayConfigList extends NHComponent {
         }).filter(value => !!value) || [])
         : null
     }),
-    () => [],
+    () => [this.loaded, this._currentAppletInstances, this._assessmentTrayEntries],
   );
 
   async fetchAssessmentTrayEntries() {
@@ -101,16 +102,21 @@ export default class AssessmentTrayConfigList extends NHComponent {
                     )}
                   </div>
                   </nh-assessment-tray>
-                  <button style="display:flex; flex: 1" @click=${() => {
-                    const assessmentTrayConfigEh = entry.assessment_tray_eh;
-                    this.dispatchEvent(
-                      new CustomEvent('edit-assessment-tray', {
-                        detail: assessmentTrayConfigEh,
-                        bubbles: true,
-                        composed: true,
-                      }),
-                    );
-                  }}>Edit</button>
+                  <nh-button
+                    .variant=${"primary"}
+                    .size=${"md"}
+                    style="display:flex; flex: 1"
+                    @click=${() => {
+                      const assessmentTrayConfigEh = entry.assessment_tray_eh;
+                      this.dispatchEvent(
+                        new CustomEvent('edit-assessment-tray', {
+                          detail: assessmentTrayConfigEh,
+                          bubbles: true,
+                          composed: true,
+                        }),
+                      );
+                    }}>Edit
+                  </nh-button>
                 </div>
               `
           )}`

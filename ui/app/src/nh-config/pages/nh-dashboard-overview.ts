@@ -14,13 +14,11 @@ import { b64images } from '@neighbourhoods/design-system-styles';
 import TabbedContextTables from '../lists/tabbed-context-tables';
 import { property, state } from 'lit/decorators.js';
 import { SensemakerStore, AppletConfig } from '@neighbourhoods/client';
-import { derived } from 'svelte/store';
 import {
   LoadingState,
 } from '../types';
 import { AppletGui, AppletInstanceInfo } from '../../types';
 import { StoreSubscriber } from 'lit-svelte-stores';
-import { decode } from '@msgpack/msgpack';
 
 export default class NHDashBoardOverview extends NHComponent {
   @property() loaded!: boolean;
@@ -42,7 +40,7 @@ export default class NHDashBoardOverview extends NHComponent {
   @state() currentAppletInstanceId : string = '';
 
   protected updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    if(this.loaded && !(this._currentAppletInstances?.value && Object.values(this._currentAppletInstances.value).length > 0)) {
+    if(this.loaded && (this._currentAppletInstances?.value && Object.values(this._currentAppletInstances.value).length == 0)) {
       
       this.dispatchEvent(
         new CustomEvent("trigger-alert", {

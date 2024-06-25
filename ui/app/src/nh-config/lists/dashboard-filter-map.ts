@@ -85,8 +85,7 @@ export class DashboardFilterMap extends NHComponent {
     await this.fetchMethods();
     this.partitionDimensionEntries();
     const rawAssessments = await this._sensemakerStore.getAssessmentsForResources({resource_def_ehs: [this.resourceDefEh.resource_def_eh]})
-    this.assessmentsForResources = rawAssessments 
-    if(typeof this.assessmentsForResources == "object") {
+    if(typeof rawAssessments == "object") {
       this.assessmentsForResources = Object.values(rawAssessments).flatMap(assessments => assessments)
         .filter(assessment => (this.resourceDefEh && this.resourceDefEh !== "none")
             ? compareUint8Arrays(this.resourceDefEh, (assessment as any).resource_def_eh)
@@ -103,6 +102,7 @@ export class DashboardFilterMap extends NHComponent {
     ) // ResourceDef or assessments have changed, need to refilter
     ) {
       this.fieldDefs = this.generateContextFieldDefs();
+      if(!this.assessmentsForResources) return
       this.filterMapRawAssessmentsToTableRecords();
     }
   }
