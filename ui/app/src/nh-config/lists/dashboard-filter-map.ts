@@ -250,7 +250,7 @@ export class DashboardFilterMap extends NHComponent {
           new CustomEvent("trigger-alert", {
             detail: { 
               title: "Some Controls Not Configured",
-              msg: "Your controls have not all been configured correctly -  go to the *Assessment Trays* screen to configure them!",
+              msg: "Your controls have not all been configured correctly -  go to the *Assessment Trays* pages to create/edit them, then set a tray as a default for each resource type.",
               type: "danger",
               closable: true,
             },
