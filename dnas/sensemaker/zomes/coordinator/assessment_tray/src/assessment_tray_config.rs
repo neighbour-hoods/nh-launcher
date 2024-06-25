@@ -21,10 +21,26 @@ fn get_latest_assessment_tray(entry_hash: EntryHash) -> ExternResult<Option<Reco
 #[hdk_extern]
 fn get_assessment_tray_config(assessment_tray_eh: EntryHash) -> ExternResult<Option<Record>> {
     let maybe_tray = get(assessment_tray_eh, GetOptions::default())?;
-    // TODO: ensure we have a tray before returning
-
-    debug!("_+_+_+_+_+_+_+_+_+_ Maybe tray entry: {:#?}", maybe_tray.clone());
-    Ok(maybe_tray)
+    if let Some(record) = maybe_tray.clone() {
+        if let Some(entry_type) = record.signed_action().hashed.content.entry_type() {
+            let result: ExternResult<Option<Record>> = match entry_type {
+                EntryType::App(entry_type) => {
+                    let entry_index : u8 = entry_type.zome_index.into();
+                    if entry_index == 1 { // 1 is the index for AssessmentTrayConfig
+                        Ok(maybe_tray)
+                    } else {
+                        Ok(None)
+                    }
+                },
+                _ => Err(wasm_error!(WasmErrorInner::Guest(String::from("This entry hash does not match an Assessment Config Tray entry"))))
+            };
+            result
+        } else {
+            Ok(None)
+        }
+    } else {
+        Ok(None)
+    }
 }
 
 #[hdk_extern]
@@ -115,8 +131,6 @@ fn get_default_assessment_tray_config_for_resource_def(resource_def_eh: EntryHas
         None,
     )?;
 
-    debug!("_+_+_+_+_+_+_+_+_+_ Default tray links: {:#?}", links.clone());
-
     let default_link = links.iter().next();
     if let Some(link) = default_link {
         let link_target_eh = link.clone().target.into_entry_hash();
@@ -163,7 +177,6 @@ fn set_default_assessment_tray_config_for_resource_def(SetAssessmentTrayDefaultI
         (),
     )?;
 
-    debug!("_+_+_+_+_+_+_+_+_+_ Created default tray link: {:#?}", _link_action_hash);
     Ok(assessment_tray_eh)
 }
 
