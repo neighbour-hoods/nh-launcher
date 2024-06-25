@@ -126,6 +126,12 @@ export default class CreateOrEditTrayConfig extends NHComponent {
     }
   }
 
+  async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
+    if(changedProperties.has("editingConfig") && changedProperties.get("editingConfig") == false && this.editingConfig && this.fetchedConfig?.name) {
+      this._trayName = this.fetchedConfig.name
+    }
+  }
+
   private findInputDimensionsForOutputDimension(outputDimensionEh: EntryHash) {
     const methods = this._methodEntries!.filter((method: Method) => compareUint8Arrays(method.output_dimension_eh, outputDimensionEh))
     return methods.map((method: Method) => method.input_dimension_ehs[0])
@@ -208,7 +214,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
 
   render(): TemplateResult {
     let renderableWidgets = (this.configuredInputWidgets || this.getCombinedWorkingAndFetchedWidgets())?.map((widgetRegistrationEntry: AssessmentControlConfig) => widgetRegistrationEntry.inputAssessmentControl as DimensionControlMapping)
-console.log('this.getCombinedWorkingAndFetchedWidgets() :>> ', this.getCombinedWorkingAndFetchedWidgets());
+
     const foundEditableWidget = this.editMode && this.selectedWidgetIndex !== -1 && renderableWidgets[this.selectedWidgetIndex as number] && Object.values(this._registeredWidgets)?.find(widget => widget.name == renderableWidgets[this.selectedWidgetIndex as number]?.componentName);
     const foundEditableWidgetConfig = this.editMode && this.selectedWidgetIndex as number !== -1 && renderableWidgets[this.selectedWidgetIndex as number]
     return html`
@@ -227,7 +233,7 @@ console.log('this.getCombinedWorkingAndFetchedWidgets() :>> ', this.getCombinedW
               .placeholder=${"Enter a name"}
               .required=${true}
               .errored=${this._trayNameFieldErrored}
-              @change=${(e) => (this._trayName = e.target.value)}
+              @change=${(e) => {this._trayName = e.target.value}}
             ></nh-text-input>
           </div>
           <div class="widget-block-config">
@@ -237,7 +243,7 @@ console.log('this.getCombinedWorkingAndFetchedWidgets() :>> ', this.getCombinedW
             >
               <div slot="widgets">
                 ${
-                  this._appletInstanceRenderers?.value && (this.fetchedConfig && this.fetchedConfig.length > 0 || this?._workingWidgetControls)
+                  this._appletInstanceRenderers?.value && (this.fetchedConfig && this.fetchedConfig.assessmentControlConfigs.length > 0 || this?._workingWidgetControls)
                     ? repeat(renderableWidgets, (widget) => `${encodeHashToBase64(widget.dimensionEh)}-${(widget as any).componentName.replace(" ","")}`, (inputWidgetConfig, idx) => {
                         const allAppletRenderers = Object.values(this._appletInstanceRenderers.value).flatMap(renderers => Object.values(renderers as any)) as (DimensionControlMapping | ResourceBlockRenderer)[];
                         if(!allAppletRenderers) throw new Error('Could not get applet renderers linked to this ResourcDef');
@@ -301,10 +307,10 @@ console.log('this.getCombinedWorkingAndFetchedWidgets() :>> ', this.getCombinedW
               id="set-widget-config"
               .variant=${'primary'}
               .loading=${this.loading}
-              .disabled=${!this.loading &&
-                (this.editingConfig
-                  ? (this.fetchedConfig && this.configuredWidgetsPersisted && this.fetchedConfig.name == this._trayName)
-                  : (this.fetchedConfig && this.configuredWidgetsPersisted) || (this?._workingWidgetControls && this._workingWidgetControls.length == 0))}
+              .disabled=${!this.loading && !(this?.fetchedConfig && this.configuredWidgetsPersisted) &&
+                (this.fetchedConfig
+                  ? (this.fetchedConfig?.name && this.fetchedConfig.name == this._trayName) // We will actually need a deepequal on the configs to make this a rigorous validation rule. This is a simple version requiring rename
+                  : (this?._workingWidgetControls && this._workingWidgetControls.length == 0))}
               .size=${'md'}
               @click=${async () => {
                 if(!this._trayName || this._trayName == "") {
