@@ -20,6 +20,8 @@ import { derived } from "svelte/store";
 export default class AssessmentTrayConfigList extends NHComponent {  
   @property() sensemakerStore!: SensemakerStore;
 
+  @property() loaded: boolean = false;
+
   @state() private _assessmentTrayEntries!: Array<AssessmentTrayConfig & { assessment_tray_eh: EntryHash }>;
 
   @consume({ context: appletInstanceInfosContext })

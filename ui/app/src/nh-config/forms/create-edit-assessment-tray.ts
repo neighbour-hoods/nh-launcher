@@ -47,8 +47,6 @@ import { object, string } from 'yup';
 import { dimensionIncludesControlRange } from '../../utils';
 
 export default class CreateOrEditTrayConfig extends NHComponent {
-  @property() loaded!: boolean;
-
   sensemakerStore!: SensemakerStore;
 
   @consume({ context: appletInstanceInfosContext })
@@ -67,7 +65,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
         }).filter(value => !!value) || [])
         : null
     }),
-    () => [this.loaded],
+    () => [this.loading],
   );
 
   @query('nh-form') private _form;
