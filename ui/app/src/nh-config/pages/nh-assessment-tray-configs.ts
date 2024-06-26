@@ -76,9 +76,9 @@ export default class AssessmentTrayConfigs extends NHComponent {
           const entryRecord = await this.fetchExistingTrayConfig(trayEh);
           if(!entryRecord) return;
           this._currentlyEditingTrayConfigEntry = [entryRecord.actionHash, entryRecord.entry];
-          await this._form.requestUpdate()
-          await this._form.updateComplete;
           this.editingConfig = true;
+          await this._form.requestUpdate("editingConfig")
+          await this._form.updateComplete;
           this._dialog.isOpen = true;
           this._dialog._dialog.show();
         }}
@@ -95,6 +95,7 @@ export default class AssessmentTrayConfigs extends NHComponent {
         </nh-page-header-card>
 
         <nh-dialog
+          .handleClose=${async(e: CustomEvent) => { await this._form.resetWorkingState(); await this._form.requestUpdate() }} 
           @assessment-widget-config-set=${async(e: CustomEvent) => { 
             this._dialog.isOpen = false;
             this._dialog._dialog.hide();
@@ -133,7 +134,6 @@ export default class AssessmentTrayConfigs extends NHComponent {
             @click=${async () => {
               this.editingConfig = false;
               this._currentlyEditingTrayConfigEntry = undefined;
-              // await this._form.resetWorkingState();
               await this._dialog.requestUpdate()
               this._dialog.showDialog()
             }}

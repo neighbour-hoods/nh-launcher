@@ -97,9 +97,6 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   @state() private _updateToFetchedConfig!: AssessmentTrayConfig;
   @state() private _registeredWidgets: Record<EntryHashB64, AssessmentControlRegistrationInput> = {};
 
-  // Derived from fetchedConfig
-  @state() configuredInputWidgets!: AssessmentControlConfig[];
-
   @state() private _inputDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
   @state() private _outputDimensionEntries!: Array<Dimension & { dimension_eh: EntryHash }>;
 
@@ -127,8 +124,14 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   }
 
   async updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
-    if(changedProperties.has("editingConfig") && changedProperties.get("editingConfig") == false && this.editingConfig && this.fetchedConfig?.name) {
-      this._trayName = this.fetchedConfig.name
+    if(changedProperties.has("editingConfig") && this.fetchedConfig && this.fetchedConfig?.name) {
+      this._trayName = this.fetchedConfig.name;
+      this.trayNameInput._input.value = this._trayName;
+      this.editMode = true;
+      this.editingConfig = true;
+      this.selectedWidgetIndex = -1;
+      this.trayNameInput.requestUpdate()
+      await this.requestUpdate()
     }
   }
 
@@ -152,13 +155,13 @@ export default class CreateOrEditTrayConfig extends NHComponent {
     } else if(this.fetchedConfig) {
       widgets = this.fetchedConfig.assessmentControlConfigs;
     } else {
-      widgets = [];
+      widgets = [...this._workingWidgetControls];
     }
     return widgets;
   }
 
   private async resetWorkingState() {
-    this.configuredWidgetsPersisted = true
+    this.configuredWidgetsPersisted = !this.fetchedConfig
     this.placeHolderWidget = undefined;
     this.selectedWidgetKey = undefined;
     this.selectedWidgetIndex = undefined;
@@ -166,7 +169,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
     this.fetchedConfigAh = undefined;
     this.editingConfig = false;
     this._workingWidgetControls = [];
-    this.configuredInputWidgets = []
+
     this.resetAssessmentControlsSelected()
     this._trayName = "";
     this.trayNameInput._input.value = "";
@@ -213,7 +216,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   }
 
   render(): TemplateResult {
-    let renderableWidgets = (this.configuredInputWidgets || this.getCombinedWorkingAndFetchedWidgets())?.map((widgetRegistrationEntry: AssessmentControlConfig) => widgetRegistrationEntry.inputAssessmentControl as DimensionControlMapping)
+    let renderableWidgets = this.getCombinedWorkingAndFetchedWidgets()?.map((widgetRegistrationEntry: AssessmentControlConfig) => widgetRegistrationEntry.inputAssessmentControl as DimensionControlMapping)
 
     const foundEditableWidget = this.editMode && this.selectedWidgetIndex !== -1 && renderableWidgets[this.selectedWidgetIndex as number] && Object.values(this._registeredWidgets)?.find(widget => widget.name == renderableWidgets[this.selectedWidgetIndex as number]?.componentName);
     const foundEditableWidgetConfig = this.editMode && this.selectedWidgetIndex as number !== -1 && renderableWidgets[this.selectedWidgetIndex as number]
@@ -242,8 +245,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
               .editing=${!!this.editingConfig}
             >
               <div slot="widgets">
-                ${
-                  this._appletInstanceRenderers?.value && (this.fetchedConfig && this.fetchedConfig.assessmentControlConfigs.length > 0 || this?._workingWidgetControls)
+                ${this._appletInstanceRenderers?.value && (this.fetchedConfig && this.fetchedConfig.assessmentControlConfigs.length > 0 || this?._workingWidgetControls)
                     ? repeat(renderableWidgets, (widget) => `${encodeHashToBase64(widget.dimensionEh)}-${(widget as any).componentName.replace(" ","")}`, (inputWidgetConfig, idx) => {
                         const allAppletRenderers = Object.values(this._appletInstanceRenderers.value).flatMap(renderers => Object.values(renderers as any)) as (DimensionControlMapping | ResourceBlockRenderer)[];
                         if(!allAppletRenderers) throw new Error('Could not get applet renderers linked to this ResourcDef');
@@ -411,7 +413,6 @@ export default class CreateOrEditTrayConfig extends NHComponent {
       outputAssessmentControl: outputDimensionBinding,
     }
     this._workingWidgetControls = [ ...(this?._workingWidgetControls || []), input];
-    this.configuredInputWidgets = this?.getCombinedWorkingAndFetchedWidgets();
     this.configuredWidgetsPersisted = false;
 
     this.resetAssessmentControlsSelected();
@@ -424,7 +425,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   async createEntries() {
     if(!this._workingWidgetControls || !(this._workingWidgetControls.length > 0)) throw Error('Nothing to persist, try adding another widget to the config.')
     try {
-      await this.sensemakerStore.setAssessmentTrayConfig({name: this._trayName, assessmentControlConfigs: [ ...this?.getCombinedWorkingAndFetchedWidgets(), ...this._workingWidgetControls ]});
+      await this.sensemakerStore.setAssessmentTrayConfig({name: this._trayName, assessmentControlConfigs: this.getCombinedWorkingAndFetchedWidgets() });
     } catch (error) {
       return Promise.reject('Error setting assessment widget config');
     }
@@ -478,16 +479,6 @@ export default class CreateOrEditTrayConfig extends NHComponent {
         slot="actions"
       >
         <span slot="buttons">
-          <nh-button
-            id="close-widget-config"
-            .variant=${'danger'}
-            .size=${'md'}
-            @click=${async () => {
-              this.editingConfig = false;
-              await this.resetWorkingState()
-            }}
-          >Cancel</nh-button>
-
           <nh-button
             id="reset-widget-config"
             .variant=${'warning'}
