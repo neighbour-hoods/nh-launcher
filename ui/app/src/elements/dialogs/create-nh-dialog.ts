@@ -48,16 +48,11 @@ export class CreateNeighbourhoodDialog extends NHComponent {
 
   private async onSubmit(e: any) {
     const root = this.renderRoot;
-
     if(!this._neighbourhood.image) {
       this._neighbourhood.image = `data:image/svg+xml;base64,${NH_DEFAULT_LOGO}`
     }
     this._neighbourhoodSchema.validate(this._neighbourhood)
       .then(async valid => {
-        if(!valid) {
-          throw new Error("Neighbourhood input data invalid");
-        }
-
         this.dispatchEvent(new CustomEvent("creating-we", {})); // required to display loading screen in the dashboard
         const weId = await this._matrixStore.createWeGroup(this._neighbourhood.name!, this._neighbourhood.image!);
 
@@ -74,6 +69,7 @@ export class CreateNeighbourhoodDialog extends NHComponent {
       })
       .catch((err) => {
         const dialog = (root.querySelector("nh-dialog") as any).renderRoot.querySelector('sl-dialog');
+        debugger;
         dialog.show() // Stop dialog from closing
         this.danger.emit({
           title: "Invalid Input",
@@ -85,6 +81,7 @@ export class CreateNeighbourhoodDialog extends NHComponent {
   }
 
   render() {
+    console.log('object :>> ', this._neighbourhood);
     return html`
       <nh-dialog
         id="dialog"
@@ -112,16 +109,19 @@ export class CreateNeighbourhoodDialog extends NHComponent {
             ></nh-text-input>
           </nh-tooltip>
 
-          <nh-select-avatar
-            slot="hoverable"
-            id="select-avatar"
-            .defaultTooltip=${"NH Image"}
-            .shape=${'circle'}
-            .label=${"Image"}
-            .size=${"lg"}
-            .value=${this._neighbourhood.image}
-            .defaultValue=${NH_DEFAULT_LOGO}
-          ></nh-select-avatar>
+          ${this._neighbourhood.image 
+            ? html`<img class="nh-avatar" src="${this._neighbourhood.image}" />`
+            : html`<nh-select-avatar
+              slot="hoverable"
+              id="select-avatar"
+              .defaultTooltip=${"NH Image"}
+              .shape=${'circle'}
+              .label=${"Image"}
+              .size=${"lg"}
+              .value=${this._neighbourhood.image}
+              @change=${(e: CustomEvent) => this.handleImageChange(e)}
+              .defaultValue=${NH_DEFAULT_LOGO}
+            ></nh-select-avatar>`}
         </div>
       </nh-dialog>
     `;
@@ -136,6 +136,13 @@ export class CreateNeighbourhoodDialog extends NHComponent {
     }
     return isValid
   }
+
+  private async handleImageChange(e) {
+    this._neighbourhood.image = e.target.value;
+    this._nhAvatarSelect = e.target.value;
+    this.requestUpdate();
+  }
+
 
   private async handleNameChange(e) {
     this._neighbourhood.name = e.target.value;
@@ -153,6 +160,13 @@ export class CreateNeighbourhoodDialog extends NHComponent {
   static styles : CSSResult[] = [
       super.styles as CSSResult,
       css`
+        .nh-avatar {
+          position: relative;
+          left: 1rem;  
+          border-radius: 1rem;
+          width: 4rem;
+          top: 1rem;  
+        }
         .row {
           min-height: 8rem;
           align-items: center;

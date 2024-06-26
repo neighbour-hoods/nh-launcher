@@ -44,6 +44,7 @@ export abstract class NHBaseForm extends NHComponent {
     } else if(target.tagName === 'NH-SELECT-AVATAR') {
       name = (target as any).name;
       value = (e as any).detail.value;
+      console.log('name,value :>> ', name,value);
     } else {
       //@ts-ignore
       name = target.name || target.dataset.name; // Fallback to dataset for name
