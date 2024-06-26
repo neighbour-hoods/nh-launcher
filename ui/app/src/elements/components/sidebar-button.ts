@@ -50,6 +50,7 @@ export class SidebarButton extends ScopedRegistryHost(LitElement) {
         cursor: pointer;
         width: 50px;
         height: 50px;
+        border-radius: .5rem;
         object-fit: cover;
         transform: scale(1.2);
       }
