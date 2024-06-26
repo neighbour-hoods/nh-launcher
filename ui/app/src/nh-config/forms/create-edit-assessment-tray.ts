@@ -146,8 +146,8 @@ export default class CreateOrEditTrayConfig extends NHComponent {
     let widgets: AssessmentControlConfig[]
 
     if((this._updateToFetchedConfig || this.fetchedConfig) && this._workingWidgetControls && this._workingWidgetControls.length > 0) {
-      widgets = this.fetchedConfig.length > 0 ? [
-        ...(this._updateToFetchedConfig || this.fetchedConfig), ...this._workingWidgetControls
+      widgets = (this.fetchedConfig?.assessmentControlConfigs as any).length > 0 ? [
+        ...(this._updateToFetchedConfig?.assessmentControlConfigs || this.fetchedConfig?.assessmentControlConfigs), ...this._workingWidgetControls
       ] : this._workingWidgetControls;
     } else if(this.fetchedConfig) {
       widgets = this.fetchedConfig.assessmentControlConfigs;
@@ -375,8 +375,8 @@ export default class CreateOrEditTrayConfig extends NHComponent {
       inputAssessmentControl: inputDimensionBinding,
       outputAssessmentControl: outputDimensionBinding,
     }
-    const isFromWorkingConfig = this.selectedWidgetIndex > this.fetchedConfig.length;
-    let newIndex = isFromWorkingConfig ? (this.selectedWidgetIndex - this.fetchedConfig.length - 1) : this.selectedWidgetIndex;
+    const isFromWorkingConfig = this.selectedWidgetIndex > this.fetchedConfig!.assessmentControlConfigs!.length;
+    let newIndex = isFromWorkingConfig ? (this.selectedWidgetIndex - this.fetchedConfig!.assessmentControlConfigs!.length - 1) : this.selectedWidgetIndex;
     (isFromWorkingConfig ? this._workingWidgetControls : this.fetchedConfig.assessmentControlConfigs).splice(newIndex, 1, input);
 
     this._updateToFetchedConfig = this.fetchedConfig;
@@ -411,7 +411,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
       outputAssessmentControl: outputDimensionBinding,
     }
     this._workingWidgetControls = [ ...(this?._workingWidgetControls || []), input];
-    this.configuredInputWidgets = [ ...this?.getCombinedWorkingAndFetchedWidgets(), ...this._workingWidgetControls ];
+    this.configuredInputWidgets = this?.getCombinedWorkingAndFetchedWidgets();
     this.configuredWidgetsPersisted = false;
 
     this.resetAssessmentControlsSelected();
