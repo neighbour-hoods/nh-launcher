@@ -76,7 +76,7 @@ export default class NHSelect extends NHComponent {
                               alt=${this.value}
                               src=${`data:image/png;base64,${this?.image || b64images.icons.refresh}`}
                             /></span>` 
-                : this.defaultValue && this.defaultValue?.renderBlock && html`<span class="option-image">${this.defaultValue?.renderBlock()}</span>` }
+                : this.defaultValue && html`<span class="option-image">${repeat(['please rerender ;)'], () => +(new Date), () => this.defaultValue?.renderBlock && this.defaultValue?.renderBlock())}</span>`}
                 <span>${this.value || this.defaultValue?.value || this.placeholder}</span>
               </div>`
         : html`<span>${this.visibleSelectValue || this.defaultValue?.label || this.placeholder}</span>`
