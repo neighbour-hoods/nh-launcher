@@ -33,7 +33,6 @@ export class CreateNeighbourhoodDialog extends NHComponent {
   @property() openDialogButton!: HTMLElement;
   @alertEvent() danger;
   @query("nh-text-input") _nhInput;
-  @query("nh-select-avatar") _nhAvatarSelect;
   @state() validName: boolean = true; // Emulates 'touched = false' initial state
 
   async reset() {
@@ -41,7 +40,6 @@ export class CreateNeighbourhoodDialog extends NHComponent {
     this._neighbourhood.image = "";
     this.validName = true;
     this._nhInput._input.value = "";
-    this._nhAvatarSelect.value = "";
     await this._nhInput.requestUpdate()
     await this._nhInput.updateComplete;
   }
@@ -138,7 +136,6 @@ export class CreateNeighbourhoodDialog extends NHComponent {
 
   private async handleImageChange(e) {
     this._neighbourhood.image = e.target.value;
-    this._nhAvatarSelect = e.target.value;
     this.requestUpdate();
   }
 
