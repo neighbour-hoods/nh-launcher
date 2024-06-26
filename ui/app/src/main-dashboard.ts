@@ -461,8 +461,8 @@ export class MainDashboard extends ScopedRegistryHost(LitElement) {
     await this.updateComplete;
 
     this.success.emit({
-      title: "Applet Installed",
-      msg: "You can now use your applet, and any assessments made in it will show up on your dashboard."
+      title: "Applet Configured",
+      msg: "Your applet's dimensions have been added and, if configured correctly, you should be able to make assessments."
     })
   }
 
