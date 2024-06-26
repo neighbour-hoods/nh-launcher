@@ -127,7 +127,6 @@ export default class CreateOrEditTrayConfig extends NHComponent {
     if(changedProperties.has("editingConfig") && this.fetchedConfig && this.fetchedConfig?.name) {
       this._trayName = this.fetchedConfig.name;
       this.trayNameInput._input.value = this._trayName;
-      this.editMode = true;
       this.editingConfig = true;
       this.selectedWidgetIndex = -1;
       this.trayNameInput.requestUpdate()
@@ -440,7 +439,7 @@ export default class CreateOrEditTrayConfig extends NHComponent {
   }
 
   async updateEntry() {
-    const updatedWidgets = [ ...this?.getCombinedWorkingAndFetchedWidgets(), ...this._workingWidgetControls ];
+    const updatedWidgets = this.getCombinedWorkingAndFetchedWidgets();
     if(updatedWidgets.length == 0 || !this.fetchedConfigAh) throw Error('Nothing to persist, try adding another widget to the config.')
     try {
       await this.sensemakerStore.updateAssessmentTrayConfig(this.fetchedConfigAh, {name: this._trayName, assessmentControlConfigs: updatedWidgets});
