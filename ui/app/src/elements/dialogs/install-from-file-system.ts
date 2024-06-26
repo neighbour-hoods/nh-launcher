@@ -90,7 +90,7 @@ export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
       await this.updateComplete;
       this.success.emit({
         title: "Applet Installed",
-        msg: "You can now use your applet, and any assessments made in it will show up on your dashboard."
+        msg: "You can now use your applet, but some configuration will be needed to add its Dimensions."
       })
       
       this.dispatchEvent(
