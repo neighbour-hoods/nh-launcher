@@ -1,4 +1,5 @@
 use hdk::prelude::*;
+use nh_sensemaker_zome_lib::entry_from_record;
 use nh_zome_assessment_tray_integrity::*;
 
 // Util for recursively finding latest update for an entry hash. Returns None for a Delete action
@@ -9,7 +10,15 @@ fn get_latest_assessment_tray(entry_hash: EntryHash) -> ExternResult<Option<Reco
     match details {
         Details::Record(_) => unreachable!(), // Would mean our entry hash was an action hash
         Details::Entry(entry_details) => match entry_details.updates.last() {
-            Some(update) => get::<ActionHash>(update.clone().hashed.hash,GetOptions::default()),
+            Some(update) => {
+                let record_for_update_action = get::<ActionHash>(update.clone().hashed.hash,GetOptions::default());
+                let Ok(Some(record)) = record_for_update_action else {
+                    return Err(wasm_error!(WasmErrorInner::Guest("Could not find Details for that update to the EntryHash".into())))
+                };
+                let entry = entry_from_record::<AssessmentTrayConfig>(record)?;
+                let hash = hash_entry(&entry)?;
+                get_latest_assessment_tray(hash)
+            },
             None => match entry_details.deletes.last() {
                 Some(_delete) => Ok(None),
                 _ => get_assessment_tray_config(entry_hash),
