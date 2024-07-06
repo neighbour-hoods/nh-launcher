@@ -13,11 +13,11 @@ fn get_latest_assessment_tray(entry_hash: EntryHash) -> ExternResult<Option<Reco
             Some(update) => {
                 let record_for_update_action = get::<ActionHash>(update.clone().hashed.hash,GetOptions::default());
                 let Ok(Some(record)) = record_for_update_action else {
-                    return Err(wasm_error!(WasmErrorInner::Guest("Could not find Details for that update to the EntryHash".into())))
+                    return Err(wasm_error!(WasmErrorInner::Guest("Could not find Details for that update to the original EntryHash".into())))
                 };
                 let entry = entry_from_record::<AssessmentTrayConfig>(record)?;
                 let hash = hash_entry(&entry)?;
-                get_latest_assessment_tray(hash)
+                return get_latest_assessment_tray(hash)
             },
             None => match entry_details.deletes.last() {
                 Some(_delete) => Ok(None),
