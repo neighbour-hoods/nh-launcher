@@ -1,7 +1,7 @@
 import type { StorybookConfig } from "@storybook/web-components-vite";
 
 const config: StorybookConfig = {
-  stories: ['../ui/libs/**/src/**/*.stories.@(js|jsx|ts|tsx)'],
+  stories: ['../ui/libs/**/src/**/*.stories.@(js|jsx|ts|tsx)','../applet-dev-workspace/**/ui/**/*.stories.@(js|jsx|ts|tsx)'],
   addons: [
     '@storybook/addon-essentials',
     '@storybook/addon-links',
