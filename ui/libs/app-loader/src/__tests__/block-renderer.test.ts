@@ -5,10 +5,9 @@ import { fixture, html as testHtml, expect } from '@open-wc/testing'
 
 import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
 import { html, LitElement } from "lit"
-import { NHDelegateReceiver } from "@neighbourhoods/client"
+import { NHDelegateReceiver, Constructor } from "@neighbourhoods/client"
 import { BlockRenderer } from '../block-renderer'
-import updater from '../block-renderer/update-block-renderer-component'
-import { Constructor } from '../../../sensemaker-client/src/delegate'
+import updateComponent from '../block-renderer/update-block-renderer-component'
 
 interface TestDelegate {
   getThing(): string
@@ -105,7 +104,7 @@ describe('Updater', () => {
     return await fixture(theHTML)
   }
 
-  describe('given a TestComponent and a TestDelegate and the registered block renderer', () => {
+  describe('given a TestComponent and a BlockRenderer component updater, (instantiated with a TestDelegate and the registered block renderer CustomElement)', () => {
 
     test(`should instantiate a TestComponent as a scoped element and render the component`, async () => {
       const delegate: TestDelegate = {
@@ -113,18 +112,17 @@ describe('Updater', () => {
           return "Test!"
         }
       }
-  
+      const updater = updateComponent(delegate, customElements.get('block-renderer') as Constructor<BlockRenderer<TestDelegate>>)
       const harness = await initialRender(
         testHtml`
           <div>
-            ${updater(TestComponent, delegate, customElements.get('block-renderer') as Constructor<BlockRenderer<TestDelegate>>)}
+            ${updater(TestComponent)}
           </div>`
       )
       const children = harness.querySelectorAll('div > *'); // It is no longer a named block-renderer component 
-      // console.log('harness :>> ', harness.querySelector('div > *')!.renderRoot);
 
       expect(children.length).to.equal(1)
-      expect(!!harness.querySelector('div > *')!.renderRoot.querySelector('*').innerHTML.match(delegate.getThing())).to.equal(true)
+      expect(!!(harness.querySelector('div > *'))!.renderRoot.querySelector('*').innerHTML.match(delegate.getThing())).to.equal(true)
     })
 
   })
