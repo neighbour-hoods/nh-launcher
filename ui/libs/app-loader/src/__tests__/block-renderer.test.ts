@@ -26,6 +26,19 @@ class TestComponent extends ScopedRegistryHost(LitElement) implements NHDelegate
   }
 }
 
+class TestComponent2 extends ScopedRegistryHost(LitElement) implements NHDelegateReceiver<TestDelegate> {
+  _delegate: TestDelegate | null = null
+
+  set nhDelegate(delegate: TestDelegate) {
+    this._delegate = delegate
+    this.requestUpdate()
+  }
+
+  render() {
+    return this._delegate ? html`<p>A second ${this._delegate.getThing()}</p>` : html`Loading...`
+  }
+}
+
 class TestRenderer extends BlockRenderer<TestDelegate> {}
 
 customElements.define('block-renderer', TestRenderer)
@@ -99,20 +112,21 @@ describe('BlockRenderer', () => {
 
 })
 
-describe('Updater', () => {
+describe.only('Updater', () => {
   const initialRender = async (theHTML) => {
     return await fixture(theHTML)
   }
 
   describe('given a TestComponent and a BlockRenderer component updater, (instantiated with a TestDelegate and the registered block renderer CustomElement)', () => {
+    const delegate: TestDelegate = {
+      getThing() {
+        return "Test!"
+      }
+      
+    }
+    const updater = updateComponent(delegate, customElements.get('block-renderer') as Constructor<BlockRenderer<TestDelegate>>)
 
     test(`should instantiate a TestComponent as a scoped element and render the component`, async () => {
-      const delegate: TestDelegate = {
-        getThing() {
-          return "Test!"
-        }
-      }
-      const updater = updateComponent(delegate, customElements.get('block-renderer') as Constructor<BlockRenderer<TestDelegate>>)
       const harness = await initialRender(
         testHtml`
           <div>
@@ -122,7 +136,23 @@ describe('Updater', () => {
       const children = harness.querySelectorAll('div > *'); // It is no longer a named block-renderer component 
 
       expect(children.length).to.equal(1)
-      expect(!!(harness.querySelector('div > *'))!.renderRoot.querySelector('*').innerHTML.match(delegate.getThing())).to.equal(true)
+      expect(!!(harness.querySelector('div > *'))!.renderRoot.querySelector('*').textContent.match(delegate.getThing())).to.equal(true)
+    })
+
+    test(`when I render with another component it should instantiate a TestComponent as a scoped element and render the new component, garbage collect the old one`, async () => {
+      const harness = await initialRender(
+        testHtml`
+          <div>
+            ${updater(TestComponent2)}
+          </div>`
+      )
+      if (global.gc) {
+        global.gc();
+      }
+      const children = harness.querySelectorAll('div > *'); // It is no longer a named block-renderer component 
+
+      expect(children.length).to.equal(1)
+      expect(!!(harness.querySelector('div > *'))!.renderRoot.querySelector('*').textContent.match("A second " + delegate.getThing())).to.equal(true)
     })
 
   })
