@@ -5,8 +5,16 @@ import { BlockRenderer } from ".";
 export default function updateComponent<D>(delegate: D, Renderer: Constructor<BlockRenderer<D>>) : (component: NHDelegateReceiverConstructor<D>) => TemplateResult {
   const blockRendererInstances = new WeakMap();
 
+  const registry = new global.FinalizationRegistry((heldValue) => {
+    console.log(`FinalizationRegistry: ${heldValue} has been garbage collected`);
+  });
+  let componentRef;
+
   return (component: NHDelegateReceiverConstructor<D>) => {
-    if (!blockRendererInstances.get(component)) {
+    componentRef = new global.WeakRef(component);
+    registry.register(component, 'TestComponent');
+
+    if (!blockRendererInstances.has(component)) {
       // Instantiate a new block renderer and assign properties
       const blockRenderer =  new Renderer;
       blockRenderer.component = component;
@@ -14,7 +22,6 @@ export default function updateComponent<D>(delegate: D, Renderer: Constructor<Bl
 
       blockRendererInstances.set(component, blockRenderer);
     }
-
     return html`${blockRendererInstances.get(component)._element}`;
   };
 }

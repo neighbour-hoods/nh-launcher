@@ -24,8 +24,8 @@
   "scripts": {
     "prepare": "pnpm build",
     "build": "rm -rf ./dist; vite build && tsc --build",
-    "test": "vitest run --reporter=verbose",
-    "test:watch": "vitest --reporter=verbose"
+    "test": "node --expose-gc node_modules/vitest/vitest.mjs run --reporter=verbose",
+    "test:watch": "node --expose-gc node_modules/vitest/vitest.mjs --reporter=verbose"
   },
   "devDependencies": {
     "@open-wc/testing": "^3.2.2",
