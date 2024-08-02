@@ -7,7 +7,7 @@ import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
 import { html, LitElement } from "lit"
 import { NHDelegateReceiver, Constructor } from "@neighbourhoods/client"
 import { BlockRenderer } from '../block-renderer'
-import updateComponent from '../block-renderer/update-block-renderer-component'
+import useBlockRendererMemo from '../block-renderer/update-block-renderer-component'
 
 interface TestDelegate {
   getThing(): string
@@ -112,7 +112,7 @@ describe('BlockRenderer', () => {
 
 })
 
-describe.only('Updater', () => {
+describe('Updater', () => {
   const initialRender = async (theHTML) => {
     return await fixture(theHTML)
   }
@@ -124,7 +124,7 @@ describe.only('Updater', () => {
       }
       
     }
-    const updater = updateComponent(delegate, customElements.get('block-renderer') as Constructor<BlockRenderer<TestDelegate>>)
+    const updater = useBlockRendererMemo(delegate, customElements.get('block-renderer') as Constructor<BlockRenderer<TestDelegate>>)
 
     test(`should instantiate a TestComponent as a scoped element and render the component`, async () => {
       const harness = await initialRender(
@@ -139,14 +139,14 @@ describe.only('Updater', () => {
       expect(!!(harness.querySelector('div > *'))!.renderRoot.querySelector('*').textContent.match(delegate.getThing())).to.equal(true)
     })
 
-    test(`when I render with another component it should instantiate a TestComponent as a scoped element and render the new component, garbage collect the old one`, async () => {
+    test(`when I render with another component it should instantiate a TestComponent as a scoped element and render the new component`, async () => {
       const harness = await initialRender(
         testHtml`
           <div>
             ${updater(TestComponent2)}
           </div>`
       )
-      if (global.gc) {
+      if (global.gc) { // NOTE: I was unable to get manual GC working but I leave this here as an indicator for possible future test coverage
         global.gc();
       }
       const children = harness.querySelectorAll('div > *'); // It is no longer a named block-renderer component 
