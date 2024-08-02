@@ -1,6 +1,6 @@
 import { EntryRecord } from "@holochain-open-dev/utils";
 import {
-  AppAgentClient,
+  AppWebsocket,
   AppInfo,
   EntryHash,
 } from "@holochain/client";
@@ -50,14 +50,14 @@ export class SubscriberManager extends Array<CallbackFn> {
  * Creates an AppBlockDelegate to be passed into an applet block
  */
 export function createAppDelegate(
-  appAgentWebsocket: AppAgentClient,
+  appWebsocket: AppWebsocket,
   appInfo: AppInfo,
   neighbourhoodInfo: NeighbourhoodInfo,
   sensemakerStore: SensemakerStore
 ): AppBlockDelegate {
 
   const delegate: AppBlockDelegate = {
-    appAgentWebsocket,
+    appWebsocket,
     appInfo,
     neighbourhoodInfo,
     sensemakerStore
@@ -70,14 +70,14 @@ export function createAppDelegate(
  * Creates an ResourceBlockDelegate to be passed into an resource block
  */
 export function createResourceBlockDelegate(
-  appAgentWebsocket: AppAgentClient,
+  appWebsocket: AppWebsocket,
   appInfo: AppInfo,
   neighbourhoodInfo: NeighbourhoodInfo,
   resourceEntryHash: EntryHash,
 ): ResourceBlockDelegate {
 
   const delegate: ResourceBlockDelegate = {
-    appAgentWebsocket,
+    appWebsocket,
     appInfo,
     neighbourhoodInfo,
     resourceEntryHash

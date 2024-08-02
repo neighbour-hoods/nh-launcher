@@ -1,4 +1,4 @@
-import { AppAgentClient, AppInfo, EntryHash } from "@holochain/client";
+import { AppInfo, AppWebsocket, EntryHash } from "@holochain/client";
 import { ConfigCulturalContext } from "./culturalContext";
 import { ConfigDimension } from "./dimension";
 import { ConfigMethod } from "./method";
@@ -70,7 +70,7 @@ export interface AppletConfigInput {
  * of the user would determine access to the context.
  */
 export interface ResourceBlockDelegate {
-  appAgentWebsocket: AppAgentClient;
+  appWebsocket: AppWebsocket;
   appInfo: AppInfo;
   neighbourhoodInfo: NeighbourhoodInfo;
   resourceEntryHash: EntryHash;
@@ -83,7 +83,7 @@ export interface ResourceBlockDelegate {
  * to ensure that the applet views don't have direct access to the AppAgentClient.
  */
 export interface AppBlockDelegate {
-  appAgentWebsocket: AppAgentClient;
+  appWebsocket: AppWebsocket;
   appInfo: AppInfo;
   neighbourhoodInfo: NeighbourhoodInfo;
   sensemakerStore: SensemakerStore;

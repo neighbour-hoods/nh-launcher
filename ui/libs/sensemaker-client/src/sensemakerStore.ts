@@ -1,7 +1,7 @@
 import {
   ActionHash,
   AgentPubKey,
-  AppAgentClient,
+  AppWebsocket,
   AppSignal,
   encodeHashToBase64,
   EntryHash,
@@ -24,7 +24,6 @@ import {
   ResourceDef,
   RunMethodInput,
   SignalPayload,
-  AssessmentControlConfig,
   AssessmentControlRegistrationInput,
   GetMethodsForDimensionQueryParams,
   AssessmentTrayConfig,
@@ -58,7 +57,7 @@ export class SensemakerStore {
   public myAgentPubKey: AgentPubKey;
   protected service: SensemakerService;
 
-  constructor(public client: AppAgentClient, public roleName: RoleName, public zomeName = 'sensemaker')
+  constructor(public client: AppWebsocket, public roleName: RoleName, public zomeName = 'sensemaker')
   {
     client.on("signal", (signal: AppSignal) => {
       // console.log("received signal in sensemaker store: ", signal)

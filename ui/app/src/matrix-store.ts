@@ -149,11 +149,10 @@ export class MatrixStore {
     adminWebsocket: AdminWebsocket,
     weParentAppInfo: AppInfo,
   ) {
-    const appAgentWebsocket = await getAppAgentWebsocket("we");
 
     console.log("@matrix-store: Creating new MembraneInvitationsStore");
     const membraneInvitationsStore = new MembraneInvitationsStore(new MembraneInvitationsClient(
-      appAgentWebsocket,
+      appWebsocket,
       "lobby",
       "membrane_invitations_coordinator"
     ));

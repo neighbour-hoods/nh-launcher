@@ -1,9 +1,9 @@
-import { ActionHash, AgentPubKey, AppAgentCallZomeRequest, AppAgentClient, EntryHash, EntryHashB64, Record as HolochainRecord, RoleName } from '@holochain/client';
-import { AppletConfig, AppletConfigInput, Assessment, AssessmentControlConfig, AssessmentControlRegistrationInput, AssessmentTrayConfig, ComputeContextInput, CreateAssessmentInput, CulturalContext, Dimension, GetAssessmentsForResourceInput, GetMethodsForDimensionQueryParams, Method, Range, ResourceDef, RunMethodInput } from './index';
+import { ActionHash, AgentPubKey, AppCallZomeRequest, AppWebsocket, EntryHash, EntryHashB64, Record as HolochainRecord, RoleName } from '@holochain/client';
+import { AppletConfig, AppletConfigInput, Assessment, AssessmentControlRegistrationInput, AssessmentTrayConfig, ComputeContextInput, CreateAssessmentInput, CulturalContext, Dimension, GetAssessmentsForResourceInput, GetMethodsForDimensionQueryParams, Method, Range, ResourceDef, RunMethodInput } from './index';
 import { Option } from './utils';
 
 export class SensemakerService {
-  constructor(public client: AppAgentClient, public roleName: RoleName, public zomeName = 'sensemaker') {}
+  constructor(public client: AppWebsocket, public roleName: RoleName, public zomeName = 'sensemaker') {}
 
     /**
    * Get my agentkey, if it has been created
@@ -142,7 +142,7 @@ export class SensemakerService {
   }
 
   private callZome(fn_name: string, payload: any, zomeName = this.zomeName) {
-    const req: AppAgentCallZomeRequest = {
+    const req: AppCallZomeRequest = {
       role_name: this.roleName,
       zome_name: zomeName,
       fn_name,

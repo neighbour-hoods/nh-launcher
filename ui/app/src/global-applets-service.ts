@@ -1,11 +1,11 @@
-import { ActionHash, AgentPubKey, DnaHash, EntryHash, CellId, AppAgentWebsocket } from "@holochain/client";
+import { ActionHash, AgentPubKey, DnaHash, EntryHash, CellId, AppWebsocket } from "@holochain/client";
 import { Applet, AppletGui, PlayingApplet, RegisterAppletInput } from "./types";
 
 export class GlobalAppletsService {
-  constructor(protected appAgentWebsocket: AppAgentWebsocket) {}
+  constructor(protected appWebsocket: AppWebsocket) {}
 
   async getAllApplets(cellId: CellId): Promise<[EntryHash, Applet, DnaHash[]][]> {
-    return this.appAgentWebsocket.callZome({
+    return this.appWebsocket.callZome({
       cell_id: cellId,
       zome_name: "applets_coordinator",
       fn_name: "get_all_applets",
@@ -14,7 +14,7 @@ export class GlobalAppletsService {
   }
 
   async getAppletsIAmPlaying(cellId: CellId): Promise<[EntryHash, PlayingApplet, DnaHash[]][]> {
-    return this.appAgentWebsocket.callZome({
+    return this.appWebsocket.callZome({
       cell_id: cellId,
       zome_name: "applets_coordinator",
       fn_name: "get_applets_i_am_playing",
@@ -24,7 +24,7 @@ export class GlobalAppletsService {
 
 
   async createApplet(cellId: CellId, registerAppletInput: RegisterAppletInput): Promise<EntryHash> {
-    return this.appAgentWebsocket.callZome({
+    return this.appWebsocket.callZome({
       cell_id: cellId,
       zome_name: "applets_coordinator",
       fn_name: "create_applet",
@@ -38,7 +38,7 @@ export class GlobalAppletsService {
     appletAgentPubKey: AgentPubKey,
     applet: Applet,
   ): Promise<EntryHash> {
-    return this.appAgentWebsocket.callZome({
+    return this.appWebsocket.callZome({
       cell_id: cellId,
       zome_name: "applets_coordinator",
       fn_name: "register_applet",
@@ -51,7 +51,7 @@ export class GlobalAppletsService {
     appletHash: EntryHash,
     weGroupDnaHash: DnaHash,
   ): Promise<ActionHash> {
-    return this.appAgentWebsocket.callZome({
+    return this.appWebsocket.callZome({
       cell_id: cellId,
       zome_name: "applets_coordinator",
       fn_name: "federate_applet",
@@ -68,7 +68,7 @@ export class GlobalAppletsService {
   async commitGuiFile(
     appletGui: AppletGui
   ): Promise<void> {
-    return this.appAgentWebsocket.callZome({
+    return this.appWebsocket.callZome({
       role_name: "lobby",
       zome_name: "applet_guis_coordinator",
       fn_name: "commit_gui_file",
@@ -78,7 +78,7 @@ export class GlobalAppletsService {
 
 
   async queryAppletGui(devhubHappReleaseHash: EntryHash): Promise<AppletGui> {
-    return this.appAgentWebsocket.callZome({
+    return this.appWebsocket.callZome({
       role_name: "lobby",
       zome_name: "applet_guis_coordinator",
       fn_name: "query_applet_gui",

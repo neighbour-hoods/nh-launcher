@@ -10,7 +10,7 @@ import {
   ActionHash,
   DnaHash,
   AgentPubKey,
-  AppAgentClient,
+  AppWebsocket,
 } from "@holochain/client";
 import {
   CloneDnaRecipe,
@@ -20,7 +20,7 @@ import {
 
 export class MembraneInvitationsClient extends ZomeClient<MembraneInvitationsSignal> {
   constructor(
-    public client: AppAgentClient,
+    public client: AppWebsocket,
     public roleName: string,
     public zomeName = "membrane_invitations"
   ) {
