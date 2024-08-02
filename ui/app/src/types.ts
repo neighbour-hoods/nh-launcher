@@ -6,8 +6,7 @@ import {
   EntryHash,
   InstalledAppId,
   EntryHashB64,
-  AppAgentClient,
-  AppAgentWebsocket,
+  AppWebsocket,
   AppInfo,
   CellId
 } from "@holochain/client";
@@ -117,7 +116,7 @@ export type Message = {
  */
 export type WeGroupData = {
   info: WeGroupInfo;
-  appAgentWebsocket: AppAgentWebsocket; // Each we group needs its own signal handler, i.e. its own AppAgentWebsocket object
+  appWebsocket: AppWebsocket; // Each we group needs its own signal handler, i.e. its own AppWebsocket object
   profilesStore: ProfilesStore;
   peerStatusStore: PeerStatusStore;
   sensemakerStore: SensemakerStore;
@@ -145,7 +144,7 @@ type BaseAppletInstanceInfo = {
  */
 export type AppletInstanceInfo = BaseAppletInstanceInfo & {
   appInfo: AppInfo; // InstalledAppInfo
-  appAgentWebsocket?: AppAgentClient;
+  appWebsocket?: AppWebsocket;
   renderers?: NeighbourhoodAppletRenderers;
 }
 

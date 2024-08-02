@@ -14,14 +14,10 @@ import {
   AgentPubKey,
   AppBundle,
   AppWebsocket,
-  InstallAppRequest,
   InstalledAppId,
   ActionHash,
   CellId,
-  AppAgentClient,
-  AppAgentWebsocket,
   encodeHashToBase64,
-  decodeHashFromBase64,
   CellType,
   AppSignal,
   StemCell,
@@ -33,7 +29,7 @@ import {
   MembraneInvitationsStore,
   MembraneInvitationsClient,
 } from "@neighbourhoods/membrane-invitations";
-import { decode, encode } from "@msgpack/msgpack";
+import { encode } from "@msgpack/msgpack";
 import {
   DnaHashMap,
   EntryHashMap,
@@ -86,11 +82,11 @@ import {
   compareCellIds,
   getClonedCellId,
   getProvisionedDnaHash,
-  getAppAgentWebsocket,
   createAppDelegate,
   createResourceBlockDelegate,
   createInputAssessmentControlDelegate,
-  createOutputAssessmentControlDelegate
+  createOutputAssessmentControlDelegate,
+  connectHolochainApp
 } from "@neighbourhoods/app-loader";
 
 declare global {
@@ -126,20 +122,18 @@ export class MatrixStore {
   private _appletGuis: EntryHashMap<NeighbourhoodApplet> = new EntryHashMap<NeighbourhoodApplet>(); // devhub hApp release entry hashes of Applets as keys
 
   public get myAgentPubKey() {
-    return this.appAgentWebsocket.myPubKey;
+    return this.appWebsocket.myPubKey;
   }
 
   private constructor(
-    public appWebsocket: AppWebsocket,
     protected adminWebsocket: AdminWebsocket,
-    protected appAgentWebsocket: AppAgentWebsocket,
+    protected appWebsocket: AppWebsocket,
     protected weParentAppInfo: AppInfo,
     public membraneInvitationsStore: MembraneInvitationsStore,
     protected appletsService: GlobalAppletsService,
   ) {
-    this.appWebsocket = appWebsocket;
     this.adminWebsocket = adminWebsocket;
-    this.appAgentWebsocket = appAgentWebsocket;
+    this.appWebsocket = appWebsocket;
     this.weParentAppInfo = weParentAppInfo;
     this.membraneInvitationsStore = membraneInvitationsStore;
   }
@@ -157,12 +151,11 @@ export class MatrixStore {
       "membrane_invitations_coordinator"
     ));
 
-    const appletsService = new GlobalAppletsService(appAgentWebsocket);
+    const appletsService = new GlobalAppletsService(appWebsocket);
 
     return new MatrixStore(
-      appWebsocket,
       adminWebsocket,
-      appAgentWebsocket,
+      appWebsocket,
       weParentAppInfo,
       membraneInvitationsStore,
       appletsService,
@@ -198,12 +191,12 @@ export class MatrixStore {
   /**
    * Returns the we group infos indexed by group hash
   */
- public weGroupInfos(): Readable<DnaHashMap<WeGroupInfo>> {
-   return derived(this._matrix, (matrix) => {
-     let groupInfos = new DnaHashMap<WeGroupInfo>();
-     matrix
-     .forEach(([groupData, _appletInstanceInfos], groupId) => {
-       groupInfos.set(groupId, groupData.info);
+  public weGroupInfos(): Readable<DnaHashMap<WeGroupInfo>> {
+    return derived(this._matrix, (matrix) => {
+      let groupInfos = new DnaHashMap<WeGroupInfo>();
+      matrix
+      .forEach(([groupData, _appletInstanceInfos], groupId) => {
+        groupInfos.set(groupId, groupData.info);
       });
       return groupInfos;
     });
@@ -230,9 +223,9 @@ export class MatrixStore {
    * @returns : Promise<Readable<WeInfo>>
    */
   public async fetchWeGroupInfo(weGroupId: DnaHash): Promise<Readable<NeighbourhoodInfo>> {
-    const appAgentWebsocket = get(this._matrix).get(weGroupId)[0].appAgentWebsocket;
-    const info = await appAgentWebsocket.callZome({
-      cell_id: [weGroupId, appAgentWebsocket.myPubKey],
+    const appWebsocket = get(this._matrix).get(weGroupId)[0].appWebsocket;
+    const info = await appWebsocket.callZome({
+      cell_id: [weGroupId, appWebsocket.myPubKey],
       zome_name: "we_coordinator",
       fn_name: "get_info",
       payload: null,
@@ -297,9 +290,10 @@ export class MatrixStore {
 
   public async initializeAppWebsocket(appInstanceInfo: AppletInstanceInfo) {
     // Check if the applets app agent websocket has been instantiated yet
-    if (!appInstanceInfo.appAgentWebsocket) {
+    if (!appInstanceInfo.appWebsocket) {
       //instantiate the websocket
-      appInstanceInfo.appAgentWebsocket = await getAppAgentWebsocket(appInstanceInfo.appInfo.installed_app_id);
+      const connection = await connectHolochainApp(appInstanceInfo.appInfo.installed_app_id)
+      appInstanceInfo.appWebsocket = connection.appWebsocket;
 
       // authorize signing credentials for all cells in the applet happ
       for (const roleName in appInstanceInfo.appInfo.cell_info) {
@@ -398,7 +392,7 @@ export class MatrixStore {
     const weGroupData = weGroup[0];
 
     return createAppDelegate(
-      appInstanceInfo.appAgentWebsocket!,
+      appInstanceInfo.appWebsocket!,
       appInstanceInfo.appInfo!,
       weGroupData.info.info,
       weGroupData.sensemakerStore
@@ -419,7 +413,7 @@ export class MatrixStore {
     )!;
     const weGroupData = weGroup[0];
     return createResourceBlockDelegate(
-      appInstanceInfo.appAgentWebsocket!,
+      appInstanceInfo.appWebsocket!,
       appInstanceInfo.appInfo!,
       weGroupData.info.info,
       resourceEntryHash
@@ -569,7 +563,7 @@ export class MatrixStore {
     >();
 
     console.log("app info from matrix", this.weParentAppInfo);
-    let weParentAppInfo: AppInfo = await this.appWebsocket.appInfo({ installed_app_id: this.weParentAppInfo.installed_app_id });
+    let weParentAppInfo: AppInfo = await this.appWebsocket.appInfo();
     console.log("parent app info after fetch", weParentAppInfo);
 
     // fetch all apps from the conductor
@@ -599,12 +593,13 @@ export class MatrixStore {
         const sensemakerGroupCellId = sensemakerGroupCellInfo.cell_id;
         const sensemakerGroupDnaHash = sensemakerGroupCellId[0];
 
-        // create dedicated AppAgentWebsocket for each We group
-        const weGroupAgentWebsocket = await getAppAgentWebsocket("we");
+        // create dedicated AppWebsocket for each We group
+        const weGroupConnection = await connectHolochainApp("we");
+        const weGroupAppWebsocket = weGroupConnection.appWebsocket;
 
         // TODO! Add unsubscribe handle to WeGroupData as well.
         // TODO: add signal handling for sensemaker cell
-        weGroupAgentWebsocket.on("signal", (signal: AppSignal) => {
+        weGroupAppWebsocket.on("signal", (signal: AppSignal) => {
           const payload = (signal.payload as SignalPayload);
           const cellId = signal.cell_id;
 
@@ -632,14 +627,13 @@ export class MatrixStore {
         });
 
         const profilesStore = new ProfilesStore(
-          new ProfilesClient(weGroupAgentWebsocket, weGroupCellInfo.clone_id!)
+          new ProfilesClient(weGroupAppWebsocket, weGroupCellInfo.clone_id!)
         );
 
-        const peerStatusStore = new PeerStatusStore(new PeerStatusClient(weGroupAgentWebsocket, 'we')); // TODO: check this
-        const sensemakerStore = new SensemakerStore(weGroupAgentWebsocket, sensemakerGroupCellInfo.clone_id!);
-        // await this.adminWebsocket.authorizeSigningCredentials(sensemakerGroupCellId)
+        const peerStatusStore =  {} as PeerStatusStore // new PeerStatusStore(new PeerStatusClient(weGroupAppWebsocket, 'we')); // See line 897 about current state of this
+        const sensemakerStore = new SensemakerStore(weGroupAppWebsocket, sensemakerGroupCellInfo.clone_id!);
         // create WeGroupData object
-        const weInfo = await weGroupAgentWebsocket.callZome({
+        const weInfo = await weGroupAppWebsocket.callZome({
           cell_id: weGroupCellId,
           zome_name: "we_coordinator",
           fn_name: "get_info",
@@ -658,7 +652,7 @@ export class MatrixStore {
 
         const weGroupData: WeGroupData = {
           info: weGroupInfo,
-          appAgentWebsocket: weGroupAgentWebsocket,
+          appWebsocket: weGroupAppWebsocket,
           profilesStore,
           peerStatusStore,
           sensemakerStore,
@@ -766,6 +760,7 @@ export class MatrixStore {
       networkSeed,
       caPubKey: encodeHashToBase64(this.myAgentPubKey),
     };
+
     const _recipeActionHash =
       await this.membraneInvitationsStore.client.createCloneDnaRecipe({
         original_dna_hash: weDnaHash,
@@ -811,7 +806,6 @@ export class MatrixStore {
     const sensemakerCloneName = `${cloneName}-sensemaker`
 
     const clonedCell = await this.appWebsocket.createCloneCell({
-      app_id: weParentAppInfo.installed_app_id,
       role_name: "we",
       modifiers: {
         network_seed: networkSeed,
@@ -829,7 +823,8 @@ export class MatrixStore {
     const newWeGroupCellId = clonedCell.cell_id;
     await this.adminWebsocket.authorizeSigningCredentials(newWeGroupCellId);
 
-    const appAgentWebsocket = await getAppAgentWebsocket(weParentAppInfo.installed_app_id);
+    const connection = await connectHolochainApp(weParentAppInfo.installed_app_id);
+    const appWebsocket = connection.appWebsocket;
 
     const sensemaker_properties = {
       ...properties,
@@ -841,7 +836,6 @@ export class MatrixStore {
       applet_configs: [],
     };
     const clonedSensemakerCell = await this.appWebsocket.createCloneCell({
-      app_id: weParentAppInfo.installed_app_id,
       role_name: "sensemaker",
       modifiers: {
         network_seed: networkSeed,
@@ -859,7 +853,7 @@ export class MatrixStore {
     // XXX: WTF? Why are we adding signal handlers here? This should happen once.
     // If we need to filter by apps we know we've queued, then we should have a list
     // of apps the listen for event for and then remove from the list when done.
-    appAgentWebsocket.on("signal", (signal) => {
+    appWebsocket.on("signal", (signal) => {
       const payload = (signal.payload as SignalPayload);
       const cellId = signal.cell_id;
 
@@ -888,7 +882,7 @@ export class MatrixStore {
 
     // Because createCloneCell currently returns InstalledCell instead of Cell, we need to manually get
     // the clone_id via appInfo at the moment.
-    const appInfo = await this.appAgentWebsocket.appInfo();
+    const appInfo = await this.appWebsocket.appInfo();
 
     const cellInfo = appInfo.cell_info["we"]
       .filter((cellInfo) => "cloned" in cellInfo)
@@ -899,9 +893,10 @@ export class MatrixStore {
       .find((cellInfo) => compareCellIds(getClonedCellId(cellInfo), clonedSensemakerCell.cell_id));
     const sensemakerCell = (sensemakerCellInfo as { [CellType.Cloned]: ClonedCell }).cloned!;
 
-    const profilesStore = new ProfilesStore(new ProfilesClient(appAgentWebsocket, cell.clone_id!));
-    const peerStatusStore = new PeerStatusStore(new PeerStatusClient(appAgentWebsocket, 'we'));
-    const sensemakerStore = new SensemakerStore(appAgentWebsocket, sensemakerCell.clone_id!);
+    const profilesStore = new ProfilesStore(new ProfilesClient(appWebsocket, cell.clone_id!));
+    // NOTE: there is no peer status package for 0.3.x so we will need to fork. I am removing it for now since we are not even using online/offline statuses in the launcher
+    const peerStatusStore = {} as PeerStatusStore // new PeerStatusStore(new PeerStatusClient(appWebsocket, 'we'));
+    const sensemakerStore = new SensemakerStore(appWebsocket, sensemakerCell.clone_id!);
 
     this._matrix.update((matrix) => {
       const weInfo: NeighbourhoodInfo = {
@@ -919,7 +914,7 @@ export class MatrixStore {
 
       const weGroupData: WeGroupData = {
         info: weGroupInfo,
-        appAgentWebsocket,
+        appWebsocket,
         profilesStore,
         peerStatusStore,
         sensemakerStore,
@@ -958,7 +953,6 @@ export class MatrixStore {
     // uninstall we group cell
     // disable we group cell
     await this.appWebsocket.disableCloneCell({
-      app_id: this.weParentAppInfo.installed_app_id,
       clone_cell_id: weGroup[0].info.cell_id,
     })
 
@@ -1055,7 +1049,9 @@ export class MatrixStore {
         );
 
         if(appletInstanceId != undefined && appletInstanceId instanceof Uint8Array) {
-          const appletAppAgentWebsocket = await getAppAgentWebsocket(installedAppId);
+
+          const appletConnection = await connectHolochainApp(installedAppId);
+          const appletAppWebsocket = appletConnection.appWebsocket;
 
           // Add AppInstanceInfo to we group store
           // XXX: This should really have an index to check against
@@ -1065,7 +1061,7 @@ export class MatrixStore {
               appInfo,
               applet,
               federatedGroups,
-              appAgentWebsocket: appletAppAgentWebsocket,
+              appWebsocket: appletAppWebsocket,
             });
             return matrix;
           });
@@ -1176,7 +1172,8 @@ export class MatrixStore {
       );
 
       if(appletInstanceId != undefined && appletInstanceId instanceof Uint8Array) {
-        const appletAppAgentWebsocket = await getAppAgentWebsocket(installedAppId);
+        const appletConnection = await connectHolochainApp(installedAppId);
+        const appletAppWebsocket = appletConnection.appWebsocket;
 
         // Add AppInstanceInfo to we group store
         // XXX: This should really have an index to check against
@@ -1186,7 +1183,7 @@ export class MatrixStore {
             appInfo,
             applet,
             federatedGroups: [],
-            appAgentWebsocket: appletAppAgentWebsocket,
+            appWebsocket: appletAppWebsocket,
           });
           return matrix;
         });
