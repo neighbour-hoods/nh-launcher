@@ -1,10 +1,9 @@
 use hdi::prelude::*;
 pub use sensemaker_integrity_structs::*;
 
-#[hdk_entry_defs]
+#[hdk_entry_types]
 #[unit_enum(UnitEntryTypes)]
 pub enum EntryTypes {
-    #[entry_def()]
     Assessment(Assessment),
     CulturalContext(CulturalContext),
     ContextResult(ContextResult),

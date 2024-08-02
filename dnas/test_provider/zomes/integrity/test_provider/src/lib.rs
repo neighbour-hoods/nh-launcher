@@ -3,10 +3,9 @@ mod post;
 
 pub use post::Post;
 
-#[hdk_entry_defs]
+#[hdk_entry_types]
 #[unit_enum(UnitEntryTypes)]
 pub enum EntryTypes {
-    #[entry_def()]
     Post(Post),
 }
 

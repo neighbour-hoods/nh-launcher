@@ -2,10 +2,10 @@ use hdi::prelude::*;
 
 
 
-#[hdk_entry_defs]
+#[hdk_entry_types]
 #[unit_enum(UnitEntryTypes)]
 pub enum EntryTypes {
-  #[entry_def(name = "applet_gui", visibility = "private")]
+  #[entry_type(name = "applet_gui", visibility = "private")]
   AppletGui(AppletGui),
 }
 

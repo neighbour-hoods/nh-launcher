@@ -3,10 +3,10 @@ use hdi::prelude::*;
 use hdi::prelude::holo_hash::DnaHash;
 
 
-#[hdk_entry_defs]
+#[hdk_entry_types]
 #[unit_enum(UnitEntryTypes)]
 pub enum EntryTypes {
-    #[entry_def(name = "applet", visibility = "public")]
+    #[entry_type(name = "applet", visibility = "public")]
     Applet(Applet),
 }
 

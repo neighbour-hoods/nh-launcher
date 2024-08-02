@@ -26,10 +26,9 @@ pub struct AssessmentTrayConfig {
     pub assessment_control_configs: Vec<AssessmentControlConfig>,
 }
 
-#[hdk_entry_defs]
+#[hdk_entry_types]
 #[unit_enum(UnitEntryTypes)]
 pub enum EntryTypes {
-    #[entry_def()]
     AssessmentTrayConfig(AssessmentTrayConfig),
     AssessmentControlRegistration(AssessmentControlRegistration),
 }

@@ -30,7 +30,7 @@ pub struct JoinMembraneInvitation {
 }
 
 #[derive(Serialize, Deserialize)]
-#[hdk_entry_defs]
+#[hdk_entry_types]
 #[unit_enum(UnitEntryTypes)]
 #[serde(tag = "type")]
 pub enum EntryTypes {
