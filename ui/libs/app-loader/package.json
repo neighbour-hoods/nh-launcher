@@ -24,8 +24,8 @@
   "scripts": {
     "prepare": "pnpm build",
     "build": "rm -rf ./dist; vite build && tsc --build",
-    "test": "vitest run --reporter=verbose",
-    "test:watch": "vitest --reporter=verbose"
+    "test": "node --expose-gc node_modules/vitest/vitest.mjs run --reporter=verbose",
+    "test:watch": "node --expose-gc node_modules/vitest/vitest.mjs --reporter=verbose"
   },
   "devDependencies": {
     "@open-wc/testing": "^3.2.2",
@@ -34,9 +34,9 @@
     "lit": "^3.0.0",
     "tslib": "^2.6.2",
     "typescript": "^5.2.2",
-    "vite": "^4.4.9",
+    "vite": "^5.3.5",
     "vite-tsconfig-paths": "^4.2.0",
-    "vitest": "^0.31.4"
+    "vitest": "^2.0.5"
   },
   "dependencies": {
     "@lit-labs/scoped-registry-mixin": "^1.0.1",
