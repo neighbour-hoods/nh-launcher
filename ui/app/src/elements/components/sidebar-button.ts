@@ -1,19 +1,10 @@
-
-
-
-
-
-
-
-import { contextProvided } from "@lit-labs/context";
-import { ScopedElementsMixin } from "@open-wc/scoped-elements";
+import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
 import { css, html, LitElement } from "lit";
-import { TaskSubscriber } from "lit-svelte-stores";
-import { SlTooltip, SlSkeleton } from "@scoped-elements/shoelace";
+import { property } from "lit/decorators.js";
 
-import { property, query } from "lit/decorators.js";
+import NHTooltip from '@neighbourhoods/design-system-components/tooltip';
 
-export class SidebarButton extends ScopedElementsMixin(LitElement) {
+export class SidebarButton extends ScopedRegistryHost(LitElement) {
 
   @property()
   logoSrc!: string;
@@ -24,11 +15,7 @@ export class SidebarButton extends ScopedElementsMixin(LitElement) {
   @property()
   placement: "top" | "top-start" | "top-end" | "right" | "right-start" | "right-end" | "bottom" | "bottom-start" | "bottom-end" | "left" | "left-start" | "left-end" = "right";
 
-  @query("#tooltip")
-  _tooltip!: SlTooltip;
-
   private handleClick(e: any) {
-    this._tooltip.hide();
     this.dispatchEvent(
       new Event("click", {
         composed: true,
@@ -38,19 +25,18 @@ export class SidebarButton extends ScopedElementsMixin(LitElement) {
   }
 
   render() {
-    return html`<sl-tooltip
-      hoist
-      id="tooltip"
-      placement="${this.placement}"
-      .content=${this.tooltipText}
-    >
-      <img class="icon" src="${this.logoSrc}" @click=${this.handleClick} />
-    </sl-tooltip>`;
+    return this.tooltipText
+      ? html`
+        <nh-tooltip .text=${this.tooltipText} class="right no-icon">
+          <img slot="hoverable" class="icon" src="${this.logoSrc}" @click=${this.handleClick} />
+        </nh-tooltip>
+      `
+      : html`<img slot="hoverable" class="icon" src="${this.logoSrc}" @click=${this.handleClick} />`;
   }
 
-  static get scopedElements() {
+  static get elementDefinitions() {
     return {
-      "sl-tooltip": SlTooltip,
+      "nh-tooltip": NHTooltip,
     };
   }
 
@@ -58,15 +44,16 @@ export class SidebarButton extends ScopedElementsMixin(LitElement) {
     return css`
       :host {
         display: flex;
+        overflow: visible;
       }
       .icon {
         cursor: pointer;
-        border-radius: 50%;
         width: 50px;
         height: 50px;
+        border-radius: .5rem;
         object-fit: cover;
+        transform: scale(1.2);
       }
     `;
   }
 }
-

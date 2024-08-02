@@ -1,56 +1,54 @@
-import { css } from "lit";
+import { css, unsafeCSS } from 'lit';
+
 
 export const sharedStyles = css`
+// We Shared Styles:
+.default-font {
+  font-family: Manrope, 'Work Sans', 'Arial', sans-serif;
+}
 
+.column {
+  display: flex;
+  flex-direction: column;
+}
+.row {
+  display: flex;
+  flex-direction: row;
+}
 
+.center-content {
+  justify-content: center;
+  align-items: center;
+}
 
-  .default-font {
-        font-family: Roboto, "Open Sans", "Helvetica Neue", sans-serif;
-      }
+.title {
+  font-size: 20px;
+}
 
-  .column {
-    display: flex;
-    flex-direction: column;
-  }
-  .row {
-    display: flex;
-    flex-direction: row;
-  }
+.placeholder {
+  color: rgba(0, 0, 0, 0.7);
+}
 
-  .center-content {
-    justify-content: center;
-    align-items: center;
-  }
+.flex-scrollable-parent {
+  position: relative;
+  display: flex;
+  flex: 1;
+}
 
-  .title {
-    font-size: 20px;
-  }
+.flex-scrollable-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
 
-  .placeholder {
-    color: rgba(0, 0, 0, 0.7);
-  }
-
-  .flex-scrollable-parent {
-    position: relative;
-    display: flex;
-    flex: 1;
-  }
-
-  .flex-scrollable-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-  }
-
-  .flex-scrollable-x {
-    max-width: 100%;
-    overflow-x: auto;
-  }
-  .flex-scrollable-y {
-    max-height: 100%;
-    overflow-y: auto;
-  }
-
+.flex-scrollable-x {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.flex-scrollable-y {
+  max-height: 100%;
+  overflow-y: auto;
+}
 `;

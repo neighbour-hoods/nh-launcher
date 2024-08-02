@@ -1,12 +1,19 @@
 [package]
-authors = ["eric@harris-braun.com"]
+authors = ["guillem.cordoba@gmail.com", "matthme@protonmail.com"]
+description = "MembraneInvitations zome for any Holochain app"
+documentation = "https://holochain-open-dev.github.io/membrane_invitations"
 edition = "2021"
+homepage = "https://docs.rs/hc_zome_membrane_invitations"
+license = "MIT"
 name = "membrane_invitations_integrity"
-version = "0.0.1-alpha1"
+repository = "https://github.com/holochain-open-dev/membrane_invitations"
+version = "0.1.0"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 name = "membrane_invitations_integrity"
 
 [dependencies]
-hc_zome_membrane_invitations_integrity = { git = "https://github.com/holochain-open-dev/membrane-invitations", branch = "for-hdk-v0.0.152", package = "hc_zome_membrane_invitations_integrity" }
+derive_more = { workspace = true }
+serde = { workspace = true }
+hdi = { workspace = true }

@@ -1,0 +1,13 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "declarationDir": "./dist",
+    "plugins": [
+      {"name": "typescript-plugin-css-modules"}
+    ]
+  },
+  "include": ["./src/*.ts", "./src/*.js"]
+}

@@ -1,36 +1,31 @@
 import { html, LitElement, css } from "lit";
-import { ScopedElementsMixin } from "@open-wc/scoped-elements";
-import { ListProfiles } from "@holochain-open-dev/profiles";
-import {
-  Button,
-  TextField,
-  CircularProgress,
-  Card,
-} from "@scoped-elements/material-web";
-import { contextProvided } from "@lit-labs/context";
-import { AgentPubKeyB64, EntryHashB64 } from "@holochain-open-dev/core-types";
+import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
+import { consume } from "@lit/context";
 import { property, query, state } from "lit/decorators.js";
-import { Task } from "@lit-labs/task";
+import { Task } from "@lit/task";
 
 import { sharedStyles } from "../../sharedStyles";
 import {
   AppWithReleases,
-  getAllPublishedApps,
+  getAllAppsWithGui,
   getLatestRelease,
 } from "../../processes/devhub/get-happs";
 
-import { AppletInfo } from "../../types";
-import { CreateAppletDialog } from "../dialogs/create-applet-dialog";
+import { AppletMetaData } from "../../types";
 import { matrixContext, weGroupContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 import { DnaHash } from "@holochain/client";
 
-export class InstallableApplets extends ScopedElementsMixin(LitElement) {
-  @contextProvided({ context: matrixContext, subscribe: true })
-  @state()
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHSpinner from '@neighbourhoods/design-system-components/spinner';
+
+export class InstallableApplets extends ScopedRegistryHost(LitElement) {
+  @consume({ context: matrixContext , subscribe: true })
+  @property({attribute: false})
   _matrixStore!: MatrixStore;
 
-  @contextProvided({ context: weGroupContext, subscribe: true })
+  @consume({ context: weGroupContext, subscribe: true })
+  @property({attribute: false})
   weGroupId!: DnaHash;
 
   _installableApplets = new Task(
@@ -38,35 +33,32 @@ export class InstallableApplets extends ScopedElementsMixin(LitElement) {
     async ([s]) => {
       const devhubHapp = await this._matrixStore.getDevhubHapp();
 
-      return getAllPublishedApps(this._matrixStore.appWebsocket, devhubHapp);
+      return getAllAppsWithGui(this._matrixStore.appWebsocket, devhubHapp);
     },
     () => [this._matrixStore, this.weGroupId]
   );
 
   @state()
-  private _selectedAppletInfo: AppletInfo | undefined;
+  private _selectedAppletInfo: AppletMetaData | undefined;
 
   @query("#applet-dialog")
-  _appletDialog!: CreateAppletDialog;
+  _appletDialog!: any;
 
-  renderInstallableApplet(appletInfo: AppletInfo) {
+  renderInstallableApplet(appletInfo: AppletMetaData) {
     return html`
-      <mwc-card class="applet-card">
-        <div style="height: 145px;">
-          <h2 style="padding: 5px; margin:0;">${appletInfo.title}</h2>
-          <h3 style="padding: 5px; margin: 0;">${appletInfo.subtitle}</h3>
-          <div style="height: 70px; overflow-y: auto; padding: 5px;">
-            ${appletInfo.description}
-          </div>
+      <div style="height: 145px;">
+        <h2 style="padding: 5px; margin:0;">${appletInfo.title}</h2>
+        <h3 style="padding: 5px; margin: 0;">${appletInfo.subtitle}</h3>
+        <div style="height: 70px; overflow-y: auto; padding: 5px;">
+          ${appletInfo.description}
         </div>
-        <mwc-button
-          outlined
-          @click=${() => {
-            this._appletDialog.open(appletInfo);
-          }}
-          >Add to group</mwc-button
-        >
-      </mwc-card>
+      </div>
+      <nh-button
+        @click=${() => {
+          this._appletDialog.open(appletInfo);
+        }}
+      >Add to neighbourhood</nh-button
+      >
     `;
   }
 
@@ -90,12 +82,13 @@ export class InstallableApplets extends ScopedElementsMixin(LitElement) {
               let latestRelease = getLatestRelease(item);
 
               if (latestRelease) {
-                let appletInfo: AppletInfo = {
+                let appletInfo: AppletMetaData = {
                   title: item.app.content.title,
                   subtitle: item.app.content.subtitle,
                   description: item.app.content.description,
                   icon: undefined, // ADD ICON HERE
                   devhubHappReleaseHash: latestRelease.address,
+                  devhubGuiReleaseHash: latestRelease.content.official_gui!,
                 };
                 return this.renderInstallableApplet(appletInfo);
               }
@@ -108,21 +101,13 @@ export class InstallableApplets extends ScopedElementsMixin(LitElement) {
   render() {
     return this._installableApplets.render({
       complete: (applets) => this.renderApplets(applets),
-      pending: () => html`
-        <mwc-circular-progress indeterminate></mwc-circular-progress>
-      `,
+      pending: () => html`<nh-spinner type=${"icon"}></nh-spinner>`,
     });
   }
 
-  static get scopedElements() {
-    return {
-      "list-profiles": ListProfiles,
-      "mwc-button": Button,
-      "mwc-textfield": TextField,
-      "mwc-circular-progress": CircularProgress,
-      "mwc-card": Card,
-      "create-applet-dialog": CreateAppletDialog,
-    };
+  static elementDefinitions = {
+    "nh-spinner": NHSpinner,
+    "nh-button": NHButton,
   }
 
   static localStyles = css`

@@ -1,14 +1,33 @@
-import { EntryHashB64 } from "@holochain-open-dev/core-types";
-import { AgentPubKey, DnaHash, EntryHash, InstalledAppId } from "@holochain/client";
+import { PeerStatusStore } from "@holochain-open-dev/peer-status";
+import { ProfilesStore } from "@holochain-open-dev/profiles";
+import {
+  AgentPubKey,
+  DnaHash,
+  EntryHash,
+  InstalledAppId,
+  EntryHashB64,
+  AppAgentClient,
+  AppAgentWebsocket,
+  AppInfo,
+  CellId
+} from "@holochain/client";
+import {
+  SensemakerStore,
+  NeighbourhoodInfo,
+  NeighbourhoodAppletRenderers
+} from "@neighbourhoods/client";
 
-
+/**
+ * The possible states of the dashboard
+ */
 export enum DashboardMode {
   MainHome,
   WeGroupHome,
+  DashboardOverview,
   AppletGroupInstanceRendering,
-  AppletClassHome,
   AppletClassRendering,
   Loading,
+  NHGlobalConfig,
 }
 
 /**
@@ -25,62 +44,45 @@ export enum DashboardMode {
  *
  */
 export enum NavigationMode {
-  AppletCentric,
   GroupCentric,
   Agnostic,
 }
 
-
-//
-/**
- *
- * agentCentricRendering needs access to ?? agentStore maybe?
- *
- * groupCentricRendering needs access to profilesStore and peerStatusStore.
- *
- *
- */
-export enum RenderingMode {
-  AgentCentric,
-  GroupCentric,
-  Agnostic,
-}
-
-
-export interface Applet {
+export type Applet = {
   customName: string; // name of the applet instance as chosen by the person adding it to the group,
   title: string; // title of the applet in the devhub
   description: string;
   logoSrc: string | undefined;
 
   devhubHappReleaseHash: EntryHash;
+  devhubGuiReleaseHash: EntryHash;
 
   properties: Record<string, Uint8Array>; // Segmented by RoleId
   networkSeed: Record<string, string | undefined>; // Segmented by RoleId
   dnaHashes: Record<string, DnaHash>; // Segmented by RoleId
 }
 
-export interface AppletGui {
+export type AppletGui = {
   devhubHappReleaseHash: EntryHash,
   gui: Uint8Array,
 }
 
-export interface RegisterAppletInput {
+export type RegisterAppletInput = {
   appletAgentPubKey: AgentPubKey,
   applet: Applet,
 }
 
-export interface AppletInfo {
+export type AppletMetaData = {
   title: string,
   subtitle: string | undefined,
   description: string,
   installedAppId?: InstalledAppId,
   devhubHappReleaseHash: EntryHash,
+  devhubGuiReleaseHash: EntryHash,
   icon: IconSrcOption,
 }
 
-
-export interface PlayingApplet {
+export type PlayingApplet = {
   applet: Applet;
   agentPubKey: AgentPubKey;
 }
@@ -90,9 +92,73 @@ export type Signal = {
   message: { type: "NewApplet"; content: Applet };
 };
 
-
 export type GuiFile = Uint8Array;
 
-export type IconFileOption = Uint8Array | undefined;
-
 export type IconSrcOption = string | undefined;
+
+export type SignalPayload = {
+  applet_hash: EntryHash,
+  message: Message,
+  federated_groups: Array<DnaHash>
+ };
+
+export type Message = {
+  type: "NewApplet",
+  content: Applet,
+};
+
+// TODO: Why is WeGroupData separate from WeGroupInfo?
+// If we make some of this more specific to Neighbourhoods, and why not since it
+// is already forked beyond recognition, we could merge WeGroupInfo into
+// NeighbourhoodInfo. Possibly with WeGroupData, too.
+
+/**
+ * Data of a group
+ */
+export type WeGroupData = {
+  info: WeGroupInfo;
+  appAgentWebsocket: AppAgentWebsocket; // Each we group needs its own signal handler, i.e. its own AppAgentWebsocket object
+  profilesStore: ProfilesStore;
+  peerStatusStore: PeerStatusStore;
+  sensemakerStore: SensemakerStore;
+}
+
+/**
+ * Info of a group
+ */
+export type WeGroupInfo = {
+  info: NeighbourhoodInfo;
+  cell_id: CellId;
+  dna_hash: DnaHash;
+  cloneName: string;
+  enabled: boolean;
+}
+
+type BaseAppletInstanceInfo = {
+  appletId: EntryHash; // hash of the Applet entry in the applets zome of the group's we dna
+  applet: Applet; // TODO: Maybe change this to DevHubAppInfo?
+  federatedGroups: DnaHash[];
+}
+
+/**
+ * Info about a specific instance of an installed Applet
+ */
+export type AppletInstanceInfo = BaseAppletInstanceInfo & {
+  appInfo: AppInfo; // InstalledAppInfo
+  appAgentWebsocket?: AppAgentClient;
+  renderers?: NeighbourhoodAppletRenderers;
+}
+
+/**
+ *
+ */
+export type UninstalledAppletInstanceInfo = BaseAppletInstanceInfo
+
+/**
+ * Info about an Applet that was added to the We group by another agent and isn't installed locally yet.
+ *
+ * REASONING: This type is separated from the AppletInstanceInfo because it requires queries to the DHT to get new
+ * applet instances while already installed applet instances can be efficiently queried from the
+ * source chain. The matrix therefore only contains locally installed applets.
+ */
+export type NewAppletInstanceInfo = BaseAppletInstanceInfo

@@ -1,133 +1,116 @@
-import { css, html, LitElement } from "lit";
-import { ScopedElementsMixin } from "@open-wc/scoped-elements";
-import {
-  Button,
-  TextField,
-  Snackbar,
-  Icon,
-  Dialog,
-  Card,
-} from "@scoped-elements/material-web";
-import { contextProvided } from "@lit-labs/context";
-import { AgentPubKeyB64 } from "@holochain-open-dev/core-types";
+import { css, CSSResult, html } from "lit";
+import { consume } from "@lit/context";
 import { property, query, state } from "lit/decorators.js";
 
-import { sharedStyles } from "../../sharedStyles";
 import { MatrixStore } from "../../matrix-store";
 import { matrixContext, weGroupContext } from "../../context";
-import { DnaHash } from "@holochain/client";
-import { deserializeHash } from "@holochain-open-dev/utils";
+import { DnaHash, AgentPubKeyB64, decodeHashFromBase64 } from "@holochain/client";
 
-export class InvitationsBlock extends ScopedElementsMixin(LitElement) {
-  @contextProvided({ context: matrixContext, subscribe: true })
-  @state()
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHCard from '@neighbourhoods/design-system-components/card';
+import NHTextInput from '@neighbourhoods/design-system-components/input/text';
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+import { b64images } from "@neighbourhoods/design-system-styles";
+import { alertEvent } from "../../decorators/alert-event";
+
+export class InvitationsBlock extends NHComponent {
+  // TODO: add Yup schema for hash validation
+  @consume({ context: matrixContext , subscribe: true })
+  @property({attribute: false})
   _matrixStore!: MatrixStore;
 
-  @contextProvided({ context: weGroupContext, subscribe: true })
+  @consume({ context: weGroupContext, subscribe: true })
+  @property({attribute: false})
   weGroupId!: DnaHash;
+
+  @alertEvent() success;
+  @alertEvent() danger;
 
   @state()
   _inviteePubKey: AgentPubKeyB64 | undefined;
 
-  @query("#snackbar-success")
-  _snackbarSuccess!: Snackbar;
-
-  @query("#snackbar-error")
-  _snackbarError!: Snackbar;
-
-  @query("#pubkey-field")
-  _pubkeyField!: TextField;
+  @query("nh-text-input")
+  _pubkeyField!: NHTextInput;
 
   async inviteToJoin(agentPubKey: AgentPubKeyB64) {
-
     this._matrixStore
-      .inviteToJoinGroup(this.weGroupId, deserializeHash(agentPubKey))
+      .inviteToJoinGroup(this.weGroupId, decodeHashFromBase64(agentPubKey))
       .then((r) => {
-        this._pubkeyField.value = "";
+        this._pubkeyField._input.value = "";
         this._inviteePubKey = undefined;
-        this._snackbarSuccess.show();
+
+        this.success.emit({
+          title: "Invitation sent!",
+          msg: "Your neighbour should now have an invite in their Neighbourhood Home."
+        })
       })
       .catch((e) => {
-        this._snackbarError.show();
+        this.danger.emit({
+          title: "Error. Public key may be invalid.",
+          msg: "Please check that you have copied it from the correct place!"
+        })
         console.log(e);
       });
   }
 
   render() {
     return html`
-      <mwc-snackbar
-        id="snackbar-success"
-        timeoutMs="4000"
-        labelText="Invitation sent."
-      ></mwc-snackbar>
-      <mwc-snackbar
-        id="snackbar-error"
-        timeoutMs="4000"
-        labelText="Error. Public key may be invalid."
-      ></mwc-snackbar>
-
-      <mwc-card style="width: 440px;">
-        <div style="margin: 20px;">
-          <div class="row">
-            <span class="title"
-              >Invite New Member</span
-            >
-          </div>
-          <div class="row" style="align-items: center; margin-top: 20px;">
-            <mwc-textfield
-              label="Public Key"
-              id="pubkey-field"
-              autoValidate
-              @input=${(e) => (this._inviteePubKey = e.target.value)}
-              outlined
-            ></mwc-textfield>
-            <mwc-button
-              style="margin: 10px;"
-              raised
-              icon="send"
-              label="INVITE"
-              @click=${() => this.inviteToJoin(this._inviteePubKey!)}
-              .disabled=${!this._inviteePubKey}
-            ></mwc-button>
-          </div>
-          <div
-            class="default-font"
-            style="margin-top: 3px; font-size: 0.8em; color: gray; text-align: left;"
-          >
-            ask a friend to send you their public key
+      <nh-card .theme=${"dark"} .heading=${"Invite new neighbour"} .textSize=${"sm"}>
+        <div class="content">
+          <div class="input-pub-key">
+            <form class="invite-form">
+              <nh-text-input
+                id="pubkey-field"
+                .name="pubkey-field"
+                .label=${""}
+                .size=${"small"}
+                .placeholder=${"Public Key"}
+                .required=${true}
+                @change=${(e) => (this._inviteePubKey = e.target.value)}
+              ></nh-text-input>
+              <nh-button type="submit" .variant=${"primary"} .iconImageB64=${b64images.icons.forwardArrow} @click=${() => this.inviteToJoin(this._inviteePubKey!)} .size=${"md"} .disabled=${!this._inviteePubKey}>Invite</nh-button>
+            </form>
           </div>
         </div>
-      </mwc-card>
+      </nh-card>
     `;
   }
 
-  static get scopedElements() {
-    return {
-      "mwc-button": Button,
-      "mwc-textfield": TextField,
-      "mwc-snackbar": Snackbar,
-      "mwc-icon": Icon,
-      "mwc-dialog": Dialog,
-      "mwc-card": Card,
-    };
+  static elementDefinitions = {
+    "nh-button": NHButton,
+    "nh-text-input": NHTextInput,
+    "nh-card": NHCard,
   }
 
   static get styles() {
-    const localStyles = css`
-      .help-icon {
-        margin-left: 10px;
-        cursor: pointer;
-        color: #454545;
-      }
-      .help-icon:hover {
-        color: #8a8a8a;
-      }
+    return [
+      super.styles as CSSResult,
+      css`
+        .content {
+          max-width: 20rem;
+          margin: 0 auto;
+          flex-direction: column;
+        }
 
-      .copy-icon:hover {
-        color: black;
-      }
-    `;
+        .invite-form {
+          display: flex;
+          flex-direction: row;
+          gap: 1rem;
+          justify-content: center;
+          align-items: flex-end;
+        }
 
-    return [sharedStyles, localStyles];
+        .content, .input-pub-key, .input-pub-key > *, .invite-form {
+          display: flex;
+        }
+
+        nh-button {
+          margin-bottom: 4px;
+        }
+
+        .content, .invite-form, .input-pub-key {
+          gap: calc(1px * var(--nh-spacing-sm));
+        }
+    `];
   }
 }

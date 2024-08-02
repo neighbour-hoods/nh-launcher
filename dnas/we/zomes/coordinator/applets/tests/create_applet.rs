@@ -31,6 +31,8 @@ async fn create_applet() {
         description: String::from("description"),
         logo_src: None,
         devhub_happ_release_hash: fixt!(EntryHash),
+        devhub_gui_release_hash: fixt!(EntryHash),
+
         properties: BTreeMap::new(), // Segmented by RoleId
         network_seed: BTreeMap::new(),        // Segmented by RoleId
         dna_hashes: BTreeMap::new(), // Segmented by RoleId
@@ -44,7 +46,7 @@ async fn create_applet() {
         .call(&alice_zome, "create_applet", input)
         .await;
 
-    consistency_10s(&[&alice, &bobbo]).await;
+    consistency_10s([&alice, &bobbo]).await;
 
     let all_applets: Vec<(EntryHash, Applet)> =
         conductors[1].call(&bob_zome, "get_all_applets", ()).await;

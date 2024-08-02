@@ -1,0 +1,51 @@
+{
+  "name": "@neighbourhoods/design-system-styles",
+  "version": "0.0.8",
+  "description": "packaged styles for the Neighbourhoods design system",
+  "source": "./src/index.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "prepare": "pnpm build",
+    "build": "rm -rf ./dist; pnpm build:styles && rollup -c rollup.config.mjs && cp -R src/themes dist/themes && cp -R src/global dist/global",
+    "build:styles": "node scripts/build.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neighbour-hoods/nh-design-system.git"
+  },
+  "keywords": [
+    "Neighbourhoods",
+    "theme",
+    "styles",
+    "css"
+  ],
+  "author": "Neighbourhoods Ltd & contributors",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/neighbour-hoods/nh-design-system/issues"
+  },
+  "homepage": "https://github.com/neighbour-hoods/nh-design-system#readme",
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@tokens-studio/sd-transforms": "^0.10.3",
+    "lit": "^3.0.0",
+    "rollup": "^3.18.0",
+    "rollup-plugin-import-css": "^3.3.1",
+    "rollup-plugin-postcss": "^4.0.2",
+    "style-dictionary": "^3.9.1",
+    "tslib": "^2.5.0",
+    "typescript": "^5.2.2"
+  }
+}

@@ -1,279 +1,259 @@
-import { css, html, LitElement } from "lit";
-import { property, query, state } from "lit/decorators.js";
-import { ScopedElementsMixin } from "@open-wc/scoped-elements";
-import { contextProvided } from "@lit-labs/context";
-import { EntryHashB64 } from "@holochain-open-dev/core-types";
-import {
-  TextField,
-  Button,
-  Snackbar,
-  Dialog,
-  CircularProgress,
-  TextArea,
-} from "@scoped-elements/material-web";
+import { css, html, LitElement, TemplateResult } from 'lit';
+import { property, query, state } from 'lit/decorators.js';
+import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
+import { consume } from '@lit/context';
+import { AppletMetaData } from '../../types';
+import { StoreSubscriber } from 'lit-svelte-stores';
+import { MatrixStore } from '../../matrix-store';
+import { provideAllApplets } from "../../matrix-helpers";
+import { matrixContext, weGroupContext } from '../../context';
+import { DnaHash, EntryHash } from '@holochain/client';
+import { fakeSeededEntryHash } from '../../utils';
 
-import md5 from 'md5';
+import NHButton from '@neighbourhoods/design-system-components/button';
+import NHDialog from '@neighbourhoods/design-system-components/dialog';
+import NHForm from '@neighbourhoods/design-system-components/form/form';
+import NHSpinner from '@neighbourhoods/design-system-components/spinner';
 
-import { sharedStyles } from "../../sharedStyles";
-import { AppletInfo } from "../../types";
-import { TaskSubscriber } from "lit-svelte-stores";
-import { MatrixStore } from "../../matrix-store";
-import { matrixContext, weGroupContext } from "../../context";
-import { DnaHash, EntryHash } from "@holochain/client";
-import { fakeEntryHash } from "@holochain-open-dev/utils";
-import { fakeMd5SeededEntryHash } from "../../utils";
+import { object, string } from 'yup';
+import { alertEvent } from '../../decorators/alert-event';
 
-export class InstallFromFsDialog extends ScopedElementsMixin(LitElement) {
-  @contextProvided({ context: matrixContext, subscribe: true })
+export class InstallFromFsDialog extends ScopedRegistryHost(LitElement) {
+  @consume({ context: matrixContext , subscribe: true })
+  @property({attribute: false})
   _matrixStore!: MatrixStore;
 
-  @contextProvided({ context: weGroupContext, subscribe: true })
+  @consume({ context: weGroupContext, subscribe: true })
+  @property({attribute: false})
   weGroupId!: DnaHash;
 
-  _allApplets = new TaskSubscriber(
+  @state() loading!: boolean;
+
+  @alertEvent() success;
+  @alertEvent() danger;
+
+  _allApplets = new StoreSubscriber(
     this,
-    () => this._matrixStore.fetchAllApplets(this.weGroupId),
-    () => [this._matrixStore, this.weGroupId]
+    () => provideAllApplets(this._matrixStore, this.weGroupId),
+    () => [this._matrixStore, this.weGroupId],
   );
 
-  @query("#applet-dialog")
-  _appletDialog!: Dialog;
+  @query('nh-form') private _form;
+  @query("nh-button[type='submit']") private _submitBtn;
+  @query('#open-applet-dialog-button') private _openAppletDialogButton!: HTMLElement;
 
-  @query("#installed-app-id")
-  _installedAppIdField!: TextField;
-
-  @query("#description-field")
-  _descriptionField!: TextArea;
-
-
-  @state()
-  _dnaBundle: { hash: EntryHashB64; file: File } | undefined = undefined;
-  @state()
-  _uiBundle: { hash: EntryHashB64; setupRenderers: any } | undefined =
-    undefined;
-  @state()
-  _invalidUiBundle = false;
-
-  @state()
-  _installableApplets;
-
-  @state()
-  _duplicateName: boolean = false;
-
-
-  @state()
-  _fileBytes: Uint8Array | undefined = undefined;
-
-  @state()
-  _fakeDevhubHappReleaseHash: EntryHash | undefined = undefined;
+  // Local state for values not covered by the nh-form api:
+  @state() private _duplicateName: boolean = false;
+  @state() private _fileBytes: Uint8Array | undefined = undefined;
+  @state() private _fakeDevhubHappReleaseHash: EntryHash | undefined = undefined;
 
   open() {
-    this._appletDialog.show();
+    this._openAppletDialogButton.click();
   }
 
-  close() {
-    this._fileBytes = undefined;
-    this._installedAppIdField.value = "";
-    this._descriptionField.value = "";
-  }
+  private resetLocalState() { this._fileBytes = undefined }
 
-  get publishDisabled() {
-    return !this._installedAppIdField || this._duplicateName || !this._fileBytes;
-  }
-
-  checkValidity(_newValue, _nativeValidity) {
+  private checkNameUniqueness(newValue: string): boolean {
     if (this._allApplets.value) {
       const allNames = this._allApplets.value!.map(
-        ([_appletEntryHash, applet]) => applet.customName
+        ([_appletEntryHash, applet]) => applet.customName,
       );
-      if (allNames.includes(this._installedAppIdField.value)) {
+      if (allNames.includes(newValue)) {
         this._duplicateName = true;
-        return {
-          valid: false,
-        };
+        return false
       }
     }
 
     this._duplicateName = false;
-    return {
-      valid: true,
-    };
+    return true
   }
 
-  async createApplet() {
-    (this.shadowRoot?.getElementById("installing-progress") as Snackbar).show();
+  private async createApplet(model: any) {
+    this.loading = true;
+    const { applet_name, applet_description } = model;
     try {
-      const appletInfo: AppletInfo = {
-        title: this._installedAppIdField.value, // for the applet class name we just take the user defined name for now.
+      const appletInfo: AppletMetaData = {
+        title: applet_name, // for the applet class name we just take the user defined name for now.
         subtitle: undefined,
-        description: this._descriptionField.value,
+        description: applet_description,
         devhubHappReleaseHash: this._fakeDevhubHappReleaseHash!,
+        devhubGuiReleaseHash: this._fakeDevhubHappReleaseHash!, // just take the same fake hash for the GUI hash
         icon: undefined,
       };
 
       const appletEntryHash = await this._matrixStore.createApplet(
         this.weGroupId,
         appletInfo,
-        this._installedAppIdField.value,
+        applet_name,
         this._fileBytes, // compressed webhapp as Uint8Array
       );
-      (
-        this.shadowRoot?.getElementById("installing-progress") as Snackbar
-      ).close();
-      (this.shadowRoot?.getElementById("success-snackbar") as Snackbar).show();
-
+      await this.updateComplete;
+      this.success.emit({
+        title: "Applet Installed",
+        msg: "You can now use your applet, but some configuration will be needed to add its Dimensions."
+      })
+      
       this.dispatchEvent(
-        new CustomEvent("applet-installed", {
+        new CustomEvent('applet-installed', {
           detail: { appletEntryHash, weGroupId: this.weGroupId },
           composed: true,
           bubbles: true,
-        })
+        }),
       );
+      this.loading = false;
     } catch (e) {
-      (
-        this.shadowRoot?.getElementById("installing-progress") as Snackbar
-      ).close();
-      (this.shadowRoot?.getElementById("error-snackbar") as Snackbar).show();
-      console.log("Installation error:", e);
+      this.resetLocalState()
+      this.danger.emit({
+        title: "Applet Could Not Be Installed",
+        msg: "There was a problem installing your applet. Please check that you have a valid and functioning webhapp bundle."
+      })
+      this.loading = false;
+      console.log('Installation error:', e);
     }
   }
 
-  // TODO! make typing right here
-  loadFileBytes(e: any) {
-    const files: FileList = e.target.files;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      console.log(e.target?.result);
-    }
-    reader.readAsArrayBuffer(files[0]);
-    // TODO! make typing right here
-    reader.onloadend = (_e) => {
-      const buffer = reader.result as ArrayBuffer;
-      const ui8 = new Uint8Array(buffer);
-      // create a fake devhub happ release hash from the filehash --> used to compare when joining an applet
-      // to ensure it is the same applet and to allow recognizing same applets across groups
-      const md5FileHash = new Uint8Array(md5(ui8, { asBytes: true }));
-      this._fakeDevhubHappReleaseHash = fakeMd5SeededEntryHash(md5FileHash);
-      this._fileBytes = ui8;
-      console.log("fake devhub happ release hash: ", this._fakeDevhubHappReleaseHash);
+  private async loadFileBytes(e: Event) {
+    const target = e.target as HTMLInputElement
+    if (target.files) {
+      const file = target.files.item(0);
+      if (file) {
+        const ab = await file.arrayBuffer()
+        const ui8 = new Uint8Array(ab)
+        // create a fake devhub happ release hash from the filehash --> used to compare when joining an applet
+        // to ensure it is the same applet and to allow recognizing same applets across groups
+        this._fakeDevhubHappReleaseHash = await fakeSeededEntryHash(ui8);
+        this._fileBytes = ui8;
+        console.log('fake devhub happ release hash: ', this._fakeDevhubHappReleaseHash);
+      }
     }
   }
 
-  renderErrorSnackbar() {
+  private renderMainForm(): TemplateResult {
     return html`
-      <mwc-snackbar
-        id="error-snackbar"
-        labelText="Installation failed! (See console for details)"
+      <nh-form
+        .config=${(() => ({
+          submitBtnRef: (() => this._submitBtn)(),
+          resetOverload: this.resetLocalState,
+          rows: [1, 1, 1],
+          fields: [
+            [
+              {
+                type: 'text',
+                placeholder: 'Enter your applet name',
+                label: 'Applet Name:',
+                name: 'applet_name',
+                id: 'applet-name',
+                defaultValue: '',
+                required: true,
+                handleInputChangeOverload: async (_e, model, _fields) => {this.checkNameUniqueness.call(this, model.applet_name)},
+              },
+            ],
+            [
+              {
+                type: 'textarea',
+                placeholder: 'Enter a description',
+                label: 'Description:',
+                name: 'applet_description',
+                id: 'applet-description',
+                defaultValue: '',
+                required: false,
+              },
+            ],
+            [
+              {
+                type: 'file',
+                placeholder: 'Choose File',
+                label: 'Upload:',
+                name: 'webhapp_file',
+                id: 'webhapp-file',
+                extension: '.webhapp',
+                required: true,
+                disabled: false,
+                defaultValue: '',
+                handleInputChangeOverload: this.loadFileBytes.bind(this),
+              },
+            ],
+          ],
+          submitOverload: this.createApplet.bind(this),
+          schema: object({
+            applet_name: string()
+              .min(1, 'Must be at least 1 characters')
+              .required('Enter a name for your new applet.')
+              // .test('is_duplicate', 'This name has already been used', () => !this._duplicateName)
+              ,
+            applet_description: string(),
+            webhapp_file: string()
+              .min(1, 'Your webhapp bundle have a valid path.')
+              .required('Add a webhapp bundle')
+          }),
+        }))()}
       >
-      </mwc-snackbar>
-    `;
-  }
-
-  renderSuccessSnackbar() {
-    return html`
-      <mwc-snackbar
-        id="success-snackbar"
-        labelText="Installation successful"
-      ></mwc-snackbar>
-    `;
-  }
-
-  renderInstallingProgress() {
-    return html`
-      <mwc-snackbar id="installing-progress" labelText="Installing..." .timeoutMs=${-1}>
-      </mwc-snackbar>
+      </nh-form>
     `;
   }
 
   render() {
-    return html`
-      ${this.renderErrorSnackbar()} ${this.renderSuccessSnackbar()}
-      ${this.renderInstallingProgress()}
-
-      <mwc-dialog id="applet-dialog" heading="Install Applet">
-        <div class="column" style="padding: 16px; margin-bottom: 24px;">
-          <div style="margin-bottom: 30px;">
-            <strong>Note: </strong>It is recommended to download and install Applets from the Applets Library if available. This guarantees compatibility between Applets of the same type and version across groups and it allows features like federation.
+    return this.loading
+      ? html`<nh-spinner type=${"page"}></nh-spinner>`
+      : html`
+        <button id="open-applet-dialog-button" style="opacity:0" type="button"></button>
+        <nh-dialog
+          .handleClose=${() => {this.resetLocalState.call(this); this._form.reset()}}
+          id="applet-dialog"
+          size="medium"
+          .dialogType=${'applet-install'}
+          .title=${"Install Applet"}
+          .openButtonRef=${this._openAppletDialogButton}
+        >
+          <div slot="inner-content" class="container">
+            ${this.renderMainForm()}
           </div>
-          <mwc-textfield
-            id="installed-app-id"
-            label="Applet Name"
-            required
-            outlined
-            autoValidate
-            @input=${() => this.requestUpdate()}
-            validateOnInitialRender
-            dialogInitialFocus
-            .validityTransform=${(newValue, nativeValidity) =>
-              this.checkValidity(newValue, nativeValidity)}
-          ></mwc-textfield>
-          ${this._duplicateName
-            ? html`<div
-                class="default-font"
-                style="color: #b10323; font-size: 12px; margin-left: 4px;"
-              >
-                Name already exists.
-              </div>`
-            : html``}
 
-        <mwc-textarea
-          style="margin-top: 7px;"
-          id="description-field"
-          label="description"
-          outlined
-        >
-        </mwc-textarea>
-
-        <span style="margin-top: 7px;">Select file:</span>
-        <input
-          style="margin-top: 7px;"
-          type="file"
-          id="filepicker"
-          accept=".webhapp"
-          @change=${this.loadFileBytes}
-        >
-        ${this._fileBytes
-            ? html``
-            : html`<div
-                class="default-font"
-                style="color: #b10323; font-size: 12px; margin-left: 4px;"
-              >
-                No file selected.
-              </div>`
-          }
-
-        </div>
-
-        <mwc-button
-          slot="secondaryAction"
-          dialogAction="cancel"
-          label="cancel"
-        ></mwc-button>
-        <mwc-button
-          id="primary-action-button"
-          .disabled=${this.publishDisabled}
-          slot="primaryAction"
-          dialogAction="close"
-          label="INSTALL"
-          @click=${() => this.createApplet()}
-        ></mwc-button>
-      </mwc-dialog>
-    `;
+          <nh-button
+            slot="primary-action"
+            type="submit"
+            id="install-applet"
+            .variant=${'primary'}
+            .size=${'md'}
+          >Install</nh-button>
+        </nh-dialog>
+      `;
   }
 
-  static get scopedElements() {
-    return {
-      "mwc-textfield": TextField,
-      "mwc-button": Button,
-      "mwc-dialog": Dialog,
-      "mwc-snackbar": Snackbar,
-      "mwc-circular-progress": CircularProgress,
-      "mwc-textarea": TextArea,
-    };
+  static elementDefinitions = {
+    'nh-button': NHButton,
+    'nh-dialog': NHDialog,
+    'nh-form': NHForm,
+    "nh-spinner": NHSpinner,
   }
 
   static get styles() {
-    return sharedStyles;
+    return css`
+      :host {
+        display: flex;
+      }
+      .container {
+        padding: 0.5rem;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        align-items: start;
+        justify-content: space-between;
+        gap: calc(1px * var(--nh-spacing-md));
+        width: fit-content;
+        margin: 0 auto;
+        overflow: auto !important;
+        color: var(--nh-theme-fg-on-dark);
+      }
+      nh-form {
+        padding-bottom: 2rem;
+      }
+      @media (max-height: 767px) {
+        .column {
+          flex-basis: 400%;
+          padding-left: calc(1px * var(--nh-spacing-xl));
+        }
+      }
+    `;
   }
 }

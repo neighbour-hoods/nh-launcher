@@ -1,0 +1,54 @@
+{
+  "name": "@neighbourhoods/client",
+  "version": "0.0.10",
+  "source": "./src/index.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "prepare": "pnpm build",
+    "build": "rm -rf ./dist; tsc --build",
+    "build:watch": "tsc --watch --preserveWatchOutput",
+    "test:debug": "TRYORAMA_LOG_LEVEL=debug RUST_BACKTRACE=1 RUST_LOG=holochain::core::ribosome::host_fn::debug=debug TRYORAMA_HOLOCHAIN_PATH=\"holochain\" node --loader ts-node/esm --experimental-specifier-resolution=node tests/index.ts",
+    "test": "TRYORAMA_LOG_LEVEL=info TRYORAMA_HOLOCHAIN_PATH=\"holochain\" node --loader ts-node/esm --experimental-specifier-resolution=node tests/index.ts | tap-diff"
+  },
+  "type": "module",
+  "dependencies": {
+    "@holochain/client": "0.16.7",
+    "@lit/context": "^1.1.0",
+    "@lit/task": "^1.0.0",
+    "@lit-labs/scoped-registry-mixin": "^1.0.3",
+    "lit-svelte-stores": "^0.3.2",
+    "svelte": "^3.59.0",
+    "lit": "^3.0.0",
+    "lit-html": "^3.0.0",
+    "@holochain-open-dev/utils": "^0.16.3",
+    "@holochain-open-dev/peer-status": "^0.9.1",
+    "@holochain-open-dev/profiles": "^0.17.3"
+  },
+  "devDependencies": {
+    "@msgpack/msgpack": "^2.7.0",
+    "@detools/tap-diff": "^0.2.2",
+    "@holochain/tryorama": "0.15.2",
+    "@types/node": "^14.0.14",
+    "@types/tape": "^4.13.4",
+    "esm": "^3.2.25",
+    "path": "^0.12.7",
+    "tape": "^5.2.2",
+    "tape-promise": "^4.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2",
+    "tslib": "^2.3.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

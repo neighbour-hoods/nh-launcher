@@ -1,0 +1,16 @@
+[package]
+edition = "2021"
+name = "sensemaker"
+version = "0.0.1"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "sensemaker"
+
+[dependencies]
+serde = { workspace = true }
+derive_more = { workspace = true }
+hdk = { workspace = true }
+holo_hash = { workspace = true }
+sensemaker_integrity = { path = "../../integrity/sensemaker" }
+nh_sensemaker_zome_lib = { path = "../../../lib/api_helpers" }

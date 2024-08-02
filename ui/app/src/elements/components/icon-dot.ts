@@ -1,12 +1,10 @@
-import { ScopedElementsMixin } from "@open-wc/scoped-elements";
-import { Icon } from "@scoped-elements/material-web";
+import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
 import { css, html, LitElement } from "lit";
 import { property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { sharedStyles } from "../../sharedStyles";
 
-export class IconDot extends ScopedElementsMixin(LitElement) {
-
+export class IconDot extends ScopedRegistryHost(LitElement) {
   @property()
   placement: "top" | "top-start" | "top-end" | "right" | "right-start" | "right-end" | "bottom" | "bottom-start" | "bottom-end" | "left" | "left-start" | "left-end" = "right";
 
@@ -18,21 +16,14 @@ export class IconDot extends ScopedElementsMixin(LitElement) {
 
   render() {
     return html`
-      <div style="position: relative; display: inline-block;">
+      <div style="position: relative; display: flex; align-items: center;">
         <slot></slot>
         <div class="column center-content icon-dot ${classMap({invisible: this.invisible})}">
-          <mwc-icon style="color: white; --mdc-icon-size: 12px;">${this.icon}</mwc-icon>
+          <button>${this.icon}</button>
         </span>
       </div>
     `;
   }
-
-  static get scopedElements() {
-    return {
-      "mwc-icon": Icon,
-    }
-  }
-
 
   static get styles() {
     return [
@@ -59,4 +50,3 @@ export class IconDot extends ScopedElementsMixin(LitElement) {
     ];
   }
 }
-

@@ -1,0 +1,14 @@
+[package]
+edition = "2021"
+name = "test_provider"
+version = "0.0.1"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "test_provider"
+
+[dependencies]
+serde = { workspace = true }
+derive_more = { workspace = true }
+test_provider_integrity = { path = "../../integrity/test_provider" }
+hdk = { workspace = true }

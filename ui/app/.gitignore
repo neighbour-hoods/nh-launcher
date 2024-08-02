@@ -3,3 +3,6 @@ dist
 ui.zip
 out-tsc
 *.tsbuildinfo
+.rollup.cache
+.env.*
+.env

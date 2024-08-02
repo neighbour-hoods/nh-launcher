@@ -1,0 +1,40 @@
+{
+  "name": "@neighbourhoods/dev-util-components",
+  "version": "0.0.1",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "require": "./dist/index.cjs"
+      }
+    },
+    "./*": {
+      "types": "./dist/",
+      "import": "./dist/"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "scripts": {
+    "prepare": "pnpm build",
+    "build": "rm -rf ./dist; vite build && tsc --build"
+  },
+  "devDependencies": {
+    "tslib": "^2.6.2",
+    "typescript": "^5.2.2",
+    "vite": "^4.4.9",
+    "vite-tsconfig-paths": "^4.2.0"
+  },
+  "dependencies": {
+    "@lit-labs/scoped-registry-mixin": "^1.0.1",
+    "@neighbourhoods/design-system-components": "workspace:*",
+    "@neighbourhoods/design-system-styles": "workspace:*",
+    "lit": "^3.0.0"
+  }
+}

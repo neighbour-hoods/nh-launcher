@@ -1,65 +1,35 @@
-import { JoinMembraneInvitation } from "@holochain-open-dev/membrane-invitations";
-import { contextProvided } from "@lit-labs/context";
+import { JoinMembraneInvitation } from "@neighbourhoods/membrane-invitations";
+import { consume } from "@lit/context";
 import { decode } from "@msgpack/msgpack";
-import { ScopedElementsMixin } from "@open-wc/scoped-elements";
-import { html, LitElement, css } from "lit";
-import { TaskSubscriber } from "lit-svelte-stores";
-import {
-  Button,
-  List,
-  ListItem,
-  Card,
-  Snackbar,
-  Icon,
-  Dialog,
-} from "@scoped-elements/material-web";
-
+import { html, css, CSSResult } from "lit";
 import { matrixContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
-import { sharedStyles } from "../../sharedStyles";
-import { query } from "lit/decorators.js";
-import { HoloIdenticon } from "@holochain-open-dev/elements";
-import { CreateWeGroupDialog } from "../dialogs/create-we-group-dialog";
-import { SlTooltip } from "@scoped-elements/shoelace";
+
+import { property, query } from "lit/decorators.js";
+import { CreateNeighbourhoodDialog } from "../dialogs/create-nh-dialog";
 import { JoinGroupCard } from "../components/join-group-card";
 import { ManagingGroupsCard } from "../components/managing-groups-card";
 
-export class HomeScreen extends ScopedElementsMixin(LitElement) {
-  @contextProvided({ context: matrixContext, subscribe: true })
+import NHComponent from '@neighbourhoods/design-system-components/ancestors/base';
+
+export class HomeScreen extends NHComponent {
+  @consume({ context: matrixContext , subscribe: true })
+  @property({attribute: false})
   matrixStore!: MatrixStore;
 
-
   @query("#we-dialog")
-  _weGroupDialog!: CreateWeGroupDialog;
+  _weGroupDialog!: CreateNeighbourhoodDialog;
 
   @query("#join-group-dialog")
-  _joinGroupDialog!: Dialog;
-
-  @query("#copied-snackbar")
-  _copiedSnackbar!: Snackbar;
-
+  _joinGroupDialog!: any;
 
   weName(invitation: JoinMembraneInvitation) {
-    return (decode(invitation.cloneDnaRecipe.properties) as any).name;
+    return (decode(invitation.clone_dna_recipe.properties) as any).name;
   }
 
   weImg(invitation: JoinMembraneInvitation) {
-    return (decode(invitation.cloneDnaRecipe.properties) as any).logoSrc;
+    return (decode(invitation.clone_dna_recipe.properties) as any).logoSrc;
   }
-
-
-
-  renderErrorSnackbar() {
-    return html`
-      <mwc-snackbar
-        style="text-align: center;"
-        id="error-snackbar"
-        labelText="You are already part of this Group!"
-      >
-      </mwc-snackbar>
-    `;
-  }
-
 
   render() {
     return html`
@@ -69,27 +39,10 @@ export class HomeScreen extends ScopedElementsMixin(LitElement) {
             <create-we-group-dialog
               id="we-dialog"
             ></create-we-group-dialog>
-            <mwc-snackbar
-              id="copied-snackbar"
-              timeoutMs="4000"
-              labelText="Copied!"
-              style="text-align: center;"
-            ></mwc-snackbar>
 
             <div class="column content-pane center-content">
-              <div
-                class="row center-content default-font"
-                style="font-size: 3em; color: #2c3888; margin-top: 15px;"
-              >
-                <div>Welcome to We!</div>
-              </div>
-
-              <div class="row" style="margin-top: 70px;">
-                <managing-groups-card
-                  style="width: 40%; margin-right: 30px;"
-                ></managing-groups-card>
-                <join-group-card style="width: 60%;"></join-group-card>
-              </div>
+              <managing-groups-card></managing-groups-card>
+              <join-group-card ></join-group-card>
             </div>
           </div>
         </div>
@@ -97,36 +50,32 @@ export class HomeScreen extends ScopedElementsMixin(LitElement) {
     `;
   }
 
-  static get scopedElements() {
-    return {
-      "mwc-button": Button,
-      "mwc-list": List,
-      "mwc-list-item": ListItem,
-      "mwc-card": Card,
-      "mwc-icon": Icon,
-      "mwc-snackbar": Snackbar,
-      "holo-identicon": HoloIdenticon,
-      "create-we-group-dialog": CreateWeGroupDialog,
-      "sl-tooltip": SlTooltip,
-      "mwc-dialog": Dialog,
-      "join-group-card": JoinGroupCard,
-      "managing-groups-card": ManagingGroupsCard,
-    };
+  static elementDefinitions = {
+    "create-we-group-dialog": CreateNeighbourhoodDialog,
+    "join-group-card": JoinGroupCard,
+    "managing-groups-card": ManagingGroupsCard,
   }
 
-  static get styles() {
-    let localStyles = css`
+  static styles : CSSResult[] = [
+    super.styles as CSSResult,
+      css`
       .content-pane {
-        padding: 30px;
+        display: flex;
+        gap:  calc(1px * var(--nh-spacing-3xl));
+        margin:  calc(1px * var(--nh-spacing-3xl));
+        flex-direction: row;
+        align-items: flex-start;
       }
 
-      .default-font {
-        font-family: Roboto, "Open Sans", "Helvetica Neue", sans-serif;
+      @media (max-width: 1024px) {
+        .content-pane {
+          flex-wrap: wrap;
+        }
+        .content-pane > * {
+          justify-content: center;
+          flex: 1;
+        }
       }
-
-
-    `;
-
-    return [sharedStyles, localStyles];
-  }
+    `
+  ];
 }

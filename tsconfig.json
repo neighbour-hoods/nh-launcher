@@ -1,19 +1,29 @@
 {
   "compilerOptions": {
-    "target": "es2018",
+    "composite": false,
+    "target": "es2017",
     "module": "esnext",
     "moduleResolution": "node",
     "noEmitOnError": true,
-    "lib": ["es2017", "dom"],
+    "lib": ["es2021", "DOM", "DOM.Iterable"],
     "strict": true,
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "noImplicitAny": false,
     "sourceMap": true,
     "inlineSources": true,
     "declaration": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "noImplicitAny": false,
+    "declarationMap": true,
+  },
+  "exclude": [
+    "**/.pnpm",
+    "**/dist",
+    "**/.cargo",
+    "**/node_modules",
+    "**/*.stories.ts",
+    "**/__tests__"
+  ],
 }

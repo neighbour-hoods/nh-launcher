@@ -1,0 +1,5 @@
+packages:
+  - "./"
+  - "ui/app"
+  - "ui/libs/**"
+  - "applet-dev-workspace/**"

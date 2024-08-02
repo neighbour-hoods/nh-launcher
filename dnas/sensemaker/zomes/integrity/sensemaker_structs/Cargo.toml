@@ -1,0 +1,13 @@
+[package]
+edition = "2021"
+name = "sensemaker_integrity_structs"
+version = "0.0.1"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "sensemaker_integrity_structs"
+
+[dependencies]
+serde = { workspace = true }
+derive_more = { workspace = true }
+hdi = { workspace = true }

@@ -1,0 +1,23 @@
+import atomic_operations from './sensemaker_dna/sensemaker/atomic_operations';
+import neighbourhood from './sensemaker_dna/sensemaker/neighbourhood';
+import sensemaker_community_activator from './sensemaker_dna/sensemaker/community_activator';
+import sensemaker_config from './sensemaker_dna/sensemaker/sm_config';
+import applet_config from './sensemaker_dna/sensemaker/applet_config';
+import range from './sensemaker_dna/sensemaker/range';
+import dashboard from './sensemaker_dna/sensemaker/dashboard';
+import method from './sensemaker_dna/sensemaker/method';
+import resource_def from './sensemaker_dna/sensemaker/resource_def';
+import assessment_tray_config from './sensemaker_dna/assessment_control/assessment_tray_config';
+import assessment_control_registration from './sensemaker_dna/assessment_control/assessment_control_registration';
+
+atomic_operations();
+range();
+neighbourhood();
+applet_config();
+sensemaker_config();
+sensemaker_community_activator();
+dashboard();
+method();
+resource_def();
+assessment_tray_config();
+assessment_control_registration();

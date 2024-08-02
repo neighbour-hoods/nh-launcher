@@ -1,71 +1,51 @@
-import { PeerStatusStore, peerStatusStoreContext } from "@holochain-open-dev/peer-status";
-import { ProfilesStore, profilesStoreContext } from "@holochain-open-dev/profiles";
 import { EntryHash } from "@holochain/client";
-import { contextProvided } from "@lit-labs/context";
-import { Task } from "@lit-labs/task";
-import { ScopedElementsMixin } from "@open-wc/scoped-elements";
-import { CircularProgress } from "@scoped-elements/material-web";
+import { AppBlockDelegate } from "@neighbourhoods/client";
+import { consume } from "@lit/context";
+import { Task } from "@lit/task";
+import { ScopedRegistryHost } from "@lit-labs/scoped-registry-mixin"
 import { css, html, LitElement } from "lit";
-import { property, state } from "lit/decorators.js";
+import { property } from "lit/decorators.js";
 import { matrixContext } from "../../context";
 import { MatrixStore } from "../../matrix-store";
 import { sharedStyles } from "../../sharedStyles";
-import { RenderBlock } from "../components/render-block";
+import { AppBlockRenderer } from "@neighbourhoods/app-loader";
 
+import NHSpinner from '@neighbourhoods/design-system-components/spinner';
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(() => r(null), ms));
+export class AppletInstanceRenderer extends ScopedRegistryHost(LitElement) {
 
-
-export class AppletInstanceRenderer extends ScopedElementsMixin(LitElement) {
-
-  @contextProvided({ context: matrixContext, subscribe: true })
+  @consume({ context: matrixContext , subscribe: true })
+  @property({attribute: false})
   _matrixStore!: MatrixStore;
-
-  @contextProvided({ context: profilesStoreContext, subscribe: true })
-  _profilesStore!: ProfilesStore;
-
-  @contextProvided({ context: peerStatusStoreContext, subscribe: true })
-  _peerStatusStore!: PeerStatusStore;
 
   @property()
   appletInstanceId!: EntryHash;
 
-
   _rendererTask = new Task(
     this,
     async () => {
-      await sleep(1);
-      return this._matrixStore.fetchAppletInstanceRenderers(this.appletInstanceId, {
-        profilesStore: this._profilesStore,
-      });
+      return this._matrixStore.fetchAppletInstanceRenderers(this.appletInstanceId);
     },
     () => [this._matrixStore, this.appletInstanceId]
   );
 
-
   render() {
     return this._rendererTask.render({
-      pending: () => html`
-        <div class="row center-content" style="flex: 1;">
-          <mwc-circular-progress indeterminate></mwc-circular-progress>
-        </div>
-      `,
-      complete: (renderer) =>
-        html`
-          <render-block
-            .renderer=${renderer.full}
-            style="flex: 1"
-          ></render-block>
-        `,
+      pending: () => html`<nh-spinner type=${"icon"}></nh-spinner>`,
+      complete: (renderers) => {
+        console.log("got renderers", renderers)
+        if (renderers.appletRenderers && renderers.appletRenderers['full']) {
+          const delegate: AppBlockDelegate = this._matrixStore.createAppDelegate(this.appletInstanceId)
+          console.log(delegate)
+          return html`<app-block-renderer .component=${renderers.appletRenderers['full']} .nhDelegate=${delegate} style="flex: 1"></app-block-renderer>`
+        }
+      },
     });
   }
 
-
-  static get scopedElements() {
-    return {
-      "render-block": RenderBlock,
-      "mwc-circular-progress": CircularProgress,
-    };
+  static elementDefinitions = {
+    "nh-spinner": NHSpinner,
+    "app-block-renderer": AppBlockRenderer,
   }
 
   static styles = [
@@ -77,6 +57,5 @@ export class AppletInstanceRenderer extends ScopedElementsMixin(LitElement) {
       }
     `,
   ];
-
 
 }
