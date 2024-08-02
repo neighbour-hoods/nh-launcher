@@ -124,7 +124,7 @@ pub fn invite_to_join_membrane(input: InviteToJoinMembraneInput) -> ExternResult
     let encoded_signal =
         ExternIO::encode(signal).map_err(|err| wasm_error!(WasmErrorInner::Guest(err.into())))?;
 
-    remote_signal(encoded_signal, vec![invitee_pub_key])?;
+    send_remote_signal(encoded_signal, vec![invitee_pub_key])?;
 
     Ok(action_hash)
 }
