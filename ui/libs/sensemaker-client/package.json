@@ -22,7 +22,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@holochain/client": "0.16.7",
+    "@holochain/client": "0.17.0",
     "@lit/context": "^1.1.0",
     "@lit/task": "^1.0.0",
     "@lit-labs/scoped-registry-mixin": "^1.0.3",
@@ -30,9 +30,7 @@
     "svelte": "^3.59.0",
     "lit": "^3.0.0",
     "lit-html": "^3.0.0",
-    "@holochain-open-dev/utils": "^0.16.3",
-    "@holochain-open-dev/peer-status": "^0.9.1",
-    "@holochain-open-dev/profiles": "^0.17.3"
+    "@holochain-open-dev/utils": "^0.300.1"
   },
   "devDependencies": {
     "@msgpack/msgpack": "^2.7.0",

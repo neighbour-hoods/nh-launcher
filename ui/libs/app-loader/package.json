@@ -40,8 +40,8 @@
   },
   "dependencies": {
     "@lit-labs/scoped-registry-mixin": "^1.0.1",
-    "@holochain-open-dev/utils": "^0.16.3",
-    "@holochain/client": "^0.16.7",
+    "@holochain-open-dev/utils": "^0.300.1",
+    "@holochain/client": "^0.17.0",
     "@holochain-open-dev/profiles": "^0.17.3",
     "@neighbourhoods/client": "workspace:*"
   }

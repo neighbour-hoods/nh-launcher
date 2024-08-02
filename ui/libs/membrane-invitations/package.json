@@ -22,9 +22,9 @@
   },
   "type": "module",
   "dependencies": {
-    "@holochain-open-dev/stores": "^0.8.2",
-    "@holochain-open-dev/utils": "^0.16.3",
-    "@holochain/client": "^0.16.7"
+    "@holochain-open-dev/stores": "^0.300.0-dev.3",
+    "@holochain-open-dev/utils": "^0.300.1",
+    "@holochain/client": "^0.17.0"
   },
   "devDependencies": {
     "rimraf": "^3.0.2",
