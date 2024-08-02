@@ -60,9 +60,10 @@ pub fn federate_applet(input: FederateAppletInput) -> ExternResult<ActionHash> {
 #[hdk_extern]
 pub fn get_federated_groups(applet_hash: EntryHash) -> ExternResult<Vec<DnaHash>> {
     let links = get_links(
-        applet_hash,
-         LinkTypes::AppletToInvitedGroup,
-          Some(LinkTag::new("AppletToInvitedGroup"))
+        GetLinksInputBuilder::try_new(
+            applet_hash,
+            LinkTypes::AppletToInvitedGroup,
+        )?.tag_prefix(LinkTag::new("AppletToInvitedGroup")).build()
     )?;
     Ok(links.iter()
         .map(|link| linkable_to_dnahash(link.target.to_owned()))
@@ -154,7 +155,12 @@ pub fn get_applets_i_am_playing(_: ()) -> ExternResult<Vec<(EntryHash, PlayingAp
 fn get_all_applets(_: ()) -> ExternResult<Vec<(EntryHash, Applet, Vec<DnaHash>)>> {
     let path = get_applets_path();
 
-    let links = get_links(path.path_entry_hash()?, LinkTypes::AnchorToApplet, None)?;
+    let links = get_links(
+        GetLinksInputBuilder::try_new(
+            path.path_entry_hash()?,
+            LinkTypes::AnchorToApplet,
+        )?.build()
+    )?;
 
     let get_input = links
         .into_iter()

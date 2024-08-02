@@ -41,9 +41,10 @@ pub fn create_clone_dna_recipe(clone_dna_recipe: CloneDnaRecipe) -> ExternResult
 #[hdk_extern]
 pub fn get_clone_recipes_for_dna(original_dna_hash: DnaHash) -> ExternResult<Vec<Record>> {
     let links = get_links(
-        dnahash_to_linkable(original_dna_hash),
-        LinkTypes::DnaHashToRecipe,
-        None,
+        GetLinksInputBuilder::try_new(
+            dnahash_to_linkable(original_dna_hash),
+            LinkTypes::DnaHashToRecipe,
+        )?.build()
     )?;
     let get_inputs = links
         .iter()
@@ -141,9 +142,10 @@ pub fn get_my_invitations(_: ()) -> ExternResult<Vec<(ActionHash, JoinMembraneIn
     let agent_info = agent_info()?;
 
     let links = get_links(
-        agent_info.agent_initial_pubkey.clone(),
-        LinkTypes::InviteeToRecipe,
-        None,
+        GetLinksInputBuilder::try_new(
+            agent_info.agent_initial_pubkey.clone(),
+            LinkTypes::InviteeToRecipe,
+        )?.build()
     )?;
 
     let recipes = get_clone_dna_recipes(&links)?;

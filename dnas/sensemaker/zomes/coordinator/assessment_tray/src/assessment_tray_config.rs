@@ -55,9 +55,10 @@ fn get_assessment_tray_config(assessment_tray_eh: EntryHash) -> ExternResult<Opt
 #[hdk_extern]
 fn get_assessment_tray_configs(_:()) -> ExternResult<Vec<Record>> {
     let links = get_links(
-        tray_configs_typed_path()?.path_entry_hash()?,
-        LinkTypes::AssessmentTrayConfig,
-        None,
+        GetLinksInputBuilder::try_new(
+            tray_configs_typed_path()?.path_entry_hash()?,
+            LinkTypes::AssessmentTrayConfig,
+        )?.build()
     )?;
     match links.last() {
         Some(_link) => {
@@ -135,9 +136,10 @@ fn update_assessment_tray_config(input: AssessmentTrayConfigUpdateInput) -> Exte
 #[hdk_extern]
 fn get_default_assessment_tray_config_for_resource_def(resource_def_eh: EntryHash) -> ExternResult<Option<Record>> {
     let links = get_links(
-        resource_def_eh,
-        LinkTypes::ResourceDefDefaultAssessmentTrayConfig,
-        None,
+        GetLinksInputBuilder::try_new(
+            resource_def_eh,
+            LinkTypes::ResourceDefDefaultAssessmentTrayConfig,
+        )?.build()
     )?;
 
     let default_link = links.iter().next();
@@ -170,9 +172,10 @@ pub struct SetAssessmentTrayDefaultInput {
 #[hdk_extern]
 fn set_default_assessment_tray_config_for_resource_def(SetAssessmentTrayDefaultInput {resource_def_eh, assessment_tray_eh}: SetAssessmentTrayDefaultInput) -> ExternResult<EntryHash> {
     let links = get_links(
-        resource_def_eh.clone(),
-        LinkTypes::ResourceDefDefaultAssessmentTrayConfig,
-        None,
+        GetLinksInputBuilder::try_new(
+            resource_def_eh.clone(),
+            LinkTypes::ResourceDefDefaultAssessmentTrayConfig,
+        )?.build()
     )?;
 
     links.into_iter().for_each(|l| {

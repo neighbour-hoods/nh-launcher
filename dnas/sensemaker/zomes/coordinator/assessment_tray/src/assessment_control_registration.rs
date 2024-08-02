@@ -41,9 +41,10 @@ fn get_assessment_control_registration(assessment_control_registration_eh: Entry
 #[hdk_extern]
 fn get_assessment_control_registrations(_:()) -> ExternResult<Vec<Record>> {
     let links = get_links(
-        registrations_typed_path()?.path_entry_hash()?,
-        LinkTypes::AssessmentControlRegistration,
-        None,
+        GetLinksInputBuilder::try_new(
+            registrations_typed_path()?.path_entry_hash()?,
+            LinkTypes::AssessmentControlRegistration,
+        )?.build()
     )?;
     match links.last() {
         Some(_link) => {

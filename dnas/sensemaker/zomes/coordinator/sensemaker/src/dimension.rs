@@ -80,9 +80,10 @@ pub struct AtomicDimensionMethodInput {
 #[hdk_extern]
 pub fn get_dimensions(_: ()) -> ExternResult<Vec<Option<Record>>> {
     get_links(
-        dimensions_typed_path()?.path_entry_hash()?,
-        LinkTypes::Dimensions,
-        None,
+        GetLinksInputBuilder::try_new(
+            dimensions_typed_path()?.path_entry_hash()?,
+            LinkTypes::Dimensions,
+        )?.build()
     )?
     .into_iter()
     .map(|link| get_dimension(link.target.into_entry_hash()

@@ -11,9 +11,10 @@ pub fn get_resource_def(entry_hash: EntryHash) -> ExternResult<Option<Record>> {
 #[hdk_extern]
 fn get_resource_defs(_: ()) -> ExternResult<Vec<Record>> {
     let links = get_links(
-        resource_defs_typed_path()?.path_entry_hash()?,
-        LinkTypes::ResourceDefs,
-        None,
+        GetLinksInputBuilder::try_new(
+            resource_defs_typed_path()?.path_entry_hash()?,
+            LinkTypes::ResourceDefs,
+        )?.build()
     )?;
     match links.last() {
         Some(_link) => {

@@ -15,7 +15,12 @@ pub fn get_latest_sensemaker_config(_: ()) -> ExternResult<Option<Record>> {
         .into();
 
     // get details of the first Sensemaker entry created in order to get all updates to it.
-    let links = get_links(ca_key, LinkTypes::CAToSensemakerConfig, None)?;
+    let links = get_links(
+        GetLinksInputBuilder::try_new(
+            ca_key,
+            LinkTypes::CAToSensemakerConfig
+        )?.build()
+    )?;
 
     // return None if links is empty
     if links.is_empty() {

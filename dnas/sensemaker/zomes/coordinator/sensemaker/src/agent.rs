@@ -12,9 +12,10 @@ pub fn get_all_agents(_: ()) -> ExternResult<Vec<AgentPubKey>> {
     let my_pub_key = agent_info()?.agent_initial_pubkey;
     let all_agents_path = all_agents_typed_path()?;
     let all_agents_links = get_links(
-        all_agents_path.path_entry_hash()?,
-        LinkTypes::AllAgentsPath,
-        None,
+        GetLinksInputBuilder::try_new(
+            all_agents_path.path_entry_hash()?,
+            LinkTypes::AllAgentsPath,
+        )?.build()
     )?;
     let all_agents: Vec<AgentPubKey> = all_agents_links
         .into_iter()

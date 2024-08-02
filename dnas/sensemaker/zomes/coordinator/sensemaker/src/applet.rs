@@ -35,9 +35,10 @@ pub fn register_applet(
 #[hdk_extern]
 pub fn check_if_applet_config_exists(applet_name: String) -> ExternResult<Option<AppletConfig>> {
     let links = get_links(
-        applet_config_typed_path(applet_name)?.path_entry_hash()?,
-        LinkTypes::AppletConfig,
-        None,
+        GetLinksInputBuilder::try_new(
+            applet_config_typed_path(applet_name)?.path_entry_hash()?,
+            LinkTypes::AppletConfig,
+        )?.build()
     )?;
     let maybe_last_link = links.last();
 

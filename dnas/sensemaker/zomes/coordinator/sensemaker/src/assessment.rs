@@ -41,9 +41,10 @@ pub fn get_assessments_for_resources(
         Some(dimension_ehs) => all_or_some_dimension_ehs = dimension_ehs,
         None => {
             all_or_some_dimension_ehs = get_links(
-                dimensions_typed_path()?.path_entry_hash()?,
-                LinkTypes::Dimensions,
-                None,
+                GetLinksInputBuilder::try_new(
+                    dimensions_typed_path()?.path_entry_hash()?,
+                    LinkTypes::Dimensions,
+                )?.build()
             )?
             .into_iter()
             .filter_map(|link| link.target.into_entry_hash())
@@ -131,7 +132,12 @@ pub fn get_all_assessments(_:()) -> ExternResult<Vec<Assessment>> {
 
         // for each dimension that a resource has been assessed, get the assessment
         for assessed_dimension_path in assessed_dimensions_for_resource_typed_paths {
-            let assessments = get_links(assessed_dimension_path.path_entry_hash()?, LinkTypes::Assessment, None)?.into_iter().map(|link| {
+            let assessments = get_links(
+                    GetLinksInputBuilder::try_new(
+                        assessed_dimension_path.path_entry_hash()?,
+                        LinkTypes::Assessment
+                    )?.build()
+                )?.into_iter().map(|link| {
                 let maybe_assessment = get_assessment(
                   link.target.into_entry_hash()
                     .ok_or(wasm_error!(WasmErrorInner::Guest(String::from("Invalid link target"))))?

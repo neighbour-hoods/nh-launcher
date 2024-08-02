@@ -23,9 +23,10 @@ pub fn get_method(entry_hash: EntryHash) -> ExternResult<Option<Record>> {
 #[hdk_extern]
 fn get_methods(_: ()) -> ExternResult<Vec<Record>> {
     let links = get_links(
-        methods_typed_path()?.path_entry_hash()?,
-        LinkTypes::Method,
-        None,
+        GetLinksInputBuilder::try_new(
+            methods_typed_path()?.path_entry_hash()?,
+            LinkTypes::Method,
+        )?.build()
     )?;
     match links.last() {
         Some(_link) => {
@@ -78,9 +79,10 @@ pub fn get_methods_for_dimension(input: GetMethodsForDimensionInput) -> ExternRe
                 "input" | "output" => {
                     let link_tag = LinkTag::new(dimension_type.as_str());
                     let links = get_links(
-                        dimension_eh,
-                        LinkTypes::DimensionToMethod,
-                        Some(link_tag),
+                        GetLinksInputBuilder::try_new(
+                            dimension_eh,
+                            LinkTypes::DimensionToMethod
+                        )?.tag_prefix(link_tag).build()
                     )?;
             
                     Ok(links.iter()

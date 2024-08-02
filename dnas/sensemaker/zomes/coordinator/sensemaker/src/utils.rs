@@ -17,9 +17,10 @@ pub fn get_assessments_for_resource_inner(
     for dimension_eh in dimension_ehs {
         let mut dimension_assessments: Vec<Assessment> = Vec::new();
         let links = get_links(
-            assessment_typed_path(resource_eh.clone(), dimension_eh.clone())?.path_entry_hash()?,
-            LinkTypes::Assessment,
-            None,
+            GetLinksInputBuilder::try_new(
+                assessment_typed_path(resource_eh.clone(), dimension_eh.clone())?.path_entry_hash()?,
+                LinkTypes::Assessment,
+            )?.build()
         )?;
         for link in links {
             let maybe_assessment = get_assessment(link.target.into_entry_hash()

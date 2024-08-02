@@ -30,9 +30,10 @@ pub fn get_range(entry_hash: EntryHash) -> ExternResult<Option<Record>> {
 #[hdk_extern]
 pub fn get_ranges(_: ()) -> ExternResult<Vec<Option<Record>>> {
     get_links(
-        ranges_typed_path()?.path_entry_hash()?,
-        LinkTypes::Ranges,
-        None,
+        GetLinksInputBuilder::try_new(
+            ranges_typed_path()?.path_entry_hash()?,
+            LinkTypes::Ranges,
+        )?.build()
     )?
     .into_iter()
     .map(|link| get_range(link.target.into_entry_hash()
