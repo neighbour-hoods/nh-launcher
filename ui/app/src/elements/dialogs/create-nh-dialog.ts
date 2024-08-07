@@ -68,7 +68,6 @@ export class CreateNeighbourhoodDialog extends NHComponent {
       .catch((err) => {
         const dialog = (root.querySelector("nh-dialog") as any).renderRoot.querySelector('sl-dialog');
         dialog.show() // Stop dialog from closing
-        debugger;
         this.danger.emit({
           title: "Invalid Input",
           msg: "Try filling out the form again!"
