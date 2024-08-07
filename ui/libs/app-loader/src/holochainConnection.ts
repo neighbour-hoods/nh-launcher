@@ -32,9 +32,16 @@ export async function connectHolochainApp(installed_app_id: string) {
   const installedCells = appInfo.cell_info;
   await Promise.all(
     Object.values(installedCells).flat().map(cellInfo => {
-      adminWebsocket.authorizeSigningCredentials(getCellId(cellInfo)!);
+      console.log('cellInfo :>> ', cellInfo);
+      try {
+        if(cellInfo['provisioned']?.name == 'sensemaker') return
+        adminWebsocket.authorizeSigningCredentials(getCellId(cellInfo)!);
+      } catch (error) {
+        console.log('error :>> ', error);
+      }
     })
   );
+
   return {
     adminWebsocket,
     appWebsocket,
